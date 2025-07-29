@@ -14,11 +14,12 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
-      - name: Install dependencies & build
-        run: |
-          cd client
-          npm ci
-          npm run build
+      - name: Install dependencies
+        working-directory: client
+        run: npm ci
+      - name: Build
+        working-directory: client
+        run: npm run build
       - name: Publish to GH Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
