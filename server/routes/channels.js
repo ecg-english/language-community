@@ -1,0 +1,251 @@
+const express = require('express');
+const router = express.Router();
+const db = require('../database');
+const { authenticateToken, requireAdmin, checkChannelViewPermission } = require('../middleware/auth');
+
+// カテゴリ一覧を取得
+router.get('/categories', authenticateToken, (req, res) => {
+  try {
+    console.log('カテゴリ取得APIが呼ばれました:', new Date().toISOString());
+    
+    const categories = db.prepare(`
+      SELECT 
+        id, 
+        name, 
+        is_collapsed,
+        created_at
+      FROM categories 
+      ORDER BY id ASC
+    `).all();
+
+    console.log('取得されたカテゴリ数:', categories.length);
+    res.json({ categories });
+  } catch (error) {
+    console.error('カテゴリ取得エラー:', error);
+    res.status(500).json({ error: 'カテゴリの取得に失敗しました' });
+  }
+});
+
+// 特定のチャンネル情報を取得
+router.get('/channels/:channelId', authenticateToken, checkChannelViewPermission, (req, res) => {
+  try {
+    const { channelId } = req.params;
+
+    const channel = db.prepare(`
+      SELECT 
+        c.*,
+        (SELECT COUNT(*) FROM posts p WHERE p.channel_id = c.id) as post_count
+      FROM channels c
+      WHERE c.id = ?
+    `).get(channelId);
+
+    if (!channel) {
+      return res.status(404).json({ error: 'チャンネルが見つかりません' });
+    }
+
+    res.json({ channel });
+  } catch (error) {
+    console.error('チャンネル情報取得エラー:', error);
+    res.status(500).json({ error: 'チャンネル情報の取得に失敗しました' });
+  }
+});
+
+// 特定のカテゴリのチャンネル一覧を取得（権限に基づくフィルタリング付き）
+router.get('/categories/:categoryId/channels', authenticateToken, (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    const userRole = req.user.role;
+
+    console.log('チャンネル一覧取得 - ユーザーロール:', userRole);
+
+    // 全チャンネルを取得
+    const allChannels = db.prepare(`
+      SELECT 
+        c.*,
+        (SELECT COUNT(*) FROM posts p WHERE p.channel_id = c.id) as post_count
+      FROM channels c
+      WHERE c.category_id = ?
+      ORDER BY c.created_at ASC
+    `).all(categoryId);
+
+    // ユーザーの権限に基づいてチャンネルをフィルタリング
+    const filteredChannels = allChannels.filter(channel => {
+      switch (channel.channel_type) {
+        case 'admin_only_instructors_view':
+          // 管理者・講師のみ閲覧可能
+          return ['サーバー管理者', 'ECG講師', 'JCG講師'].includes(userRole);
+        
+        case 'class1_post_class1_view':
+          // Class1メンバー以上のみ閲覧可能
+          return ['サーバー管理者', 'ECG講師', 'JCG講師', 'Class1 Members'].includes(userRole);
+        
+        case 'admin_only_all_view':
+        case 'instructors_post_all_view':
+        case 'all_post_all_view':
+          // 全メンバー閲覧可能
+          return true;
+        
+        default:
+          console.warn('未知のチャンネルタイプ:', channel.channel_type);
+          return false;
+      }
+    });
+
+    console.log(`チャンネルフィルタリング結果: ${allChannels.length}個中${filteredChannels.length}個を表示`);
+
+    res.json({ channels: filteredChannels });
+  } catch (error) {
+    console.error('チャンネル取得エラー:', error);
+    res.status(500).json({ error: 'チャンネルの取得に失敗しました' });
+  }
+});
+
+// カテゴリの折りたたみ状態を切り替え
+router.put('/categories/:categoryId/toggle', authenticateToken, (req, res) => {
+  try {
+    const { categoryId } = req.params;
+
+    // 現在の状態を取得
+    const category = db.prepare('SELECT is_collapsed FROM categories WHERE id = ?').get(categoryId);
+    
+    if (!category) {
+      return res.status(404).json({ error: 'カテゴリが見つかりません' });
+    }
+
+    // 状態を切り替え
+    const newState = category.is_collapsed ? 0 : 1;
+    const updateCategory = db.prepare('UPDATE categories SET is_collapsed = ? WHERE id = ?');
+    updateCategory.run(newState, categoryId);
+
+    res.json({ 
+      message: 'カテゴリの状態が更新されました',
+      is_collapsed: Boolean(newState)
+    });
+  } catch (error) {
+    console.error('カテゴリ切り替えエラー:', error);
+    res.status(500).json({ error: 'カテゴリの切り替えに失敗しました' });
+  }
+});
+
+// 新しいカテゴリを作成（管理者のみ）
+router.post('/categories', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const { name } = req.body;
+
+    console.log('カテゴリ作成APIが呼ばれました:', { name, timestamp: new Date().toISOString() });
+
+    if (!name || name.trim() === '') {
+      return res.status(400).json({ error: 'カテゴリ名を入力してください' });
+    }
+
+    const trimmedName = name.trim();
+
+    // 重複チェック（大文字小文字を区別しない）
+    const existingCategory = db.prepare(`
+      SELECT id FROM categories 
+      WHERE LOWER(name) = LOWER(?)
+    `).get(trimmedName);
+    
+    if (existingCategory) {
+      console.log('重複カテゴリが検出されました:', trimmedName);
+      return res.status(400).json({ error: 'このカテゴリ名は既に存在します' });
+    }
+
+    const insertCategory = db.prepare('INSERT INTO categories (name) VALUES (?)');
+    const result = insertCategory.run(trimmedName);
+
+    console.log('新しいカテゴリが作成されました:', { id: result.lastInsertRowid, name: trimmedName });
+
+    res.status(201).json({
+      message: 'カテゴリが作成されました',
+      category: {
+        id: result.lastInsertRowid,
+        name: trimmedName,
+        is_collapsed: false
+      }
+    });
+  } catch (error) {
+    console.error('カテゴリ作成エラー:', error);
+    res.status(500).json({ error: 'カテゴリの作成に失敗しました' });
+  }
+});
+
+// 新しいチャンネルを作成（管理者のみ）
+router.post('/categories/:categoryId/channels', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    const { name, description, channel_type } = req.body;
+
+    if (!name || name.trim() === '') {
+      return res.status(400).json({ error: 'チャンネル名を入力してください' });
+    }
+
+    const validChannelTypes = [
+      'admin_only_instructors_view',
+      'admin_only_all_view', 
+      'instructors_post_all_view',
+      'all_post_all_view',
+      'class1_post_class1_view'
+    ];
+
+    if (!channel_type || !validChannelTypes.includes(channel_type)) {
+      return res.status(400).json({ error: '有効なチャンネルタイプを選択してください' });
+    }
+
+    // カテゴリの存在確認
+    const category = db.prepare('SELECT id FROM categories WHERE id = ?').get(categoryId);
+    if (!category) {
+      return res.status(404).json({ error: 'カテゴリが見つかりません' });
+    }
+
+    const insertChannel = db.prepare(`
+      INSERT INTO channels (name, description, category_id, channel_type) 
+      VALUES (?, ?, ?, ?)
+    `);
+    
+    const result = insertChannel.run(
+      name.trim(), 
+      description || '', 
+      categoryId, 
+      channel_type
+    );
+
+    // 作成されたチャンネルを取得
+    const newChannel = db.prepare(`
+      SELECT 
+        c.*,
+        0 as post_count
+      FROM channels c
+      WHERE c.id = ?
+    `).get(result.lastInsertRowid);
+
+    res.status(201).json({
+      message: 'チャンネルが作成されました',
+      channel: newChannel
+    });
+  } catch (error) {
+    console.error('チャンネル作成エラー:', error);
+    res.status(500).json({ error: 'チャンネルの作成に失敗しました' });
+  }
+});
+
+// チャンネルを削除（管理者のみ）
+router.delete('/channels/:channelId', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const { channelId } = req.params;
+
+    const deleteChannel = db.prepare('DELETE FROM channels WHERE id = ?');
+    const result = deleteChannel.run(channelId);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'チャンネルが見つかりません' });
+    }
+
+    res.json({ message: 'チャンネルが削除されました' });
+  } catch (error) {
+    console.error('チャンネル削除エラー:', error);
+    res.status(500).json({ error: 'チャンネルの削除に失敗しました' });
+  }
+});
+
+module.exports = router; 

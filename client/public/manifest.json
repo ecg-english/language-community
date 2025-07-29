@@ -1,0 +1,15 @@
+{
+  "short_name": "言語学習コミュニティ",
+  "name": "言語学習コミュニティ - 英語・日本語学習プラットフォーム",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#1976d2",
+  "background_color": "#ffffff"
+} 
