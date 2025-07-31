@@ -256,6 +256,7 @@ router.get('/users/public', authenticateToken, (req, res) => {
       return res.status(500).json({ error: 'データベーステーブルが存在しません' });
     }
 
+    console.log('Users table exists, fetching users...');
     const users = db.prepare(`
       SELECT id, username, role, avatar_url, created_at
       FROM users
@@ -264,7 +265,11 @@ router.get('/users/public', authenticateToken, (req, res) => {
 
     console.log(`Found ${users.length} users`);
     console.log('Users:', users);
+    
+    // レスポンスを送信
+    console.log('Sending response with users');
     res.json({ users });
+    console.log('Response sent successfully');
   } catch (error) {
     console.error('ユーザー一覧取得エラー:', error);
     res.status(500).json({ error: 'ユーザー一覧の取得に失敗しました' });
