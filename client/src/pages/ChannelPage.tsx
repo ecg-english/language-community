@@ -13,12 +13,19 @@ import {
   Alert,
   CircularProgress,
   IconButton,
+  Collapse,
+  Paper,
+  Stack,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   Send as SendIcon,
   ThumbUp as ThumbUpIcon,
+  ThumbUpOutlined as ThumbUpOutlinedIcon,
   Comment as CommentIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+  Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -31,8 +38,18 @@ interface Post {
   user_id: number;
   username: string;
   created_at: string;
-  likes: number;
+  like_count: number;
   comment_count: number;
+  user_liked: number;
+}
+
+interface Comment {
+  id: number;
+  content: string;
+  user_id: number;
+  username: string;
+  role: string;
+  created_at: string;
 }
 
 interface Channel {
@@ -49,10 +66,14 @@ const ChannelPage: React.FC = () => {
   const { t } = useTranslation();
   const [channel, setChannel] = useState<Channel | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [comments, setComments] = useState<{ [postId: number]: Comment[] }>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [newPost, setNewPost] = useState('');
+  const [newComment, setNewComment] = useState<{ [postId: number]: string }>({});
+  const [expandedComments, setExpandedComments] = useState<{ [postId: number]: boolean }>({});
   const [canPost, setCanPost] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const numChannelId = parseInt(channelId || '0');
 
@@ -113,9 +134,10 @@ const ChannelPage: React.FC = () => {
 
   const handleSubmitPost = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newPost.trim() || !canPost) return;
+    if (!newPost.trim() || !canPost || isSubmitting) return;
 
     try {
+      setIsSubmitting(true);
       await axios.post(`/api/posts/channels/${numChannelId}/posts`, {
         content: newPost
       });
@@ -126,6 +148,90 @@ const ChannelPage: React.FC = () => {
     } catch (error: any) {
       console.error('投稿の作成に失敗しました:', error);
       setError(t('postsLoadFailed'));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleLike = async (postId: number) => {
+    try {
+      await axios.post(`/api/posts/posts/${postId}/like`);
+      // 投稿を再読み込み
+      const postsResponse = await axios.get(`/api/posts/channels/${numChannelId}/posts`);
+      setPosts(postsResponse.data.posts || []);
+    } catch (error) {
+      console.error('いいねに失敗しました:', error);
+    }
+  };
+
+  const handleDeletePost = async (postId: number) => {
+    if (window.confirm('この投稿を削除しますか？')) {
+      try {
+        await axios.delete(`/api/posts/posts/${postId}`);
+        // 投稿を再読み込み
+        const postsResponse = await axios.get(`/api/posts/channels/${numChannelId}/posts`);
+        setPosts(postsResponse.data.posts || []);
+      } catch (error) {
+        console.error('投稿の削除に失敗しました:', error);
+      }
+    }
+  };
+
+  const handleToggleComments = async (postId: number) => {
+    setExpandedComments(prev => ({
+      ...prev,
+      [postId]: !prev[postId]
+    }));
+
+    if (!expandedComments[postId]) {
+      try {
+        const response = await axios.get(`/api/posts/posts/${postId}/comments`);
+        setComments(prev => ({
+          ...prev,
+          [postId]: response.data.comments || []
+        }));
+      } catch (error) {
+        console.error('コメントの取得に失敗しました:', error);
+      }
+    }
+  };
+
+  const handleSubmitComment = async (postId: number) => {
+    const content = newComment[postId];
+    if (!content?.trim()) return;
+
+    try {
+      await axios.post(`/api/posts/posts/${postId}/comments`, {
+        content: content
+      });
+      setNewComment(prev => ({ ...prev, [postId]: '' }));
+      // コメントを再読み込み
+      const response = await axios.get(`/api/posts/posts/${postId}/comments`);
+      setComments(prev => ({
+        ...prev,
+        [postId]: response.data.comments || []
+      }));
+    } catch (error) {
+      console.error('コメントの作成に失敗しました:', error);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+    if (window.confirm('このコメントを削除しますか？')) {
+      try {
+        await axios.delete(`/api/posts/comments/${commentId}`);
+        // 投稿を再読み込みしてコメント数を更新
+        const postsResponse = await axios.get(`/api/posts/channels/${numChannelId}/posts`);
+        setPosts(postsResponse.data.posts || []);
+        // コメントを再読み込み
+        const response = await axios.get(`/api/posts/posts/${commentId}/comments`);
+        setComments(prev => ({
+          ...prev,
+          [commentId]: response.data.comments || []
+        }));
+      } catch (error) {
+        console.error('コメントの削除に失敗しました:', error);
+      }
     }
   };
 
@@ -161,6 +267,10 @@ const ChannelPage: React.FC = () => {
       default:
         return 'default';
     }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString('ja-JP');
   };
 
   if (loading) {
@@ -258,9 +368,9 @@ const ChannelPage: React.FC = () => {
                   type="submit"
                   variant="contained"
                   endIcon={<SendIcon />}
-                  disabled={!newPost.trim()}
+                  disabled={!newPost.trim() || isSubmitting}
                 >
-                  {t('post')}
+                  {isSubmitting ? t('loading') : t('post')}
                 </Button>
               </Box>
             </form>
@@ -291,9 +401,18 @@ const ChannelPage: React.FC = () => {
                       {post.username}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {new Date(post.created_at).toLocaleString('ja-JP')}
+                      {formatDate(post.created_at)}
                     </Typography>
                   </Box>
+                  {(user?.id === post.user_id || user?.role === 'サーバー管理者') && (
+                    <IconButton
+                      onClick={() => handleDeletePost(post.id)}
+                      size="small"
+                      color="error"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  )}
                 </Box>
                 
                 <Typography variant="body1" sx={{ mb: 2 }}>
@@ -303,19 +422,87 @@ const ChannelPage: React.FC = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <Button
                     size="small"
-                    startIcon={<ThumbUpIcon />}
-                    sx={{ color: 'text.secondary' }}
+                    startIcon={post.user_liked ? <ThumbUpIcon /> : <ThumbUpOutlinedIcon />}
+                    onClick={() => handleLike(post.id)}
+                    sx={{ color: post.user_liked ? 'primary.main' : 'text.secondary' }}
                   >
-                    {post.likes} {t('like')}
+                    {post.like_count} {t('like')}
                   </Button>
                   <Button
                     size="small"
                     startIcon={<CommentIcon />}
+                    onClick={() => handleToggleComments(post.id)}
+                    endIcon={expandedComments[post.id] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                     sx={{ color: 'text.secondary' }}
                   >
                     {post.comment_count} {t('comments')}
                   </Button>
                 </Box>
+
+                {/* コメントセクション */}
+                <Collapse in={expandedComments[post.id]} timeout="auto" unmountOnExit>
+                  <Box sx={{ mt: 2 }}>
+                    <Divider sx={{ mb: 2 }} />
+                    
+                    {/* コメント入力 */}
+                    <Box sx={{ mb: 2, display: 'flex', gap: 1 }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        placeholder={t('writeComment')}
+                        value={newComment[post.id] || ''}
+                        onChange={(e) => setNewComment(prev => ({ ...prev, [post.id]: e.target.value }))}
+                        variant="outlined"
+                      />
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => handleSubmitComment(post.id)}
+                        disabled={!newComment[post.id]?.trim()}
+                      >
+                        {t('sendComment')}
+                      </Button>
+                    </Box>
+
+                    {/* コメント一覧 */}
+                    {comments[post.id]?.map((comment) => (
+                      <Paper key={comment.id} sx={{ p: 2, mb: 1, bgcolor: 'grey.50' }}>
+                        <Stack direction="row" spacing={2} alignItems="flex-start">
+                          <Avatar sx={{ width: 32, height: 32 }}>
+                            {comment.username.charAt(0).toUpperCase()}
+                          </Avatar>
+                          <Box sx={{ flexGrow: 1 }}>
+                            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+                              <Typography variant="subtitle2" fontWeight={600}>
+                                {comment.username}
+                              </Typography>
+                              <Chip
+                                label={comment.role}
+                                size="small"
+                                sx={{ fontSize: '0.7rem' }}
+                              />
+                              <Typography variant="caption" color="text.secondary">
+                                {formatDate(comment.created_at)}
+                              </Typography>
+                            </Stack>
+                            <Typography variant="body2">
+                              {comment.content}
+                            </Typography>
+                          </Box>
+                          {(user?.id === comment.user_id || user?.role === 'サーバー管理者') && (
+                            <IconButton
+                              onClick={() => handleDeleteComment(comment.id)}
+                              size="small"
+                              color="error"
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          )}
+                        </Stack>
+                      </Paper>
+                    ))}
+                  </Box>
+                </Collapse>
               </CardContent>
             </Card>
           ))
