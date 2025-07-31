@@ -19,7 +19,7 @@ import {
   Event as EventIcon,
   Logout as LogoutIcon,
 } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 interface LayoutProps {
