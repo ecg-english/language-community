@@ -214,12 +214,22 @@ router.put('/profile', authenticateToken, async (req, res) => {
 // ユーザー一覧を取得（誰でも閲覧可、機微情報は除外）
 router.get('/users/public', authenticateToken, (req, res) => {
   try {
+    console.log('Fetching public users list...');
+    
+    // データベースの状態を確認
+    const tableCheck = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='users'").get();
+    if (!tableCheck) {
+      console.error('Users table does not exist');
+      return res.status(500).json({ error: 'データベーステーブルが存在しません' });
+    }
+
     const users = db.prepare(`
       SELECT id, username, role, avatar_url, created_at
       FROM users
       ORDER BY created_at DESC
     `).all();
 
+    console.log(`Found ${users.length} users`);
     res.json({ users });
   } catch (error) {
     console.error('ユーザー一覧取得エラー:', error);
