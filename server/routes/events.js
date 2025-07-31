@@ -13,7 +13,7 @@ router.get('/', authenticateToken, (req, res) => {
         u.role as created_by_role
       FROM events e
       JOIN users u ON e.created_by = u.id
-      ORDER BY e.event_date ASC, e.event_time ASC
+      ORDER BY e.event_date ASC, e.start_time ASC
     `).all();
 
     res.json({ events });
@@ -38,7 +38,7 @@ router.get('/month/:year/:month', authenticateToken, (req, res) => {
       FROM events e
       JOIN users u ON e.created_by = u.id
       WHERE e.event_date >= ? AND e.event_date <= ?
-      ORDER BY e.event_date ASC, e.event_time ASC
+      ORDER BY e.event_date ASC, e.start_time ASC
     `).all(startDate, endDate);
 
     res.json({ events });
