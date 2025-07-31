@@ -68,6 +68,12 @@ const CommunityPage: React.FC = () => {
       loadChannels(categoryId);
     }
     toggleCategory(categoryId);
+    // expandedCategoriesの状態も更新
+    setExpandedCategories(prev => 
+      prev.includes(categoryId) 
+        ? prev.filter(id => id !== categoryId)
+        : [...prev, categoryId]
+    );
   };
 
   const handleChannelClick = (channelId: number) => {
@@ -328,7 +334,7 @@ const CommunityPage: React.FC = () => {
                     }}
                   >
                     <Accordion
-                      expanded={expandedCategories.includes(category.id)}
+                      expanded={!category.is_collapsed}
                       onChange={() => handleCategoryToggle(category.id)}
                       sx={{
                         '&:before': { display: 'none' },
@@ -367,7 +373,7 @@ const CommunityPage: React.FC = () => {
                             {category.name}
                           </Typography>
                           <Chip
-                            label={`${category.channels.length}チャンネル`}
+                            label={`${channels[category.id]?.length || 0}チャンネル`}
                             size="small"
                             sx={{
                               ml: 'auto',
@@ -381,7 +387,7 @@ const CommunityPage: React.FC = () => {
                       </AccordionSummary>
                       <AccordionDetails>
                         <Grid container spacing={{ xs: 1, sm: 2 }}>
-                          {category.channels.map((channel) => (
+                          {channels[category.id]?.map((channel) => (
                             <Grid item xs={12} sm={6} md={4} key={channel.id}>
                               <Card
                                 elevation={0}
@@ -412,8 +418,8 @@ const CommunityPage: React.FC = () => {
                                       {channel.name}
                                     </Typography>
                                     <Chip
-                                      label={getChannelTypeLabel(channel.type)}
-                                      color={getChannelTypeColor(channel.type) as any}
+                                      label={getChannelTypeLabel(channel.channel_type)}
+                                      color={getChannelTypeColor(channel.channel_type) as any}
                                       size="small"
                                       sx={{
                                         fontSize: { xs: '0.7rem', sm: '0.75rem' },
