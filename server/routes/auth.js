@@ -166,7 +166,7 @@ router.get('/users/:userId', authenticateToken, (req, res) => {
 // プロフィール更新
 router.put('/profile', authenticateToken, async (req, res) => {
   try {
-    const { username, bio, goal, message } = req.body;
+    const { username, bio, goal, message, avatar_url } = req.body;
     const userId = req.user.userId;
 
     if (!username || username.trim() === '') {
@@ -182,7 +182,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
     // プロフィール更新
     const updateUser = db.prepare(`
       UPDATE users 
-      SET username = ?, bio = ?, goal = ?, message = ?
+      SET username = ?, bio = ?, goal = ?, message = ?, avatar_url = ?
       WHERE id = ?
     `);
 
@@ -191,6 +191,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
       bio || '',
       goal || '',
       message || '',
+      avatar_url || null,
       userId
     );
 

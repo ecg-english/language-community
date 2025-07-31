@@ -4,6 +4,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import App from './App';
 import './axiosConfig';
+import './i18n';
 
 // シンプルで洗練されたテーマ
 const theme = createTheme({

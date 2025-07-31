@@ -10,6 +10,8 @@ import {
   Container,
   Menu,
   MenuItem,
+  Select,
+  FormControl,
 } from '@mui/material';
 import {
   AccountCircle as AccountCircleIcon,
@@ -18,8 +20,11 @@ import {
   Info as InfoIcon,
   Event as EventIcon,
   Logout as LogoutIcon,
+  Language as LanguageIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 interface LayoutProps {
@@ -28,6 +33,8 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, logout } = useAuth();
+  const { currentLanguage, changeLanguage, getLanguageLabel } = useLanguage();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -57,6 +64,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const handleMemberList = () => {
     navigate('/members');
     handleClose();
+  };
+
+  const handleLanguageChange = (event: any) => {
+    changeLanguage(event.target.value);
   };
 
   const getRoleColor = (role: string) => {
@@ -121,12 +132,31 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 }}
                 onClick={() => navigate('/community')}
               >
-                言語学習コミュニティ
+                {t('languageLearningCommunity')}
               </Typography>
             </Box>
 
             {user && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
+                {/* 言語選択 */}
+                <FormControl size="small" sx={{ minWidth: { xs: 80, sm: 120 } }}>
+                  <Select
+                    value={currentLanguage}
+                    onChange={handleLanguageChange}
+                    displayEmpty
+                    sx={{
+                      '& .MuiSelect-select': {
+                        py: { xs: 0.5, sm: 1 },
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                      },
+                    }}
+                  >
+                    <MenuItem value="en">English</MenuItem>
+                    <MenuItem value="ja">日本語</MenuItem>
+                    <MenuItem value="jaSimple">かんたんな、にほんご</MenuItem>
+                  </Select>
+                </FormControl>
+
                 <Chip
                   label={user.role}
                   size="small"
@@ -195,7 +225,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         >
           <AccountCircleIcon sx={{ mr: 2, color: 'primary.main' }} />
           <Typography variant="body2" fontWeight={500}>
-            プロフィール
+            {t('profile')}
           </Typography>
         </MenuItem>
 
@@ -210,7 +240,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         >
           <PeopleIcon sx={{ mr: 2, color: 'primary.main' }} />
           <Typography variant="body2" fontWeight={500}>
-            メンバーリスト
+            {t('memberList')}
           </Typography>
         </MenuItem>
 
@@ -225,7 +255,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         >
           <InfoIcon sx={{ mr: 2, color: 'primary.main' }} />
           <Typography variant="body2" fontWeight={500}>
-            このコミュニティでできること
+            {t('features')}
           </Typography>
         </MenuItem>
 
@@ -240,7 +270,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         >
           <EventIcon sx={{ mr: 2, color: 'primary.main' }} />
           <Typography variant="body2" fontWeight={500}>
-            イベントスケジュール
+            {t('events')}
           </Typography>
         </MenuItem>
 
@@ -256,7 +286,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           >
             <AdminPanelSettingsIcon sx={{ mr: 2, color: 'primary.main' }} />
             <Typography variant="body2" fontWeight={500}>
-              管理者パネル
+              {t('adminPanel')}
             </Typography>
           </MenuItem>
         )}
@@ -273,7 +303,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         >
           <LogoutIcon sx={{ mr: 2, color: '#dc2626' }} />
           <Typography variant="body2" fontWeight={500} color="#dc2626">
-            ログアウト
+            {t('logout')}
           </Typography>
         </MenuItem>
       </Menu>

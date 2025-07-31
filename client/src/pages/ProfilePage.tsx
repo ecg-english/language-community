@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Alert,
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -23,9 +24,11 @@ import {
   CalendarToday as CalendarIcon,
   School as SchoolIcon,
   Message as MessageIcon,
+  PhotoCamera as PhotoCameraIcon,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 
 interface ProfileData {
@@ -44,12 +47,15 @@ const ProfilePage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
+  const { t } = useTranslation();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<Partial<ProfileData>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const isOwnProfile = user?.id.toString() === userId;
 
@@ -66,6 +72,7 @@ const ProfilePage: React.FC = () => {
           bio: response.data.user.bio || '',
           goal: response.data.user.goal || '',
           message: response.data.user.message || '',
+          avatar_url: response.data.user.avatar_url || '',
         });
       } catch (error: any) {
         console.error('プロフィール取得エラー:', error);
@@ -95,25 +102,63 @@ const ProfilePage: React.FC = () => {
       bio: profileData?.bio || '',
       goal: profileData?.goal || '',
       message: profileData?.message || '',
+      avatar_url: profileData?.avatar_url || '',
     });
+    setSelectedFile(null);
+    setPreviewUrl(null);
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
   };
 
   const handleSave = async () => {
     try {
       setIsSaving(true);
-      
-      const response = await axios.put('/api/auth/profile', editData);
-      
+      setError(null);
+
+      let avatarUrl = editData.avatar_url;
+
+      // 新しいファイルが選択されている場合はアップロード
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append('avatar', selectedFile);
+
+        const uploadResponse = await axios.post('/api/upload/avatar', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        avatarUrl = uploadResponse.data.fileUrl;
+      }
+
+      // プロフィール更新
+      const response = await axios.put('/api/auth/profile', {
+        username: editData.username,
+        bio: editData.bio,
+        goal: editData.goal,
+        message: editData.message,
+        avatar_url: avatarUrl,
+      });
+
       setProfileData(response.data.user);
       setIsEditing(false);
-      
-      // 自分のプロフィールを編集した場合、AuthContextも更新
+      setSelectedFile(null);
+      setPreviewUrl(null);
+
+      // 自分のプロフィールの場合はAuthContextも更新
       if (isOwnProfile) {
         updateUser(response.data.user);
       }
     } catch (error: any) {
       console.error('プロフィール更新エラー:', error);
-      setError('プロフィールの更新に失敗しました');
+      setError(error.response?.data?.error || 'プロフィールの更新に失敗しました');
     } finally {
       setIsSaving(false);
     }
@@ -189,6 +234,7 @@ const ProfilePage: React.FC = () => {
               justifyContent: { xs: 'space-between', sm: 'flex-start' }
             }}>
               <Avatar
+                src={profileData.avatar_url ? `https://language-community-backend.onrender.com${profileData.avatar_url}` : undefined}
                 sx={{
                   width: { xs: 60, sm: 80 },
                   height: { xs: 60, sm: 80 },
@@ -321,6 +367,45 @@ const ProfilePage: React.FC = () => {
 
           {/* プロフィール詳細 */}
           <Box sx={{ display: 'grid', gap: { xs: 2, sm: 3 } }}>
+            {/* アバター */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Typography variant="h6" sx={{ fontWeight: 500 }}>
+                アバター
+              </Typography>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                style={{ display: 'none' }}
+                id="avatar-upload-input"
+              />
+              <label htmlFor="avatar-upload-input">
+                <IconButton
+                  component="span"
+                  color="primary"
+                  sx={{
+                    p: { xs: 1, sm: 1.5 },
+                    '&:hover': {
+                      backgroundColor: 'rgba(30, 64, 175, 0.04)',
+                    },
+                  }}
+                >
+                  <PhotoCameraIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
+                </IconButton>
+              </label>
+            </Box>
+            {previewUrl && (
+              <Avatar
+                src={previewUrl}
+                sx={{
+                  width: { xs: 100, sm: 120 },
+                  height: { xs: 100, sm: 120 },
+                  border: '1px solid #ccc',
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                }}
+              />
+            )}
+
             {/* 目標 */}
             <Box>
               <Box sx={{ 
@@ -341,7 +426,7 @@ const ProfilePage: React.FC = () => {
                     fontSize: { xs: '1rem', sm: '1.25rem' }
                   }}
                 >
-                  学習目標
+                  {t('learningGoal')}
                 </Typography>
               </Box>
               {isEditing ? (
@@ -372,7 +457,7 @@ const ProfilePage: React.FC = () => {
                     fontSize: { xs: '0.875rem', sm: '1rem' },
                   }}
                 >
-                  {profileData.goal || '目標が設定されていません'}
+                  {profileData.goal || t('goalNotSet')}
                 </Typography>
               )}
             </Box>
@@ -397,7 +482,7 @@ const ProfilePage: React.FC = () => {
                     fontSize: { xs: '1rem', sm: '1.25rem' }
                   }}
                 >
-                  一言メッセージ
+                  {t('oneWordMessage')}
                 </Typography>
               </Box>
               {isEditing ? (
@@ -428,7 +513,7 @@ const ProfilePage: React.FC = () => {
                     fontSize: { xs: '0.875rem', sm: '1rem' },
                   }}
                 >
-                  {profileData.message || 'メッセージが設定されていません'}
+                  {profileData.message || t('messageNotSet')}
                 </Typography>
               )}
             </Box>
@@ -453,7 +538,7 @@ const ProfilePage: React.FC = () => {
                     fontSize: { xs: '1rem', sm: '1.25rem' }
                   }}
                 >
-                  自己紹介
+                  {t('selfIntroduction')}
                 </Typography>
               </Box>
               {isEditing ? (
@@ -484,7 +569,7 @@ const ProfilePage: React.FC = () => {
                     fontSize: { xs: '0.875rem', sm: '1rem' },
                   }}
                 >
-                  {profileData.bio || '自己紹介が設定されていません'}
+                  {profileData.bio || t('bioNotSet')}
                 </Typography>
               )}
             </Box>
