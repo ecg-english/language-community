@@ -25,6 +25,7 @@ const authenticateToken = (req, res, next) => {
     
     console.log('Token verified successfully');
     console.log('User from token:', { userId: user.userId, username: user.username, role: user.role });
+    console.log('User ID type:', typeof user.userId, 'Value:', user.userId);
     
     // データベースでユーザーの存在確認
     console.log('Checking database for user ID:', user.userId);
@@ -42,11 +43,24 @@ const authenticateToken = (req, res, next) => {
       const dbUserByNumeric = db.prepare('SELECT id, username, role FROM users WHERE id = ?').get(numericUserId);
       console.log('User found with numeric ID:', dbUserByNumeric);
       
-      if (!dbUserByNumeric) {
+      // 文字列での検索も試行
+      const stringUserId = user.userId.toString();
+      console.log('String user ID:', stringUserId);
+      const dbUserByString = db.prepare('SELECT id, username, role FROM users WHERE id = ?').get(stringUserId);
+      console.log('User found with string ID:', dbUserByString);
+      
+      // ユーザー名での検索も試行
+      const dbUserByName = db.prepare('SELECT id, username, role FROM users WHERE username = ?').get(user.username);
+      console.log('User found by username:', dbUserByName);
+      
+      if (!dbUserByNumeric && !dbUserByString && !dbUserByName) {
+        console.log('No user found with any method');
         return res.status(404).json({ error: 'ユーザーが見つかりません' });
       } else {
-        console.log('User found with numeric ID, using that');
-        req.user = { ...user, ...dbUserByNumeric };
+        // 見つかったユーザーを使用
+        const foundUser = dbUserByNumeric || dbUserByString || dbUserByName;
+        console.log('Using found user:', foundUser);
+        req.user = { ...user, ...foundUser };
         next();
         return;
       }

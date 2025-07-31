@@ -99,16 +99,19 @@ router.post('/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
+    console.log('=== Login Debug ===');
+    console.log('User from database:', { id: user.id, username: user.username, role: user.role });
+    console.log('Token payload:', { userId: user.id, username: user.username, email: user.email, role: user.role });
+
     res.json({
-      message: 'ログインに成功しました',
+      message: 'ログインが完了しました',
       token,
       user: {
         id: user.id,
         username: user.username,
         email: user.email,
         role: user.role,
-        bio: user.bio || '',
-        avatar_url: user.avatar_url
+        bio: user.bio || ''
       }
     });
   } catch (error) {
