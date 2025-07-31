@@ -21,6 +21,9 @@ import {
   TextField,
   InputAdornment,
   Avatar,
+  InputBase,
+  IconButton,
+  Grid,
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
@@ -48,6 +51,7 @@ const CommunityPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const hasLoaded = useRef(false);
+  const [expandedCategories, setExpandedCategories] = useState<number[]>([]);
 
   useEffect(() => {
     if (!hasLoaded.current) {
@@ -122,19 +126,19 @@ const CommunityPage: React.FC = () => {
   const getRoleGradient = (role: string) => {
     switch (role) {
       case 'サーバー管理者':
-        return 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)';
+        return '#dc2626';
       case 'ECG講師':
       case 'JCG講師':
-        return 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)';
+        return '#ea580c';
       case 'Class1 Members':
-        return 'linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%)';
+        return '#7c3aed';
       case 'ECGメンバー':
       case 'JCGメンバー':
-        return 'linear-gradient(135deg, #2196f3 0%, #1976d2 100%)';
+        return '#2563eb';
       case 'Trial参加者':
-        return 'linear-gradient(135deg, #757575 0%, #616161 100%)';
+        return '#6b7280';
       default:
-        return 'linear-gradient(135deg, #757575 0%, #616161 100%)';
+        return '#6b7280';
     }
   };
 
@@ -144,23 +148,20 @@ const CommunityPage: React.FC = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(180deg, #fafafb 0%, #f3f4f6 100%)',
+        backgroundColor: '#ffffff',
       }}
     >
-      <Container maxWidth="lg" sx={{ py: 6 }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 3, sm: 4, md: 6 } }}>
         <Fade in timeout={800}>
           <Box>
             {/* ヘッダーセクション */}
-            <Box sx={{ mb: 6, textAlign: 'center' }}>
+            <Box sx={{ mb: { xs: 4, sm: 5, md: 6 }, textAlign: 'center' }}>
               <Typography 
                 variant="h2" 
                 component="h1" 
                 sx={{
                   fontWeight: 800,
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
+                  color: '#1e40af',
                   mb: 2,
                 }}
               >
@@ -190,54 +191,62 @@ const CommunityPage: React.FC = () => {
                 さん！
               </Typography>
               
-              {/* 検索窓 */}
-              <Paper 
-                component="form"
-                onSubmit={handleSearch}
+              {/* 検索バー */}
+              <Paper
                 elevation={0}
-                sx={{ 
-                  p: 2, 
-                  mb: 4,
-                  backgroundColor: '#ffffff',
-                  border: '1px solid rgba(0, 0, 0, 0.08)',
-                  borderRadius: 3,
+                sx={{
                   maxWidth: 600,
                   mx: 'auto',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+                  mb: { xs: 3, sm: 4 },
+                  borderRadius: 3,
+                  border: '1px solid rgba(0, 0, 0, 0.08)',
+                  overflow: 'hidden',
                 }}
               >
-                <TextField
-                  fullWidth
-                  placeholder="投稿内容やユーザー名を検索..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  variant="outlined"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon sx={{ color: 'text.secondary' }} />
-                      </InputAdornment>
-                    ),
-                  }}
+                <Box
+                  component="form"
+                  onSubmit={handleSearch}
                   sx={{
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': {
-                        border: 'none',
-                      },
-                      '&:hover fieldset': {
-                        border: 'none',
-                      },
-                      '&.Mui-focused fieldset': {
-                        border: '2px solid',
-                        borderColor: 'primary.main',
-                      },
-                    },
+                    display: 'flex',
+                    alignItems: 'center',
+                    backgroundColor: '#fafafb',
                   }}
-                />
+                >
+                  <InputBase
+                    placeholder="投稿やユーザーを検索..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    sx={{
+                      flex: 1,
+                      px: { xs: 2, sm: 3 },
+                      py: { xs: 1.5, sm: 2 },
+                      fontSize: { xs: '0.875rem', sm: '1rem' },
+                      '& .MuiInputBase-input': {
+                        color: '#1f2937',
+                        '&::placeholder': {
+                          color: '#9ca3af',
+                          opacity: 1,
+                        },
+                      },
+                    }}
+                  />
+                  <IconButton
+                    type="submit"
+                    sx={{
+                      p: { xs: 1, sm: 1.5 },
+                      color: '#6b7280',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                      },
+                    }}
+                  >
+                    <SearchIcon />
+                  </IconButton>
+                </Box>
               </Paper>
 
               {/* メンバーリストボタン */}
-              <Box sx={{ textAlign: 'center', mb: 4 }}>
+              <Box sx={{ textAlign: 'center', mb: { xs: 3, sm: 4 } }}>
                 <Card
                   elevation={0}
                   sx={{
@@ -249,15 +258,15 @@ const CommunityPage: React.FC = () => {
                     cursor: 'pointer',
                     transition: 'all 0.2s ease-in-out',
                     '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 8px 25px rgba(0, 0, 0, 0.1)',
-                      border: '1px solid rgba(102, 126, 234, 0.3)',
+                      transform: 'translateY(-1px)',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                      border: '1px solid rgba(30, 64, 175, 0.3)',
                     },
                   }}
                   onClick={handleMemberList}
                 >
-                  <CardContent sx={{ p: 3, textAlign: 'center' }}>
-                    <PeopleIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+                  <CardContent sx={{ p: { xs: 2, sm: 3 }, textAlign: 'center' }}>
+                    <PeopleIcon sx={{ fontSize: { xs: 40, sm: 48 }, color: 'primary.main', mb: 2 }} />
                     <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
                       メンバーリスト
                     </Typography>
@@ -269,7 +278,7 @@ const CommunityPage: React.FC = () => {
               </Box>
 
               {/* このコミュニティでできることボタン */}
-              <Box sx={{ textAlign: 'center', mb: 4 }}>
+              <Box sx={{ textAlign: 'center', mb: { xs: 3, sm: 4 } }}>
                 <Card
                   elevation={0}
                   sx={{
@@ -281,15 +290,15 @@ const CommunityPage: React.FC = () => {
                     cursor: 'pointer',
                     transition: 'all 0.2s ease-in-out',
                     '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 8px 25px rgba(0, 0, 0, 0.1)',
-                      border: '1px solid rgba(102, 126, 234, 0.3)',
+                      transform: 'translateY(-1px)',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                      border: '1px solid rgba(30, 64, 175, 0.3)',
                     },
                   }}
                   onClick={handleFeatures}
                 >
-                  <CardContent sx={{ p: 3, textAlign: 'center' }}>
-                    <InfoIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+                  <CardContent sx={{ p: { xs: 2, sm: 3 }, textAlign: 'center' }}>
+                    <InfoIcon sx={{ fontSize: { xs: 40, sm: 48 }, color: 'primary.main', mb: 2 }} />
                     <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
                       このコミュニティでできること
                     </Typography>
@@ -302,7 +311,7 @@ const CommunityPage: React.FC = () => {
             </Box>
 
             {/* カテゴリセクション */}
-            <Stack spacing={3}>
+            <Stack spacing={{ xs: 2, sm: 3 }}>
               {categories.map((category) => (
                 <Fade in key={category.id} timeout={800} style={{ transitionDelay: `${category.id * 100}ms` }}>
                   <Card 
@@ -313,148 +322,120 @@ const CommunityPage: React.FC = () => {
                       overflow: 'hidden',
                       transition: 'all 0.3s ease-in-out',
                       '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
                       },
                     }}
                   >
                     <Accordion
-                      expanded={!category.is_collapsed}
+                      expanded={expandedCategories.includes(category.id)}
                       onChange={() => handleCategoryToggle(category.id)}
-                      elevation={0}
                       sx={{
                         '&:before': { display: 'none' },
-                        borderRadius: 0,
+                        '& .MuiAccordionSummary-root': {
+                          backgroundColor: '#ffffff',
+                          minHeight: { xs: 56, sm: 64 },
+                          '&:hover': {
+                            backgroundColor: '#fafafb',
+                          },
+                        },
+                        '& .MuiAccordionSummary-content': {
+                          margin: { xs: '8px 0', sm: '12px 0' },
+                        },
+                        '& .MuiAccordionDetails-root': {
+                          padding: { xs: '8px 16px 16px', sm: '16px 24px 24px' },
+                        },
                       }}
                     >
                       <AccordionSummary
-                        expandIcon={<ExpandMoreIcon sx={{ color: 'text.primary' }} />}
-                        sx={{ 
-                          backgroundColor: '#ffffff',
-                          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-                          '&:hover': { 
-                            backgroundColor: '#f9fafb',
-                          },
-                          '& .MuiAccordionSummary-content': {
-                            alignItems: 'center',
-                            py: 2,
+                        expandIcon={<ExpandMoreIcon />}
+                        sx={{
+                          '& .MuiAccordionSummary-expandIconWrapper': {
+                            color: '#6b7280',
                           },
                         }}
                       >
-                        <Stack direction="row" spacing={2} alignItems="center" sx={{ width: '100%' }}>
-                          <Avatar
-                            sx={{
-                              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                              width: 36,
-                              height: 36,
-                            }}
-                          >
-                            <TagIcon sx={{ color: 'white', fontSize: 20 }} />
-                          </Avatar>
+                        <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                           <Typography 
-                            variant="h5" 
+                            variant="h6" 
                             sx={{ 
-                              fontWeight: 700, 
-                              flexGrow: 1,
-                              color: 'text.primary',
+                              fontWeight: 600,
+                              fontSize: { xs: '1rem', sm: '1.125rem' },
+                              color: '#1f2937',
                             }}
                           >
                             {category.name}
                           </Typography>
                           <Chip
-                            label={`${channels[category.id]?.length || 0} チャンネル`}
+                            label={`${category.channels.length}チャンネル`}
                             size="small"
-                            sx={{ 
-                              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                              color: 'white',
-                              fontWeight: 600,
+                            sx={{
+                              ml: 'auto',
+                              mr: 2,
+                              backgroundColor: '#f3f4f6',
+                              color: '#6b7280',
+                              fontSize: { xs: '0.75rem', sm: '0.8rem' },
                             }}
                           />
-                        </Stack>
+                        </Box>
                       </AccordionSummary>
-                      
-                      <AccordionDetails sx={{ p: 0 }}>
-                        {channels[category.id]?.length > 0 ? (
-                          <List disablePadding>
-                            {channels[category.id].map((channel) => (
-                              <ListItem key={channel.id} disablePadding>
-                                <ListItemButton
-                                  onClick={() => handleChannelClick(channel.id)}
-                                  sx={{
-                                    py: 3,
-                                    px: 3,
-                                    '&:hover': { 
-                                      bgcolor: 'rgba(102, 126, 234, 0.04)',
-                                      transform: 'translateX(8px)',
-                                    },
-                                    transition: 'all 0.2s ease-in-out',
-                                  }}
-                                >
-                                  <ListItemIcon>
-                                    <ChatIcon 
+                      <AccordionDetails>
+                        <Grid container spacing={{ xs: 1, sm: 2 }}>
+                          {category.channels.map((channel) => (
+                            <Grid item xs={12} sm={6} md={4} key={channel.id}>
+                              <Card
+                                elevation={0}
+                                sx={{
+                                  cursor: 'pointer',
+                                  border: '1px solid rgba(0, 0, 0, 0.06)',
+                                  borderRadius: 2,
+                                  transition: 'all 0.2s ease-in-out',
+                                  '&:hover': {
+                                    transform: 'translateY(-1px)',
+                                    boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.1)',
+                                    border: '1px solid rgba(30, 64, 175, 0.2)',
+                                  },
+                                }}
+                                onClick={() => handleChannelClick(channel.id)}
+                              >
+                                <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                    <Typography 
+                                      variant="subtitle1" 
                                       sx={{ 
-                                        color: 'primary.main',
-                                        fontSize: 28,
-                                      }} 
+                                        fontWeight: 600,
+                                        fontSize: { xs: '0.875rem', sm: '1rem' },
+                                        color: '#1f2937',
+                                        flex: 1,
+                                      }}
+                                    >
+                                      {channel.name}
+                                    </Typography>
+                                    <Chip
+                                      label={getChannelTypeLabel(channel.type)}
+                                      color={getChannelTypeColor(channel.type) as any}
+                                      size="small"
+                                      sx={{
+                                        fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                                        height: { xs: 20, sm: 24 },
+                                      }}
                                     />
-                                  </ListItemIcon>
-                                  <ListItemText
-                                    primary={
-                                      <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 1 }}>
-                                        <Typography variant="h6" fontWeight={600}>
-                                          {channel.name}
-                                        </Typography>
-                                        <Chip
-                                          label={getChannelTypeLabel(channel.channel_type)}
-                                          size="small"
-                                          color={getChannelTypeColor(channel.channel_type) as any}
-                                          variant="outlined"
-                                          sx={{ fontWeight: 500 }}
-                                        />
-                                      </Stack>
-                                    }
-                                    secondary={
-                                      <Stack direction="row" spacing={3} alignItems="center" sx={{ mt: 1 }}>
-                                        {channel.description && (
-                                          <Typography variant="body2" color="text.secondary">
-                                            {channel.description}
-                                          </Typography>
-                                        )}
-                                        <Badge
-                                          badgeContent={channel.post_count}
-                                          color="primary"
-                                          showZero
-                                          sx={{
-                                            '& .MuiBadge-badge': {
-                                              fontWeight: 600,
-                                            },
-                                          }}
-                                        >
-                                          <Stack direction="row" spacing={1} alignItems="center">
-                                            <PeopleIcon fontSize="small" color="action" />
-                                            <Typography variant="caption" color="text.secondary">
-                                              投稿
-                                            </Typography>
-                                          </Stack>
-                                        </Badge>
-                                      </Stack>
-                                    }
-                                  />
-                                </ListItemButton>
-                              </ListItem>
-                            ))}
-                          </List>
-                        ) : (
-                          <Box sx={{ p: 6, textAlign: 'center' }}>
-                            <ChatIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
-                            <Typography variant="h6" color="text.secondary" gutterBottom>
-                              チャンネルがありません
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              このカテゴリにはまだチャンネルが作成されていません
-                            </Typography>
-                          </Box>
-                        )}
+                                  </Box>
+                                  <Typography 
+                                    variant="body2" 
+                                    color="text.secondary"
+                                    sx={{
+                                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                                      lineHeight: 1.4,
+                                    }}
+                                  >
+                                    {channel.description || '説明なし'}
+                                  </Typography>
+                                </CardContent>
+                              </Card>
+                            </Grid>
+                          ))}
+                        </Grid>
                       </AccordionDetails>
                     </Accordion>
                   </Card>
