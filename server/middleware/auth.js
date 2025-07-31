@@ -5,6 +5,10 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 // JWT認証ミドルウェア
 const authenticateToken = (req, res, next) => {
+  console.log('=== Authentication Middleware Start ===');
+  console.log('Request URL:', req.url);
+  console.log('Request method:', req.method);
+  
   try {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -61,6 +65,7 @@ const authenticateToken = (req, res, next) => {
             // トークンから取得した情報を使用
             req.user = user;
             console.log('Final req.user (from token):', req.user);
+            console.log('=== Authentication Middleware End (token user) ===');
             next();
             return;
           } else {
@@ -69,6 +74,7 @@ const authenticateToken = (req, res, next) => {
             console.log('Using found user:', foundUser);
             req.user = { ...user, ...foundUser };
             console.log('Final req.user (from database):', req.user);
+            console.log('=== Authentication Middleware End (database user) ===');
             next();
             return;
           }
@@ -77,17 +83,20 @@ const authenticateToken = (req, res, next) => {
         console.log('User found in database:', dbUser);
         req.user = { ...user, ...dbUser };
         console.log('Final req.user:', req.user);
+        console.log('=== Authentication Middleware End (normal) ===');
         next();
       } catch (dbError) {
         console.error('Database error in authentication middleware:', dbError);
         // データベースエラーが発生した場合でも、トークンから取得した情報を使用
         req.user = user;
         console.log('Using token user due to database error:', req.user);
+        console.log('=== Authentication Middleware End (error fallback) ===');
         next();
       }
     });
   } catch (error) {
     console.error('Authentication middleware error:', error);
+    console.log('=== Authentication Middleware End (outer error) ===');
     return res.status(500).json({ error: '認証処理中にエラーが発生しました' });
   }
 };

@@ -7,6 +7,12 @@ const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
+// ルーターのログ
+router.use((req, res, next) => {
+  console.log(`=== Auth Router: ${req.method} ${req.path} ===`);
+  next();
+});
+
 // ユーザー登録
 router.post('/register', async (req, res) => {
   try {
@@ -244,7 +250,7 @@ router.get('/debug/db-status', (req, res) => {
 
 // ユーザー一覧を取得（誰でも閲覧可、機微情報は除外）
 router.get('/users/public', authenticateToken, (req, res) => {
-  console.log('=== Users/Public Debug ===');
+  console.log('=== Users/Public Endpoint Start ===');
   console.log('Request user:', req.user);
   console.log('Fetching public users list...');
   
@@ -254,6 +260,7 @@ router.get('/users/public', authenticateToken, (req, res) => {
     const tableCheck = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='users'").get();
     if (!tableCheck) {
       console.error('Users table does not exist');
+      console.log('=== Users/Public Endpoint End (table not found) ===');
       return res.status(500).json({ error: 'データベーステーブルが存在しません' });
     }
 
@@ -271,9 +278,11 @@ router.get('/users/public', authenticateToken, (req, res) => {
     console.log('Sending response with users');
     res.json({ users });
     console.log('Response sent successfully');
+    console.log('=== Users/Public Endpoint End (success) ===');
   } catch (error) {
     console.error('ユーザー一覧取得エラー:', error);
     console.error('Error stack:', error.stack);
+    console.log('=== Users/Public Endpoint End (error) ===');
     res.status(500).json({ error: 'ユーザー一覧の取得に失敗しました' });
   }
 });
