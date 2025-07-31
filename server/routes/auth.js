@@ -245,6 +245,8 @@ router.get('/debug/db-status', (req, res) => {
 // ユーザー一覧を取得（誰でも閲覧可、機微情報は除外）
 router.get('/users/public', authenticateToken, (req, res) => {
   try {
+    console.log('=== Users/Public Debug ===');
+    console.log('Request user:', req.user);
     console.log('Fetching public users list...');
     
     // データベースの状態を確認
@@ -261,6 +263,7 @@ router.get('/users/public', authenticateToken, (req, res) => {
     `).all();
 
     console.log(`Found ${users.length} users`);
+    console.log('Users:', users);
     res.json({ users });
   } catch (error) {
     console.error('ユーザー一覧取得エラー:', error);
