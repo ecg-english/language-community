@@ -274,9 +274,8 @@ router.get('/users/test', (req, res) => {
 });
 
 // ユーザー一覧を取得（誰でも閲覧可、機微情報は除外）
-router.get('/users/public', authenticateToken, (req, res) => {
+router.get('/users/public', (req, res) => {
   console.log('=== Users/Public Endpoint Start ===');
-  console.log('Request user:', req.user);
   console.log('Fetching public users list...');
   
   try {
