@@ -211,10 +211,26 @@ router.put('/profile', authenticateToken, async (req, res) => {
 });
 
 // ユーザー一覧を取得（誰でも閲覧可、機微情報は除外）
-router.get('/users', authenticateToken, (req, res) => {
+router.get('/users/public', authenticateToken, (req, res) => {
   try {
     const users = db.prepare(`
       SELECT id, username, role, avatar_url, created_at
+      FROM users
+      ORDER BY created_at DESC
+    `).all();
+
+    res.json({ users });
+  } catch (error) {
+    console.error('ユーザー一覧取得エラー:', error);
+    res.status(500).json({ error: 'ユーザー一覧の取得に失敗しました' });
+  }
+});
+
+// ユーザー一覧を取得（管理者のみ、メールアドレス含む）
+router.get('/users', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const users = db.prepare(`
+      SELECT id, username, email, role, avatar_url, created_at
       FROM users
       ORDER BY created_at DESC
     `).all();

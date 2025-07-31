@@ -38,42 +38,39 @@ interface Member {
 const MembersPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [members, setMembers] = useState<Member[]>([]);
-  const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
+  const [users, setUsers] = useState<Member[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    const fetchMembers = async () => {
+    const loadUsers = async () => {
       try {
         setLoading(true);
-        setError(null);
-        
-        const response = await axios.get('/api/auth/users');
-        setMembers(response.data.users);
-        setFilteredMembers(response.data.users);
-      } catch (error: any) {
-        console.error('メンバー取得エラー:', error);
-        setError('メンバー一覧の取得に失敗しました');
+        const response = await axios.get('/api/auth/users/public');
+        setUsers(response.data.users || []);
+      } catch (error) {
+        console.error('ユーザー一覧取得エラー:', error);
+        setError('ユーザー一覧の取得に失敗しました');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchMembers();
+    loadUsers();
   }, []);
 
   useEffect(() => {
-    const filtered = members.filter(member =>
-      member.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (member.bio && member.bio.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (member.goal && member.goal.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (member.message && member.message.toLowerCase().includes(searchQuery.toLowerCase()))
+    const filtered = users.filter(user =>
+      user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (user.bio && user.bio.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (user.goal && user.goal.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (user.message && user.message.toLowerCase().includes(searchQuery.toLowerCase()))
     );
-    setFilteredMembers(filtered);
-  }, [searchQuery, members]);
+    setFilteredUsers(filtered);
+  }, [searchQuery, users]);
 
   const handleMemberClick = (memberId: number) => {
     navigate(`/profile/${memberId}`);
@@ -114,7 +111,7 @@ const MembersPage: React.FC = () => {
   };
 
   const getRoleCount = (role: string) => {
-    return members.filter(member => member.role === role).length;
+    return users.filter(user => user.role === role).length;
   };
 
   if (loading) {
@@ -172,7 +169,7 @@ const MembersPage: React.FC = () => {
             size="small"
           />
           <Chip
-            label={`総数: ${members.length}`}
+            label={`総数: ${users.length}`}
             color="primary"
             size="small"
           />
@@ -211,7 +208,7 @@ const MembersPage: React.FC = () => {
       </Box>
 
       {/* メンバー一覧 */}
-      {filteredMembers.length === 0 ? (
+      {filteredUsers.length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <Typography variant="h6" color="text.secondary">
             {searchQuery ? '検索結果が見つかりません' : 'メンバーがいません'}
@@ -219,8 +216,8 @@ const MembersPage: React.FC = () => {
         </Box>
       ) : (
         <Grid container spacing={3}>
-          {filteredMembers.map((member) => (
-            <Grid item xs={12} sm={6} md={4} key={member.id}>
+          {filteredUsers.map((user) => (
+            <Grid item xs={12} sm={6} md={4} key={user.id}>
               <Card
                 elevation={0}
                 sx={{
@@ -234,7 +231,7 @@ const MembersPage: React.FC = () => {
                     border: '1px solid rgba(102, 126, 234, 0.3)',
                   },
                 }}
-                onClick={() => handleMemberClick(member.id)}
+                onClick={() => handleMemberClick(user.id)}
               >
                 <CardContent sx={{ p: 3 }}>
                   {/* ヘッダー部分 */}
@@ -248,23 +245,23 @@ const MembersPage: React.FC = () => {
                         mr: 2,
                       }}
                     >
-                      {member.username.charAt(0).toUpperCase()}
+                      {user.username.charAt(0).toUpperCase()}
                     </Avatar>
                     <Box sx={{ flex: 1 }}>
                       <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-                        {member.username}
+                        {user.username}
                       </Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Chip
-                          label={member.role}
-                          color={getRoleColor(member.role) as any}
+                          label={user.role}
+                          color={getRoleColor(user.role) as any}
                           size="small"
-                          icon={getRoleIcon(member.role)}
+                          icon={getRoleIcon(user.role)}
                         />
                         <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
                           <CalendarIcon sx={{ fontSize: 14, mr: 0.5 }} />
                           <Typography variant="caption">
-                            {formatDate(member.created_at)}
+                            {formatDate(user.created_at)}
                           </Typography>
                         </Box>
                       </Box>
@@ -272,7 +269,7 @@ const MembersPage: React.FC = () => {
                   </Box>
 
                   {/* 目標 */}
-                  {member.goal && (
+                  {user.goal && (
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                         学習目標
@@ -287,13 +284,13 @@ const MembersPage: React.FC = () => {
                           lineHeight: 1.4,
                         }}
                       >
-                        {member.goal}
+                        {user.goal}
                       </Typography>
                     </Box>
                   )}
 
                   {/* 一言メッセージ */}
-                  {member.message && (
+                  {user.message && (
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                         一言メッセージ
@@ -308,13 +305,13 @@ const MembersPage: React.FC = () => {
                           lineHeight: 1.4,
                         }}
                       >
-                        {member.message}
+                        {user.message}
                       </Typography>
                     </Box>
                   )}
 
                   {/* 自己紹介 */}
-                  {member.bio && (
+                  {user.bio && (
                     <Box>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                         自己紹介
@@ -329,7 +326,7 @@ const MembersPage: React.FC = () => {
                           lineHeight: 1.4,
                         }}
                       >
-                        {member.bio}
+                        {user.bio}
                       </Typography>
                     </Box>
                   )}
