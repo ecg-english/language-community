@@ -69,6 +69,20 @@ const upload = multer({
 // 静的ファイル配信
 app.use('/uploads', express.static(uploadsDir));
 
+// テスト用エンドポイント（直接サーバーに追加）
+app.get('/api/test/users', (req, res) => {
+  try {
+    console.log('=== Direct Test Endpoint ===');
+    const db = require('./database');
+    const users = db.prepare('SELECT id, username, role FROM users').all();
+    console.log(`Found ${users.length} users in direct test`);
+    res.json({ users });
+  } catch (error) {
+    console.error('Direct test endpoint error:', error);
+    res.status(500).json({ error: 'Direct test failed' });
+  }
+});
+
 // ルート
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/channels', require('./routes/channels'));

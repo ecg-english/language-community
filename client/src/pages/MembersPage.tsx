@@ -47,13 +47,13 @@ const MembersPage: React.FC = () => {
 
   const testEndpoint = async () => {
     try {
-      console.log('Testing endpoint without authentication...');
-      const response = await axios.get('/api/auth/users/test');
-      console.log('Test response:', response.data);
-      alert('Test endpoint works! Users: ' + response.data.users.length);
+      console.log('Testing direct endpoint...');
+      const response = await axios.get('/api/test/users');
+      console.log('Direct test response:', response.data);
+      alert('Direct test endpoint works! Users: ' + response.data.users.length);
     } catch (error: any) {
-      console.error('Test endpoint error:', error);
-      alert('Test endpoint failed: ' + error.response?.data?.error || error.message);
+      console.error('Direct test endpoint error:', error);
+      alert('Direct test endpoint failed: ' + error.response?.data?.error || error.message);
     }
   };
 

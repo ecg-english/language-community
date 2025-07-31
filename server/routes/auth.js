@@ -13,6 +13,12 @@ router.use((req, res, next) => {
   next();
 });
 
+// エラーハンドリングミドルウェア（authルーター用）
+router.use((error, req, res, next) => {
+  console.error('Auth router error:', error);
+  res.status(500).json({ error: 'Auth router error' });
+});
+
 // ユーザー登録
 router.post('/register', async (req, res) => {
   try {
