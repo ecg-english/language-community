@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.js": "/language-community/static/js/main.8824f560.js",
+    "main.js": "/language-community/static/js/main.cadff4e2.js",
     "index.html": "/language-community/index.html",
-    "main.8824f560.js.map": "/language-community/static/js/main.8824f560.js.map"
+    "main.cadff4e2.js.map": "/language-community/static/js/main.cadff4e2.js.map"
   },
   "entrypoints": [
-    "static/js/main.8824f560.js"
+    "static/js/main.cadff4e2.js"
   ]
 }
