@@ -210,12 +210,12 @@ router.put('/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// ユーザー一覧の取得（管理者のみ）
-router.get('/users', authenticateToken, requireAdmin, (req, res) => {
+// ユーザー一覧を取得（誰でも閲覧可、機微情報は除外）
+router.get('/users', authenticateToken, (req, res) => {
   try {
     const users = db.prepare(`
-      SELECT id, username, email, role, bio, avatar_url, created_at 
-      FROM users 
+      SELECT id, username, role, avatar_url, created_at
+      FROM users
       ORDER BY created_at DESC
     `).all();
 
