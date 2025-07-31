@@ -44,11 +44,11 @@ const LoginPage: React.FC = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(180deg, #fafafb 0%, #f3f4f6 100%)',
+        backgroundColor: '#ffffff',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 2,
+        padding: { xs: 1, sm: 2 },
       }}
     >
       <Container component="main" maxWidth="sm">
@@ -57,30 +57,30 @@ const LoginPage: React.FC = () => {
             elevation={0}
             sx={{ 
               backgroundColor: '#ffffff',
-              border: '1px solid rgba(0, 0, 0, 0.06)',
+              border: '1px solid rgba(0, 0, 0, 0.08)',
               borderRadius: 3,
-              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
             }}
           >
-            <CardContent sx={{ p: 5 }}>
+            <CardContent sx={{ p: { xs: 3, sm: 5 } }}>
               <Box
                 sx={{
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  mb: 4,
+                  mb: { xs: 3, sm: 4 },
                 }}
               >
                 <Avatar
                   sx={{
-                    width: 72,
-                    height: 72,
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    mb: 3,
-                    boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
+                    width: { xs: 60, sm: 72 },
+                    height: { xs: 60, sm: 72 },
+                    backgroundColor: '#1e40af',
+                    mb: { xs: 2, sm: 3 },
+                    boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.1)',
                   }}
                 >
-                  <Language sx={{ fontSize: 40 }} />
+                  <Language sx={{ fontSize: { xs: 32, sm: 40 } }} />
                 </Avatar>
                 
                 <Typography 
@@ -88,12 +88,10 @@ const LoginPage: React.FC = () => {
                   variant="h4" 
                   sx={{
                     fontWeight: 700,
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    backgroundClip: 'text',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
+                    color: '#1e40af',
                     mb: 1,
                     textAlign: 'center',
+                    fontSize: { xs: '1.5rem', sm: '2.125rem' },
                   }}
                 >
                   言語学習コミュニティ
@@ -107,6 +105,7 @@ const LoginPage: React.FC = () => {
                     maxWidth: 400,
                     lineHeight: 1.6,
                     fontWeight: 400,
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
                   }}
                 >
                   英語を学ぶ日本人と日本語を学ぶ外国人のための
@@ -115,7 +114,7 @@ const LoginPage: React.FC = () => {
                 </Typography>
               </Box>
 
-              <Divider sx={{ mb: 4, borderColor: 'rgba(0, 0, 0, 0.08)' }} />
+              <Divider sx={{ mb: { xs: 3, sm: 4 }, borderColor: 'rgba(0, 0, 0, 0.08)' }} />
 
               {error && (
                 <Fade in>
@@ -194,30 +193,18 @@ const LoginPage: React.FC = () => {
                   variant="contained"
                   disabled={isLoading}
                   sx={{
-                    py: 1.8,
+                    py: { xs: 1.5, sm: 1.8 },
                     mb: 3,
-                    fontSize: '1rem',
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
                     fontWeight: 600,
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    backgroundColor: '#1e40af',
                     border: 'none',
                     position: 'relative',
                     overflow: 'hidden',
-                    '&:before': {
-                      content: '""',
-                      position: 'absolute',
-                      top: 0,
-                      left: '-100%',
-                      width: '100%',
-                      height: '100%',
-                      background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
-                      transition: 'left 0.5s',
-                    },
-                    '&:hover:before': {
-                      left: '100%',
-                    },
                     '&:hover': {
+                      backgroundColor: '#1e3a8a',
                       transform: 'translateY(-1px)',
-                      boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
                     },
                   }}
                 >
@@ -233,6 +220,7 @@ const LoginPage: React.FC = () => {
                       textDecoration: 'none',
                       color: 'primary.main',
                       fontWeight: 500,
+                      fontSize: { xs: '0.875rem', sm: '1rem' },
                       '&:hover': {
                         textDecoration: 'underline',
                       },
@@ -246,15 +234,16 @@ const LoginPage: React.FC = () => {
           </Card>
         </Fade>
 
-        <Box sx={{ mt: 4, textAlign: 'center' }}>
+        <Box sx={{ mt: { xs: 3, sm: 4 }, textAlign: 'center' }}>
           <Typography 
             variant="body2" 
             sx={{ 
               color: 'text.secondary',
               fontWeight: 400,
+              fontSize: { xs: '0.75rem', sm: '0.875rem' },
             }}
           >
-            © 2024 言語学習コミュニティ. All rights reserved.
+            © 2025 英会話ジム ECG. All rights reserved.
           </Typography>
         </Box>
       </Container>
