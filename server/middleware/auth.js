@@ -27,10 +27,29 @@ const authenticateToken = (req, res, next) => {
     console.log('User from token:', { userId: user.userId, username: user.username, role: user.role });
     
     // データベースでユーザーの存在確認
+    console.log('Checking database for user ID:', user.userId);
     const dbUser = db.prepare('SELECT id, username, role FROM users WHERE id = ?').get(user.userId);
+    
     if (!dbUser) {
-      console.log('User not found in database:', user.userId);
-      return res.status(404).json({ error: 'ユーザーが見つかりません' });
+      console.log('User not found in database. Checking all users...');
+      const allUsers = db.prepare('SELECT id, username, role FROM users').all();
+      console.log('All users in database:', allUsers);
+      console.log('Token user ID:', user.userId, 'Type:', typeof user.userId);
+      
+      // ユーザーIDの型を確認
+      const numericUserId = parseInt(user.userId);
+      console.log('Numeric user ID:', numericUserId);
+      const dbUserByNumeric = db.prepare('SELECT id, username, role FROM users WHERE id = ?').get(numericUserId);
+      console.log('User found with numeric ID:', dbUserByNumeric);
+      
+      if (!dbUserByNumeric) {
+        return res.status(404).json({ error: 'ユーザーが見つかりません' });
+      } else {
+        console.log('User found with numeric ID, using that');
+        req.user = { ...user, ...dbUserByNumeric };
+        next();
+        return;
+      }
     }
     
     console.log('User found in database:', dbUser);

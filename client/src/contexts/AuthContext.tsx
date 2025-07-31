@@ -49,9 +49,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const checkAuthStatus = async () => {
     try {
+      console.log('=== AuthContext Debug ===');
+      const token = localStorage.getItem('token');
+      console.log('Token in localStorage:', !!token);
+      
+      if (token) {
+        try {
+          const tokenParts = token.split('.');
+          if (tokenParts.length === 3) {
+            const payload = JSON.parse(atob(tokenParts[1]));
+            console.log('Token payload in AuthContext:', payload);
+          }
+        } catch (e) {
+          console.log('Could not decode token payload in AuthContext');
+        }
+      }
+      
       const response = await axios.get('/api/auth/me');
+      console.log('Auth status response:', response.data);
       setUser(response.data.user);
     } catch (error) {
+      console.error('Auth status check failed:', error);
       localStorage.removeItem('token');
       delete axios.defaults.headers.common['Authorization'];
     } finally {

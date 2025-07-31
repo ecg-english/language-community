@@ -54,6 +54,19 @@ const MembersPage: React.FC = () => {
         const token = localStorage.getItem('token');
         console.log('Token present:', !!token);
         
+        // トークンの内容をデコードして確認
+        if (token) {
+          try {
+            const tokenParts = token.split('.');
+            if (tokenParts.length === 3) {
+              const payload = JSON.parse(atob(tokenParts[1]));
+              console.log('Token payload:', payload);
+            }
+          } catch (e) {
+            console.log('Could not decode token payload');
+          }
+        }
+        
         const response = await axios.get('/api/auth/users/public');
         console.log('Response received:', response.data);
         
