@@ -8,15 +8,33 @@ const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
+  console.log('=== Authentication Debug ===');
+  console.log('Auth header:', authHeader);
+  console.log('Token:', token ? 'Present' : 'Missing');
+
   if (!token) {
+    console.log('No token provided');
     return res.status(401).json({ error: 'アクセストークンが必要です' });
   }
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) {
+      console.log('Token verification failed:', err.message);
       return res.status(403).json({ error: '無効なトークンです' });
     }
-    req.user = user;
+    
+    console.log('Token verified successfully');
+    console.log('User from token:', { userId: user.userId, username: user.username, role: user.role });
+    
+    // データベースでユーザーの存在確認
+    const dbUser = db.prepare('SELECT id, username, role FROM users WHERE id = ?').get(user.userId);
+    if (!dbUser) {
+      console.log('User not found in database:', user.userId);
+      return res.status(404).json({ error: 'ユーザーが見つかりません' });
+    }
+    
+    console.log('User found in database:', dbUser);
+    req.user = { ...user, ...dbUser };
     next();
   });
 };

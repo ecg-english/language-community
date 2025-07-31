@@ -50,12 +50,34 @@ const MembersPage: React.FC = () => {
         setLoading(true);
         setError(null);
         
+        console.log('Fetching members from:', '/api/auth/users/public');
+        const token = localStorage.getItem('token');
+        console.log('Token present:', !!token);
+        
         const response = await axios.get('/api/auth/users/public');
-        setMembers(response.data.users);
-        setFilteredMembers(response.data.users);
+        console.log('Response received:', response.data);
+        
+        if (response.data.users) {
+          setMembers(response.data.users);
+          setFilteredMembers(response.data.users);
+        } else {
+          console.error('No users array in response:', response.data);
+          setError('レスポンスにユーザー情報が含まれていません');
+        }
       } catch (error: any) {
         console.error('ユーザー一覧取得エラー:', error);
-        setError(t('userListFailed'));
+        console.error('Error response:', error.response?.data);
+        console.error('Error status:', error.response?.status);
+        
+        if (error.response?.status === 404) {
+          setError('ユーザーが見つかりません。データベースを確認してください。');
+        } else if (error.response?.status === 401) {
+          setError('認証エラーです。再度ログインしてください。');
+        } else if (error.response?.status === 403) {
+          setError('アクセス権限がありません。');
+        } else {
+          setError(t('userListFailed'));
+        }
       } finally {
         setLoading(false);
       }

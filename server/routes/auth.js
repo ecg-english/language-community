@@ -211,6 +211,34 @@ router.put('/profile', authenticateToken, async (req, res) => {
   }
 });
 
+// デバッグ用：データベース状態確認
+router.get('/debug/db-status', (req, res) => {
+  try {
+    console.log('=== Database Debug ===');
+    
+    // テーブル一覧を取得
+    const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
+    console.log('Available tables:', tables);
+    
+    // ユーザーテーブルの行数を確認
+    const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get();
+    console.log('User count:', userCount);
+    
+    // 最新のユーザーを確認
+    const latestUsers = db.prepare('SELECT id, username, role, created_at FROM users ORDER BY created_at DESC LIMIT 5').all();
+    console.log('Latest users:', latestUsers);
+    
+    res.json({
+      tables: tables.map(t => t.name),
+      userCount: userCount.count,
+      latestUsers: latestUsers
+    });
+  } catch (error) {
+    console.error('Database debug error:', error);
+    res.status(500).json({ error: 'データベースデバッグエラー', details: error.message });
+  }
+});
+
 // ユーザー一覧を取得（誰でも閲覧可、機微情報は除外）
 router.get('/users/public', authenticateToken, (req, res) => {
   try {
