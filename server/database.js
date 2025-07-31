@@ -1,7 +1,15 @@
+const fs = require('fs');
 const Database = require('better-sqlite3');
 const path = require('path');
 
-const dbPath = path.join(__dirname, 'community.db');
+// データベースファイルのパスを環境変数または Render の Disk に切り替え
+const defaultPath = path.join(__dirname, 'community.db');
+const renderDiskPath = path.join('/opt/render/data', 'community.db');
+const dbPath = process.env.DATABASE_PATH || (fs.existsSync('/opt/render/data') ? renderDiskPath : defaultPath);
+
+// ディレクトリが無い場合は作成（ローカル初回など）
+fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+
 const db = new Database(dbPath);
 
 // WALモードを有効化
