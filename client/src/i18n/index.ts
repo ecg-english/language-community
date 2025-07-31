@@ -21,6 +21,9 @@ const en = {
     loading: 'Loading...',
     error: 'Error',
     success: 'Success',
+    back: 'Back',
+    close: 'Close',
+    confirm: 'Confirm',
     
     // ログイン・登録
     email: 'Email',
@@ -31,6 +34,9 @@ const en = {
     creatingAccount: 'Creating account...',
     noAccount: "Don't have an account? Click here",
     haveAccount: 'Already have an account? Click here',
+    loginFailed: 'Login failed',
+    registrationFailed: 'Registration failed',
+    passwordMismatch: 'Passwords do not match',
     
     // コミュニティ
     searchPosts: 'Search posts and users...',
@@ -38,6 +44,16 @@ const en = {
     featuresDescription: 'Learn about community features',
     noChannels: 'No channels available',
     noPosts: 'No posts yet',
+    channelNotFound: 'Channel not found',
+    noPostPermission: 'No posting permission',
+    postContent: 'Post content',
+    post: 'Post',
+    like: 'Like',
+    comment: 'Comment',
+    comments: 'Comments',
+    noComments: 'No comments yet',
+    writeComment: 'Write a comment...',
+    sendComment: 'Send',
     
     // プロフィール
     learningGoal: 'Learning Goal',
@@ -47,6 +63,8 @@ const en = {
     messageNotSet: 'Message not set',
     bioNotSet: 'Self introduction not set',
     registrationDate: 'Registration Date',
+    profileUpdateSuccess: 'Profile updated successfully',
+    profileUpdateFailed: 'Failed to update profile',
     
     // イベント
     upcomingEvents: 'Upcoming Events',
@@ -58,6 +76,13 @@ const en = {
     participationMethod: 'Participation Method',
     startTime: 'Start Time',
     endTime: 'End Time',
+    addEvent: 'Add Event',
+    editEvent: 'Edit Event',
+    deleteEvent: 'Delete Event',
+    eventAdded: 'Event added successfully',
+    eventUpdated: 'Event updated successfully',
+    eventDeleted: 'Event deleted successfully',
+    eventFailed: 'Failed to manage event',
     
     // 管理者
     userManagement: 'User Management',
@@ -66,6 +91,18 @@ const en = {
     createCategory: 'Create New Category',
     createChannel: 'Create New Channel',
     changeRole: 'Change Role',
+    categoryName: 'Category Name',
+    channelName: 'Channel Name',
+    channelType: 'Channel Type',
+    allPostAllView: 'All members post, All members view',
+    adminOnlyAllView: 'Admin only post, All members view',
+    adminOnlyInstructorsView: 'Instructors only post, Instructors only view',
+    instructorsPostAllView: 'Instructors only post, All members view',
+    class1PostClass1View: 'Class1 Members post, Class1 Members view',
+    create: 'Create',
+    update: 'Update',
+    roleChanged: 'Role changed successfully',
+    roleChangeFailed: 'Failed to change role',
     
     // ロール
     serverAdmin: 'Server Administrator',
@@ -75,6 +112,17 @@ const en = {
     ecgMember: 'ECG Member',
     jcgMember: 'JCG Member',
     trialParticipant: 'Trial Participant',
+    
+    // エラーメッセージ
+    userListFailed: 'Failed to get user list',
+    channelInfoFailed: 'Failed to get channel information',
+    postsLoadFailed: 'Failed to load posts',
+    eventLoadFailed: 'Failed to load events',
+    networkError: 'Network error occurred',
+    serverError: 'Server error occurred',
+    unauthorized: 'Unauthorized access',
+    forbidden: 'Access forbidden',
+    notFound: 'Resource not found',
   }
 };
 
@@ -98,6 +146,9 @@ const ja = {
     loading: '読み込み中...',
     error: 'エラー',
     success: '成功',
+    back: '戻る',
+    close: '閉じる',
+    confirm: '確認',
     
     // ログイン・登録
     email: 'メールアドレス',
@@ -108,6 +159,9 @@ const ja = {
     creatingAccount: 'アカウント作成中...',
     noAccount: 'アカウントをお持ちでない方はこちら',
     haveAccount: '既にアカウントをお持ちの方はこちら',
+    loginFailed: 'ログインに失敗しました',
+    registrationFailed: 'ユーザー登録に失敗しました',
+    passwordMismatch: 'パスワードが一致しません',
     
     // コミュニティ
     searchPosts: '投稿やユーザーを検索...',
@@ -115,6 +169,16 @@ const ja = {
     featuresDescription: 'コミュニティの機能を詳しく紹介',
     noChannels: 'チャンネルがありません',
     noPosts: '投稿がありません',
+    channelNotFound: 'チャンネルが見つかりません',
+    noPostPermission: '投稿権限がありません',
+    postContent: '投稿内容',
+    post: '投稿',
+    like: 'いいね',
+    comment: 'コメント',
+    comments: 'コメント',
+    noComments: 'コメントがありません',
+    writeComment: 'コメントを書く...',
+    sendComment: '送信',
     
     // プロフィール
     learningGoal: '学習目標',
@@ -124,6 +188,8 @@ const ja = {
     messageNotSet: 'メッセージが設定されていません',
     bioNotSet: '自己紹介が設定されていません',
     registrationDate: '登録日',
+    profileUpdateSuccess: 'プロフィールが更新されました',
+    profileUpdateFailed: 'プロフィールの更新に失敗しました',
     
     // イベント
     upcomingEvents: '今後のイベント',
@@ -135,6 +201,13 @@ const ja = {
     participationMethod: '参加方法',
     startTime: '開始時刻',
     endTime: '終了時刻',
+    addEvent: 'イベント追加',
+    editEvent: 'イベント編集',
+    deleteEvent: 'イベント削除',
+    eventAdded: 'イベントが追加されました',
+    eventUpdated: 'イベントが更新されました',
+    eventDeleted: 'イベントが削除されました',
+    eventFailed: 'イベントの操作に失敗しました',
     
     // 管理者
     userManagement: 'ユーザー管理',
@@ -143,6 +216,18 @@ const ja = {
     createCategory: '新しいカテゴリを作成',
     createChannel: '新しいチャンネルを作成',
     changeRole: 'ロール変更',
+    categoryName: 'カテゴリ名',
+    channelName: 'チャンネル名',
+    channelType: 'チャンネルタイプ',
+    allPostAllView: '全メンバー発言可能・全メンバー閲覧可能',
+    adminOnlyAllView: 'サーバー管理者のみ発言可能・全メンバー閲覧可能',
+    adminOnlyInstructorsView: 'サーバー管理者、ECG講師、JCG講師のみ発言可能・サーバー管理者、ECG講師、JCG講師のみ閲覧可能',
+    instructorsPostAllView: 'サーバー管理者、ECG講師、JCG講師のみ発言可能・全メンバー閲覧可能',
+    class1PostClass1View: '投稿: 管理者・講師・Class1 Members, 閲覧: 管理者・講師・Class1 Members',
+    create: '作成',
+    update: '更新',
+    roleChanged: 'ロールが変更されました',
+    roleChangeFailed: 'ロールの変更に失敗しました',
     
     // ロール
     serverAdmin: 'サーバー管理者',
@@ -152,6 +237,17 @@ const ja = {
     ecgMember: 'ECGメンバー',
     jcgMember: 'JCGメンバー',
     trialParticipant: 'Trial参加者',
+    
+    // エラーメッセージ
+    userListFailed: 'ユーザー一覧の取得に失敗しました',
+    channelInfoFailed: 'チャンネル情報の取得に失敗しました',
+    postsLoadFailed: '投稿の読み込みに失敗しました',
+    eventLoadFailed: 'イベントの読み込みに失敗しました',
+    networkError: 'ネットワークエラーが発生しました',
+    serverError: 'サーバーエラーが発生しました',
+    unauthorized: '認証が必要です',
+    forbidden: 'アクセスが拒否されました',
+    notFound: 'リソースが見つかりません',
   }
 };
 
@@ -175,6 +271,9 @@ const jaSimple = {
     loading: 'よみこみちゅう...',
     error: 'エラー',
     success: 'せいこう',
+    back: 'もどる',
+    close: 'しめる',
+    confirm: 'かくにん',
     
     // ログイン・登録
     email: 'メールアドレス',
@@ -185,6 +284,9 @@ const jaSimple = {
     creatingAccount: 'アカウントさくせいちゅう...',
     noAccount: 'アカウントをもっていないかたはこちら',
     haveAccount: 'すでにアカウントをもっているかたはこちら',
+    loginFailed: 'ログインにしっぱいしました',
+    registrationFailed: 'ユーザーとうろくにしっぱいしました',
+    passwordMismatch: 'パスワードがいっちしません',
     
     // コミュニティ
     searchPosts: 'とうこうやユーザーをけんさく...',
@@ -192,6 +294,16 @@ const jaSimple = {
     featuresDescription: 'コミュニティのきのうをくわしくしょうかい',
     noChannels: 'チャンネルがありません',
     noPosts: 'とうこうがありません',
+    channelNotFound: 'チャンネルが見つかりません',
+    noPostPermission: 'とうこうけんげんがありません',
+    postContent: 'とうこうないよう',
+    post: 'とうこう',
+    like: 'いいね',
+    comment: 'コメント',
+    comments: 'コメント',
+    noComments: 'コメントがありません',
+    writeComment: 'コメントをかく...',
+    sendComment: 'そうしん',
     
     // プロフィール
     learningGoal: 'がくしゅうもくひょう',
@@ -201,6 +313,8 @@ const jaSimple = {
     messageNotSet: 'メッセージがせっていされていません',
     bioNotSet: 'じこしょうかいがせっていされていません',
     registrationDate: 'とうろくび',
+    profileUpdateSuccess: 'プロフィールがこうしんされました',
+    profileUpdateFailed: 'プロフィールのこうしんにしっぱいしました',
     
     // イベント
     upcomingEvents: 'こんごのイベント',
@@ -212,6 +326,13 @@ const jaSimple = {
     participationMethod: 'さんかほうほう',
     startTime: 'かいしじこく',
     endTime: 'しゅうりょうじこく',
+    addEvent: 'イベントついか',
+    editEvent: 'イベントへんしゅう',
+    deleteEvent: 'イベントさくじょ',
+    eventAdded: 'イベントがついかされました',
+    eventUpdated: 'イベントがこうしんされました',
+    eventDeleted: 'イベントがさくじょされました',
+    eventFailed: 'イベントのそうさにしっぱいしました',
     
     // 管理者
     userManagement: 'ユーザーかんり',
@@ -220,6 +341,18 @@ const jaSimple = {
     createCategory: 'あたらしいカテゴリをさくせい',
     createChannel: 'あたらしいチャンネルをさくせい',
     changeRole: 'ロールへんこう',
+    categoryName: 'カテゴリめい',
+    channelName: 'チャンネルめい',
+    channelType: 'チャンネルタイプ',
+    allPostAllView: 'ぜんメンバーはつげんかのう・ぜんメンバーえつらんかのう',
+    adminOnlyAllView: 'サーバーかんりしゃのみはつげんかのう・ぜんメンバーえつらんかのう',
+    adminOnlyInstructorsView: 'サーバーかんりしゃ、ECGきょうし、JCGきょうしのみはつげんかのう・サーバーかんりしゃ、ECGきょうし、JCGきょうしのみえつらんかのう',
+    instructorsPostAllView: 'サーバーかんりしゃ、ECGきょうし、JCGきょうしのみはつげんかのう・ぜんメンバーえつらんかのう',
+    class1PostClass1View: 'とうこう: かんりしゃ・きょうし・Class1 Members, えつらん: かんりしゃ・きょうし・Class1 Members',
+    create: 'さくせい',
+    update: 'こうしん',
+    roleChanged: 'ロールがへんこうされました',
+    roleChangeFailed: 'ロールのへんこうにしっぱいしました',
     
     // ロール
     serverAdmin: 'サーバーかんりしゃ',
@@ -229,6 +362,17 @@ const jaSimple = {
     ecgMember: 'ECGメンバー',
     jcgMember: 'JCGメンバー',
     trialParticipant: 'Trialさんかしゃ',
+    
+    // エラーメッセージ
+    userListFailed: 'ユーザーいちらんのしゅとくにしっぱいしました',
+    channelInfoFailed: 'チャンネルじょうほうのしゅとくにしっぱいしました',
+    postsLoadFailed: 'とうこうのよみこみにしっぱいしました',
+    eventLoadFailed: 'イベントのよみこみにしっぱいしました',
+    networkError: 'ネットワークエラーがはっせいしました',
+    serverError: 'サーバーエラーがはっせいしました',
+    unauthorized: 'にんしょうがひつようです',
+    forbidden: 'アクセスがきょひされました',
+    notFound: 'リソースが見つかりません',
   }
 };
 

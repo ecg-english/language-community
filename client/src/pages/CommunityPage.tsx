@@ -38,6 +38,7 @@ import {
 import { useCommunity } from '../contexts/CommunityContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const CommunityPage: React.FC = () => {
   const { user } = useAuth();
@@ -52,6 +53,7 @@ const CommunityPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const hasLoaded = useRef(false);
   const [expandedCategories, setExpandedCategories] = useState<number[]>([]);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!hasLoaded.current) {
@@ -171,7 +173,7 @@ const CommunityPage: React.FC = () => {
                   mb: 2,
                 }}
               >
-                言語学習コミュニティ
+                {t('community.title')}
               </Typography>
               
               <Typography 
@@ -183,18 +185,7 @@ const CommunityPage: React.FC = () => {
                   lineHeight: 1.6,
                 }}
               >
-                ようこそ、
-                <Chip
-                  label={user?.username}
-                  sx={{
-                    mx: 1,
-                    background: getRoleGradient(user?.role || ''),
-                    color: 'white',
-                    fontWeight: 600,
-                    fontSize: '0.9rem',
-                  }}
-                />
-                さん！
+                {t('community.welcome', { username: user?.username })}
               </Typography>
               
               {/* 検索バー */}
@@ -219,7 +210,7 @@ const CommunityPage: React.FC = () => {
                   }}
                 >
                   <InputBase
-                    placeholder="投稿やユーザーを検索..."
+                    placeholder={t('community.searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     sx={{
@@ -274,10 +265,10 @@ const CommunityPage: React.FC = () => {
                   <CardContent sx={{ p: { xs: 2, sm: 3 }, textAlign: 'center' }}>
                     <PeopleIcon sx={{ fontSize: { xs: 40, sm: 48 }, color: 'primary.main', mb: 2 }} />
                     <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                      メンバーリスト
+                      {t('community.memberList')}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      コミュニティのメンバー一覧を確認
+                      {t('community.memberListDescription')}
                     </Typography>
                   </CardContent>
                 </Card>
@@ -306,10 +297,10 @@ const CommunityPage: React.FC = () => {
                   <CardContent sx={{ p: { xs: 2, sm: 3 }, textAlign: 'center' }}>
                     <InfoIcon sx={{ fontSize: { xs: 40, sm: 48 }, color: 'primary.main', mb: 2 }} />
                     <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                      このコミュニティでできること
+                      {t('community.whatYouCanDo')}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      コミュニティの機能を詳しく紹介
+                      {t('community.whatYouCanDoDescription')}
                     </Typography>
                   </CardContent>
                 </Card>
@@ -373,7 +364,7 @@ const CommunityPage: React.FC = () => {
                             {category.name}
                           </Typography>
                           <Chip
-                            label={`${channels[category.id]?.length || 0}チャンネル`}
+                            label={`${channels[category.id]?.length || 0} ${t('community.channels')}`}
                             size="small"
                             sx={{
                               ml: 'auto',
@@ -455,10 +446,10 @@ const CommunityPage: React.FC = () => {
                   <CardContent sx={{ textAlign: 'center', py: 8 }}>
                     <Language sx={{ fontSize: 72, color: 'text.disabled', mb: 3 }} />
                     <Typography variant="h4" color="text.secondary" gutterBottom fontWeight={600}>
-                      カテゴリがまだありません
+                      {t('community.noCategories')}
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
-                      管理者がカテゴリとチャンネルを作成するまでお待ちください
+                      {t('community.waitAdmin')}
                     </Typography>
                   </CardContent>
                 </Card>
