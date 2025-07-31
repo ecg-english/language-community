@@ -244,12 +244,13 @@ router.get('/debug/db-status', (req, res) => {
 
 // ユーザー一覧を取得（誰でも閲覧可、機微情報は除外）
 router.get('/users/public', authenticateToken, (req, res) => {
+  console.log('=== Users/Public Debug ===');
+  console.log('Request user:', req.user);
+  console.log('Fetching public users list...');
+  
   try {
-    console.log('=== Users/Public Debug ===');
-    console.log('Request user:', req.user);
-    console.log('Fetching public users list...');
-    
     // データベースの状態を確認
+    console.log('Checking if users table exists...');
     const tableCheck = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='users'").get();
     if (!tableCheck) {
       console.error('Users table does not exist');
@@ -272,6 +273,7 @@ router.get('/users/public', authenticateToken, (req, res) => {
     console.log('Response sent successfully');
   } catch (error) {
     console.error('ユーザー一覧取得エラー:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ error: 'ユーザー一覧の取得に失敗しました' });
   }
 });

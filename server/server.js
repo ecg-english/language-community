@@ -93,6 +93,19 @@ app.post('/api/upload/avatar', upload.single('avatar'), (req, res) => {
   }
 });
 
+// エラーハンドリングミドルウェア
+app.use((error, req, res, next) => {
+  console.error('Unhandled error:', error);
+  console.error('Error stack:', error.stack);
+  res.status(500).json({ error: 'サーバーエラーが発生しました' });
+});
+
+// 404ハンドラー
+app.use('*', (req, res) => {
+  console.log('404 Not Found:', req.method, req.originalUrl);
+  res.status(404).json({ error: 'エンドポイントが見つかりません' });
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
