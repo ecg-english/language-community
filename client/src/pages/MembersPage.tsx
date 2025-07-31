@@ -12,6 +12,7 @@ import {
   InputAdornment,
   Alert,
   CircularProgress,
+  Button,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -43,6 +44,18 @@ const MembersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const testEndpoint = async () => {
+    try {
+      console.log('Testing endpoint without authentication...');
+      const response = await axios.get('/api/auth/users/test');
+      console.log('Test response:', response.data);
+      alert('Test endpoint works! Users: ' + response.data.users.length);
+    } catch (error: any) {
+      console.error('Test endpoint error:', error);
+      alert('Test endpoint failed: ' + error.response?.data?.error || error.message);
+    }
+  };
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -200,6 +213,13 @@ const MembersPage: React.FC = () => {
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
+        <Button 
+          variant="contained" 
+          onClick={testEndpoint}
+          sx={{ mb: 2 }}
+        >
+          テストエンドポイントを試す
+        </Button>
       </Container>
     );
   }

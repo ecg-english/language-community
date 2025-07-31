@@ -3,7 +3,7 @@ const db = require('../database');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-// JWT認証ミドルウェア
+// JWT認証ミドルウェア（簡素化版）
 const authenticateToken = (req, res, next) => {
   console.log('=== Authentication Middleware Start ===');
   console.log('Request URL:', req.url);
@@ -13,9 +13,7 @@ const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
-    console.log('=== Authentication Debug ===');
-    console.log('Auth header:', authHeader);
-    console.log('Token:', token ? 'Present' : 'Missing');
+    console.log('Token present:', !!token);
 
     if (!token) {
       console.log('No token provided');
@@ -30,73 +28,15 @@ const authenticateToken = (req, res, next) => {
       
       console.log('Token verified successfully');
       console.log('User from token:', { userId: user.userId, username: user.username, role: user.role });
-      console.log('User ID type:', typeof user.userId, 'Value:', user.userId);
       
-      try {
-        // データベースでユーザーの存在確認
-        console.log('Checking database for user ID:', user.userId);
-        const dbUser = db.prepare('SELECT id, username, role FROM users WHERE id = ?').get(user.userId);
-        
-        if (!dbUser) {
-          console.log('User not found in database. Checking all users...');
-          const allUsers = db.prepare('SELECT id, username, role FROM users').all();
-          console.log('All users in database:', allUsers);
-          console.log('Token user ID:', user.userId, 'Type:', typeof user.userId);
-          
-          // ユーザーIDの型を確認
-          const numericUserId = parseInt(user.userId);
-          console.log('Numeric user ID:', numericUserId);
-          const dbUserByNumeric = db.prepare('SELECT id, username, role FROM users WHERE id = ?').get(numericUserId);
-          console.log('User found with numeric ID:', dbUserByNumeric);
-          
-          // 文字列での検索も試行
-          const stringUserId = user.userId.toString();
-          console.log('String user ID:', stringUserId);
-          const dbUserByString = db.prepare('SELECT id, username, role FROM users WHERE id = ?').get(stringUserId);
-          console.log('User found with string ID:', dbUserByString);
-          
-          // ユーザー名での検索も試行
-          const dbUserByName = db.prepare('SELECT id, username, role FROM users WHERE username = ?').get(user.username);
-          console.log('User found by username:', dbUserByName);
-          
-          // 一時的に、ユーザーが見つからない場合でも処理を続行
-          if (!dbUserByNumeric && !dbUserByString && !dbUserByName) {
-            console.log('No user found with any method, but allowing request to continue for debugging');
-            // トークンから取得した情報を使用
-            req.user = user;
-            console.log('Final req.user (from token):', req.user);
-            console.log('=== Authentication Middleware End (token user) ===');
-            next();
-            return;
-          } else {
-            // 見つかったユーザーを使用
-            const foundUser = dbUserByNumeric || dbUserByString || dbUserByName;
-            console.log('Using found user:', foundUser);
-            req.user = { ...user, ...foundUser };
-            console.log('Final req.user (from database):', req.user);
-            console.log('=== Authentication Middleware End (database user) ===');
-            next();
-            return;
-          }
-        }
-        
-        console.log('User found in database:', dbUser);
-        req.user = { ...user, ...dbUser };
-        console.log('Final req.user:', req.user);
-        console.log('=== Authentication Middleware End (normal) ===');
-        next();
-      } catch (dbError) {
-        console.error('Database error in authentication middleware:', dbError);
-        // データベースエラーが発生した場合でも、トークンから取得した情報を使用
-        req.user = user;
-        console.log('Using token user due to database error:', req.user);
-        console.log('=== Authentication Middleware End (error fallback) ===');
-        next();
-      }
+      // 簡素化：データベースチェックをスキップしてトークン情報のみ使用
+      req.user = user;
+      console.log('Final req.user:', req.user);
+      console.log('=== Authentication Middleware End ===');
+      next();
     });
   } catch (error) {
     console.error('Authentication middleware error:', error);
-    console.log('=== Authentication Middleware End (outer error) ===');
     return res.status(500).json({ error: '認証処理中にエラーが発生しました' });
   }
 };

@@ -248,6 +248,25 @@ router.get('/debug/db-status', (req, res) => {
   }
 });
 
+// テスト用：認証なしでユーザー一覧を取得
+router.get('/users/test', (req, res) => {
+  try {
+    console.log('=== Test Endpoint: No Authentication ===');
+    
+    const users = db.prepare(`
+      SELECT id, username, role, avatar_url, created_at
+      FROM users
+      ORDER BY created_at DESC
+    `).all();
+
+    console.log(`Found ${users.length} users in test endpoint`);
+    res.json({ users });
+  } catch (error) {
+    console.error('Test endpoint error:', error);
+    res.status(500).json({ error: 'テストエンドポイントエラー' });
+  }
+});
+
 // ユーザー一覧を取得（誰でも閲覧可、機微情報は除外）
 router.get('/users/public', authenticateToken, (req, res) => {
   console.log('=== Users/Public Endpoint Start ===');
