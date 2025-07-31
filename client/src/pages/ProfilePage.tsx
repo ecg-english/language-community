@@ -171,70 +171,146 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto', py: 4, px: 2 }}>
+    <Box sx={{ maxWidth: 800, mx: 'auto', py: { xs: 2, sm: 4 }, px: { xs: 1, sm: 2 } }}>
       <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid rgba(0, 0, 0, 0.08)' }}>
-        <CardContent sx={{ p: 4 }}>
+        <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
           {/* ヘッダー部分 */}
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-            <Avatar
-              sx={{
-                width: 80,
-                height: 80,
-                bgcolor: 'primary.main',
-                fontSize: '2rem',
-                mr: 3,
-              }}
-            >
-              {profileData.username.charAt(0).toUpperCase()}
-            </Avatar>
-            <Box sx={{ flex: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                {isEditing ? (
-                  <TextField
-                    value={editData.username}
-                    onChange={(e) => setEditData({ ...editData, username: e.target.value })}
-                    variant="outlined"
-                    size="small"
-                    sx={{ mr: 2, minWidth: 200 }}
-                  />
-                ) : (
-                  <Typography variant="h4" sx={{ fontWeight: 600, mr: 2 }}>
-                    {profileData.username}
-                  </Typography>
-                )}
-                <Chip
-                  label={profileData.role}
-                  color={getRoleColor(profileData.role) as any}
-                  size="small"
-                  sx={{ mr: 1 }}
-                />
-                <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
-                  <CalendarIcon sx={{ fontSize: 16, mr: 0.5 }} />
-                  <Typography variant="caption">
-                    {formatDate(profileData.created_at)}
-                  </Typography>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: { xs: 'flex-start', sm: 'center' }, 
+            mb: 3,
+            gap: { xs: 2, sm: 0 }
+          }}>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center',
+              width: { xs: '100%', sm: 'auto' },
+              justifyContent: { xs: 'space-between', sm: 'flex-start' }
+            }}>
+              <Avatar
+                sx={{
+                  width: { xs: 60, sm: 80 },
+                  height: { xs: 60, sm: 80 },
+                  bgcolor: 'primary.main',
+                  fontSize: { xs: '1.5rem', sm: '2rem' },
+                  mr: { xs: 2, sm: 3 },
+                }}
+              >
+                {profileData.username.charAt(0).toUpperCase()}
+              </Avatar>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  alignItems: { xs: 'flex-start', sm: 'center' }, 
+                  mb: 1,
+                  gap: { xs: 1, sm: 2 }
+                }}>
+                  {isEditing ? (
+                    <TextField
+                      value={editData.username}
+                      onChange={(e) => setEditData({ ...editData, username: e.target.value })}
+                      variant="outlined"
+                      size="small"
+                      sx={{ 
+                        mr: { xs: 0, sm: 2 }, 
+                        minWidth: { xs: '100%', sm: 200 },
+                        mb: { xs: 1, sm: 0 }
+                      }}
+                    />
+                  ) : (
+                    <Typography 
+                      variant="h4" 
+                      sx={{ 
+                        fontWeight: 600, 
+                        mr: { xs: 0, sm: 2 },
+                        fontSize: { xs: '1.5rem', sm: '2.125rem' },
+                        mb: { xs: 1, sm: 0 }
+                      }}
+                    >
+                      {profileData.username}
+                    </Typography>
+                  )}
+                  <Box sx={{ 
+                    display: 'flex', 
+                    flexDirection: { xs: 'row', sm: 'row' },
+                    alignItems: 'center',
+                    gap: 1,
+                    flexWrap: 'wrap'
+                  }}>
+                    <Chip
+                      label={profileData.role}
+                      color={getRoleColor(profileData.role) as any}
+                      size="small"
+                      sx={{ 
+                        fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                        height: { xs: 24, sm: 28 }
+                      }}
+                    />
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      color: 'text.secondary',
+                      fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                    }}>
+                      <CalendarIcon sx={{ fontSize: { xs: 14, sm: 16 }, mr: 0.5 }} />
+                      <Typography variant="caption">
+                        {formatDate(profileData.created_at)}
+                      </Typography>
+                    </Box>
+                  </Box>
                 </Box>
               </Box>
             </Box>
             {isOwnProfile && (
-              <Box>
+              <Box sx={{ 
+                display: 'flex', 
+                gap: 1,
+                mt: { xs: 2, sm: 0 },
+                width: { xs: '100%', sm: 'auto' },
+                justifyContent: { xs: 'flex-end', sm: 'flex-start' }
+              }}>
                 {isEditing ? (
                   <>
                     <IconButton
                       onClick={handleSave}
                       disabled={isSaving}
                       color="primary"
-                      sx={{ mr: 1 }}
+                      sx={{ 
+                        p: { xs: 1, sm: 1.5 },
+                        '&:hover': {
+                          backgroundColor: 'rgba(30, 64, 175, 0.04)',
+                        },
+                      }}
                     >
-                      <SaveIcon />
+                      <SaveIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
                     </IconButton>
-                    <IconButton onClick={handleCancel} color="error">
-                      <CancelIcon />
+                    <IconButton 
+                      onClick={handleCancel} 
+                      color="error"
+                      sx={{ 
+                        p: { xs: 1, sm: 1.5 },
+                        '&:hover': {
+                          backgroundColor: 'rgba(220, 38, 38, 0.04)',
+                        },
+                      }}
+                    >
+                      <CancelIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
                     </IconButton>
                   </>
                 ) : (
-                  <IconButton onClick={handleEdit} color="primary">
-                    <EditIcon />
+                  <IconButton 
+                    onClick={handleEdit} 
+                    color="primary"
+                    sx={{ 
+                      p: { xs: 1, sm: 1.5 },
+                      '&:hover': {
+                        backgroundColor: 'rgba(30, 64, 175, 0.04)',
+                      },
+                    }}
+                  >
+                    <EditIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
                   </IconButton>
                 )}
               </Box>
@@ -244,12 +320,27 @@ const ProfilePage: React.FC = () => {
           <Divider sx={{ my: 3 }} />
 
           {/* プロフィール詳細 */}
-          <Box sx={{ display: 'grid', gap: 3 }}>
+          <Box sx={{ display: 'grid', gap: { xs: 2, sm: 3 } }}>
             {/* 目標 */}
             <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <SchoolIcon sx={{ mr: 1, color: 'primary.main' }} />
-                <Typography variant="h6" sx={{ fontWeight: 500 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                mb: 1,
+                gap: 1
+              }}>
+                <SchoolIcon sx={{ 
+                  mr: 1, 
+                  color: 'primary.main',
+                  fontSize: { xs: 20, sm: 24 }
+                }} />
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontWeight: 500,
+                    fontSize: { xs: '1rem', sm: '1.25rem' }
+                  }}
+                >
                   学習目標
                 </Typography>
               </Box>
@@ -262,17 +353,23 @@ const ProfilePage: React.FC = () => {
                   onChange={(e) => setEditData({ ...editData, goal: e.target.value })}
                   placeholder="学習目標を入力してください..."
                   variant="outlined"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      fontSize: { xs: '0.875rem', sm: '1rem' },
+                    },
+                  }}
                 />
               ) : (
                 <Typography
                   variant="body1"
                   sx={{
-                    p: 2,
+                    p: { xs: 1.5, sm: 2 },
                     bgcolor: 'grey.50',
                     borderRadius: 1,
-                    minHeight: 60,
+                    minHeight: { xs: 50, sm: 60 },
                     display: 'flex',
                     alignItems: 'center',
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
                   }}
                 >
                   {profileData.goal || '目標が設定されていません'}
@@ -282,9 +379,24 @@ const ProfilePage: React.FC = () => {
 
             {/* 一言メッセージ */}
             <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <MessageIcon sx={{ mr: 1, color: 'primary.main' }} />
-                <Typography variant="h6" sx={{ fontWeight: 500 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                mb: 1,
+                gap: 1
+              }}>
+                <MessageIcon sx={{ 
+                  mr: 1, 
+                  color: 'primary.main',
+                  fontSize: { xs: 20, sm: 24 }
+                }} />
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontWeight: 500,
+                    fontSize: { xs: '1rem', sm: '1.25rem' }
+                  }}
+                >
                   一言メッセージ
                 </Typography>
               </Box>
@@ -297,17 +409,23 @@ const ProfilePage: React.FC = () => {
                   onChange={(e) => setEditData({ ...editData, message: e.target.value })}
                   placeholder="一言メッセージを入力してください..."
                   variant="outlined"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      fontSize: { xs: '0.875rem', sm: '1rem' },
+                    },
+                  }}
                 />
               ) : (
                 <Typography
                   variant="body1"
                   sx={{
-                    p: 2,
+                    p: { xs: 1.5, sm: 2 },
                     bgcolor: 'grey.50',
                     borderRadius: 1,
-                    minHeight: 60,
+                    minHeight: { xs: 50, sm: 60 },
                     display: 'flex',
                     alignItems: 'center',
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
                   }}
                 >
                   {profileData.message || 'メッセージが設定されていません'}
@@ -317,9 +435,24 @@ const ProfilePage: React.FC = () => {
 
             {/* 自己紹介 */}
             <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <PersonIcon sx={{ mr: 1, color: 'primary.main' }} />
-                <Typography variant="h6" sx={{ fontWeight: 500 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                mb: 1,
+                gap: 1
+              }}>
+                <PersonIcon sx={{ 
+                  mr: 1, 
+                  color: 'primary.main',
+                  fontSize: { xs: 20, sm: 24 }
+                }} />
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontWeight: 500,
+                    fontSize: { xs: '1rem', sm: '1.25rem' }
+                  }}
+                >
                   自己紹介
                 </Typography>
               </Box>
@@ -332,17 +465,23 @@ const ProfilePage: React.FC = () => {
                   onChange={(e) => setEditData({ ...editData, bio: e.target.value })}
                   placeholder="自己紹介を入力してください..."
                   variant="outlined"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      fontSize: { xs: '0.875rem', sm: '1rem' },
+                    },
+                  }}
                 />
               ) : (
                 <Typography
                   variant="body1"
                   sx={{
-                    p: 2,
+                    p: { xs: 1.5, sm: 2 },
                     bgcolor: 'grey.50',
                     borderRadius: 1,
-                    minHeight: 80,
+                    minHeight: { xs: 70, sm: 80 },
                     display: 'flex',
                     alignItems: 'flex-start',
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
                   }}
                 >
                   {profileData.bio || '自己紹介が設定されていません'}
