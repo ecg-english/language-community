@@ -25,6 +25,19 @@ const en = {
     close: 'Close',
     confirm: 'Confirm',
     
+    // Features Page
+    featuresTitle: 'What you can do in this community',
+    featuresSubtitle: 'Introducing the main content of the language learning community',
+    welcomeMessage: 'Welcome, {{username}}!',
+    pronunciationCorrection: 'Weekly Pronunciation Correction',
+    pronunciationDescription: 'Submit audio for weekly assignments! Pronunciation correction feedback is returned to everyone once a week.',
+    studyLog: 'Everyone\'s Study Log',
+    studyLogDescription: 'Let\'s share study logs and turn each other\'s growth into motivation.',
+    motivationPlace: 'Place to boost motivation',
+    pronunciationVideo: 'Pronunciation Video Course',
+    pronunciationVideoDescription: 'Send audio you want corrected to the chat group. Audio correction feedback is returned to everyone once a week.',
+    freePronunciationCourse: 'Part of the pronunciation course released for free!',
+    
     // ログイン・登録
     email: 'Email',
     password: 'Password',
@@ -150,6 +163,19 @@ const ja = {
     close: '閉じる',
     confirm: '確認',
     
+    // Features Page
+    featuresTitle: 'このコミュニティでできること',
+    featuresSubtitle: '言語学習コミュニティの主な内容を紹介',
+    welcomeMessage: 'ようこそ、{{username}}！',
+    pronunciationCorrection: '週間発音訂正',
+    pronunciationDescription: '週間の課題に音声を提出！発音訂正フィードバックは週に一度全員に返却されます。',
+    studyLog: '全員の学習ログ',
+    studyLogDescription: '学習ログを共有し、互いの成長を動機付けましょう。',
+    motivationPlace: '動機付けの場所',
+    pronunciationVideo: '発音動画コース',
+    pronunciationVideoDescription: 'チャットグループに修正したい音声を送信。音声訂正フィードバックは週に一度全員に返却されます。',
+    freePronunciationCourse: '無料で公開されている発音コースの一部！',
+    
     // ログイン・登録
     email: 'メールアドレス',
     password: 'パスワード',
@@ -274,6 +300,19 @@ const jaSimple = {
     back: 'もどる',
     close: 'しめる',
     confirm: 'かくにん',
+    
+    // Features Page
+    featuresTitle: 'このコミュニティでできること',
+    featuresSubtitle: '言語学習コミュニティの主な内容を紹介',
+    welcomeMessage: 'ようこそ、{{username}}！',
+    pronunciationCorrection: '週間発音訂正',
+    pronunciationDescription: '週間の課題に音声を提出！発音訂正フィードバックは週に一度全員に返却されます。',
+    studyLog: '全員の学習ログ',
+    studyLogDescription: '学習ログを共有し、互いの成長を動機付けましょう。',
+    motivationPlace: '動機付けの場所',
+    pronunciationVideo: '発音動画コース',
+    pronunciationVideoDescription: 'チャットグループに修正したい音声を送信。音声訂正フィードバックは週に一度全員に返却されます。',
+    freePronunciationCourse: '無料で公開されている発音コースの一部！',
     
     // ログイン・登録
     email: 'メールアドレス',

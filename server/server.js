@@ -66,6 +66,7 @@ app.use('/uploads', express.static(uploadsDir));
 // ルート
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/channels', require('./routes/channels'));
+app.use('/api/posts', require('./routes/posts'));
 app.use('/api/events', require('./routes/events'));
 
 // ファイルアップロード用ルート
