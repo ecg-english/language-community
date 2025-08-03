@@ -39,8 +39,13 @@ interface ProfileData {
   bio: string;
   avatar_url?: string;
   created_at: string;
-  goal?: string;
   message?: string;
+  native_language?: string;
+  target_languages?: string;
+  country?: string;
+  timezone?: string;
+  monthly_reflection?: string;
+  monthly_goal?: string;
 }
 
 const ProfilePage: React.FC = () => {
@@ -70,9 +75,12 @@ const ProfilePage: React.FC = () => {
         setEditData({
           username: response.data.user.username,
           bio: response.data.user.bio || '',
-          goal: response.data.user.goal || '',
           message: response.data.user.message || '',
           avatar_url: response.data.user.avatar_url || '',
+          native_language: response.data.user.native_language || '',
+          target_languages: response.data.user.target_languages || '',
+          country: response.data.user.country || '',
+          timezone: response.data.user.timezone || '',
         });
       } catch (error: any) {
         console.error('プロフィール取得エラー:', error);
@@ -142,9 +150,12 @@ const ProfilePage: React.FC = () => {
       const response = await axios.put('/api/auth/profile', {
         username: editData.username,
         bio: editData.bio,
-        goal: editData.goal,
         message: editData.message,
         avatar_url: avatarUrl,
+        native_language: editData.native_language,
+        target_languages: editData.target_languages,
+        country: editData.country,
+        timezone: editData.timezone,
       });
 
       setProfileData(response.data.user);
@@ -406,7 +417,7 @@ const ProfilePage: React.FC = () => {
               />
             )}
 
-            {/* 目標 */}
+            {/* 母語 */}
             <Box>
               <Box sx={{ 
                 display: 'flex', 
@@ -426,17 +437,15 @@ const ProfilePage: React.FC = () => {
                     fontSize: { xs: '1rem', sm: '1.25rem' }
                   }}
                 >
-                  {t('learningGoal')}
+                  母語
                 </Typography>
               </Box>
               {isEditing ? (
                 <TextField
                   fullWidth
-                  multiline
-                  rows={3}
-                  value={editData.goal || ''}
-                  onChange={(e) => setEditData({ ...editData, goal: e.target.value })}
-                  placeholder="学習目標を入力してください..."
+                  value={editData.native_language || ''}
+                  onChange={(e) => setEditData({ ...editData, native_language: e.target.value })}
+                  placeholder="母語を入力してください..."
                   variant="outlined"
                   sx={{
                     '& .MuiOutlinedInput-root': {
@@ -457,7 +466,117 @@ const ProfilePage: React.FC = () => {
                     fontSize: { xs: '0.875rem', sm: '1rem' },
                   }}
                 >
-                  {profileData.goal || t('goalNotSet')}
+                  {profileData.native_language || '未設定'}
+                </Typography>
+              )}
+            </Box>
+
+            {/* 学習したい言語 */}
+            <Box>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                mb: 1,
+                gap: 1
+              }}>
+                <SchoolIcon sx={{ 
+                  mr: 1, 
+                  color: 'primary.main',
+                  fontSize: { xs: 20, sm: 24 }
+                }} />
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontWeight: 500,
+                    fontSize: { xs: '1rem', sm: '1.25rem' }
+                  }}
+                >
+                  学習したい言語
+                </Typography>
+              </Box>
+              {isEditing ? (
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={2}
+                  value={editData.target_languages || ''}
+                  onChange={(e) => setEditData({ ...editData, target_languages: e.target.value })}
+                  placeholder="学習したい言語を入力してください..."
+                  variant="outlined"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      fontSize: { xs: '0.875rem', sm: '1rem' },
+                    },
+                  }}
+                />
+              ) : (
+                <Typography
+                  variant="body1"
+                  sx={{
+                    p: { xs: 1.5, sm: 2 },
+                    bgcolor: 'grey.50',
+                    borderRadius: 1,
+                    minHeight: { xs: 50, sm: 60 },
+                    display: 'flex',
+                    alignItems: 'center',
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                  }}
+                >
+                  {profileData.target_languages || '未設定'}
+                </Typography>
+              )}
+            </Box>
+
+            {/* 現在の国 */}
+            <Box>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                mb: 1,
+                gap: 1
+              }}>
+                <SchoolIcon sx={{ 
+                  mr: 1, 
+                  color: 'primary.main',
+                  fontSize: { xs: 20, sm: 24 }
+                }} />
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontWeight: 500,
+                    fontSize: { xs: '1rem', sm: '1.25rem' }
+                  }}
+                >
+                  現在の国
+                </Typography>
+              </Box>
+              {isEditing ? (
+                <TextField
+                  fullWidth
+                  value={editData.country || ''}
+                  onChange={(e) => setEditData({ ...editData, country: e.target.value })}
+                  placeholder="現在の国を入力してください..."
+                  variant="outlined"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      fontSize: { xs: '0.875rem', sm: '1rem' },
+                    },
+                  }}
+                />
+              ) : (
+                <Typography
+                  variant="body1"
+                  sx={{
+                    p: { xs: 1.5, sm: 2 },
+                    bgcolor: 'grey.50',
+                    borderRadius: 1,
+                    minHeight: { xs: 50, sm: 60 },
+                    display: 'flex',
+                    alignItems: 'center',
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                  }}
+                >
+                  {profileData.country || '未設定'}
                 </Typography>
               )}
             </Box>

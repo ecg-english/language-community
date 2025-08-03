@@ -32,8 +32,14 @@ const initializeDatabase = () => {
         role TEXT DEFAULT 'Trial参加者',
         bio TEXT,
         avatar_url TEXT,
-        goal TEXT,
         message TEXT,
+        native_language TEXT,
+        target_languages TEXT,
+        country TEXT,
+        timezone TEXT,
+        last_monthly_update DATE,
+        monthly_reflection TEXT,
+        monthly_goal TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `).run();
@@ -115,6 +121,20 @@ const initializeDatabase = () => {
         created_by_role TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (created_by) REFERENCES users (id)
+      )
+    `).run();
+
+    // 月次更新通知テーブルの作成
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS monthly_notifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        year INTEGER NOT NULL,
+        month INTEGER NOT NULL,
+        is_completed BOOLEAN DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id),
+        UNIQUE(user_id, year, month)
       )
     `).run();
 

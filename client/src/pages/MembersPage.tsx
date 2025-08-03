@@ -30,8 +30,13 @@ interface Member {
   role: string;
   bio: string;
   avatar_url?: string;
-  goal?: string;
   message?: string;
+  native_language?: string;
+  target_languages?: string;
+  country?: string;
+  timezone?: string;
+  monthly_reflection?: string;
+  monthly_goal?: string;
   created_at: string;
 }
 

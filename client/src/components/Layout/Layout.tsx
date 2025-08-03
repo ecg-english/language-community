@@ -26,6 +26,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { useMonthlyNotification } from '../../hooks/useMonthlyNotification';
+import MonthlyUpdateDialog from '../MonthlyUpdateDialog';
 
 interface LayoutProps {
   children: ReactNode;
@@ -37,6 +39,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const { notification, refetch } = useMonthlyNotification();
+  const [monthlyDialogOpen, setMonthlyDialogOpen] = React.useState(false);
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -69,6 +73,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const handleLanguageChange = (event: any) => {
     changeLanguage(event.target.value);
   };
+
+  // 月次通知の表示
+  React.useEffect(() => {
+    if (notification?.shouldNotify) {
+      setMonthlyDialogOpen(true);
+    }
+  }, [notification]);
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -318,6 +329,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       >
         {children}
       </Box>
+
+      {/* 月次通知ダイアログ */}
+      <MonthlyUpdateDialog
+        open={monthlyDialogOpen}
+        onClose={() => setMonthlyDialogOpen(false)}
+        onSuccess={() => {
+          refetch();
+          setMonthlyDialogOpen(false);
+        }}
+      />
     </Box>
   );
 };

@@ -181,7 +181,16 @@ router.get('/users/:userId', authenticateToken, (req, res) => {
 // プロフィール更新
 router.put('/profile', authenticateToken, async (req, res) => {
   try {
-    const { username, bio, goal, message, avatar_url } = req.body;
+    const { 
+      username, 
+      bio, 
+      message, 
+      avatar_url, 
+      native_language, 
+      target_languages, 
+      country, 
+      timezone 
+    } = req.body;
     const userId = req.user.userId;
 
     if (!username || username.trim() === '') {
@@ -197,22 +206,27 @@ router.put('/profile', authenticateToken, async (req, res) => {
     // プロフィール更新
     const updateUser = db.prepare(`
       UPDATE users 
-      SET username = ?, bio = ?, goal = ?, message = ?, avatar_url = ?
+      SET username = ?, bio = ?, message = ?, avatar_url = ?, 
+          native_language = ?, target_languages = ?, country = ?, timezone = ?
       WHERE id = ?
     `);
 
     updateUser.run(
       username.trim(),
       bio || '',
-      goal || '',
       message || '',
       avatar_url || null,
+      native_language || '',
+      target_languages || '',
+      country || '',
+      timezone || '',
       userId
     );
 
     // 更新されたユーザー情報を取得
     const updatedUser = db.prepare(`
-      SELECT id, username, email, role, bio, avatar_url, goal, message, created_at
+      SELECT id, username, email, role, bio, avatar_url, message, 
+             native_language, target_languages, country, timezone, created_at
       FROM users WHERE id = ?
     `).get(userId);
 
@@ -260,7 +274,9 @@ router.get('/users/test', (req, res) => {
     console.log('=== Test Endpoint: No Authentication ===');
     
     const users = db.prepare(`
-      SELECT id, username, role, avatar_url, created_at
+      SELECT id, username, role, avatar_url, bio, message, 
+             native_language, target_languages, country, timezone,
+             monthly_reflection, monthly_goal, created_at
       FROM users
       ORDER BY created_at DESC
     `).all();
@@ -290,7 +306,9 @@ router.get('/users/public', (req, res) => {
 
     console.log('Users table exists, fetching users...');
     const users = db.prepare(`
-      SELECT id, username, role, avatar_url, created_at
+      SELECT id, username, role, avatar_url, bio, message, 
+             native_language, target_languages, country, timezone,
+             monthly_reflection, monthly_goal, created_at
       FROM users
       ORDER BY created_at DESC
     `).all();
@@ -349,6 +367,101 @@ router.put('/users/:userId/role', authenticateToken, requireAdmin, (req, res) =>
   } catch (error) {
     console.error('ロール変更エラー:', error);
     res.status(500).json({ error: 'ロールの変更に失敗しました' });
+  }
+});
+
+// 月次振り返り・目標設定
+router.post('/monthly-update', authenticateToken, async (req, res) => {
+  try {
+    const { reflection, goal } = req.body;
+    const userId = req.user.userId;
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1; // getMonth()は0ベース
+
+    // 月次更新を記録
+    const updateMonthly = db.prepare(`
+      UPDATE users 
+      SET monthly_reflection = ?, monthly_goal = ?, last_monthly_update = ?
+      WHERE id = ?
+    `);
+
+    updateMonthly.run(
+      reflection || '',
+      goal || '',
+      now.toISOString().split('T')[0], // YYYY-MM-DD形式
+      userId
+    );
+
+    // 月次通知を完了としてマーク
+    const markNotificationComplete = db.prepare(`
+      INSERT OR REPLACE INTO monthly_notifications 
+      (user_id, year, month, is_completed) VALUES (?, ?, ?, 1)
+    `);
+
+    markNotificationComplete.run(userId, currentYear, currentMonth);
+
+    res.json({
+      message: '月次振り返り・目標が更新されました',
+      year: currentYear,
+      month: currentMonth
+    });
+  } catch (error) {
+    console.error('月次更新エラー:', error);
+    res.status(500).json({ error: '月次更新に失敗しました' });
+  }
+});
+
+// 月次通知の確認
+router.get('/monthly-notification', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+
+    // 今月の通知が完了しているかチェック
+    const notification = db.prepare(`
+      SELECT is_completed FROM monthly_notifications 
+      WHERE user_id = ? AND year = ? AND month = ?
+    `).get(userId, currentYear, currentMonth);
+
+    // 今月1日以降で、まだ更新していない場合は通知
+    const shouldNotify = now.getDate() >= 1 && (!notification || !notification.is_completed);
+
+    res.json({
+      shouldNotify,
+      currentYear,
+      currentMonth
+    });
+  } catch (error) {
+    console.error('月次通知確認エラー:', error);
+    res.status(500).json({ error: '月次通知確認に失敗しました' });
+  }
+});
+
+// ユーザーの月次情報を取得
+router.get('/monthly-info/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    const user = db.prepare(`
+      SELECT monthly_reflection, monthly_goal, last_monthly_update
+      FROM users WHERE id = ?
+    `).get(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: 'ユーザーが見つかりません' });
+    }
+
+    res.json({
+      monthly_reflection: user.monthly_reflection,
+      monthly_goal: user.monthly_goal,
+      last_monthly_update: user.last_monthly_update
+    });
+  } catch (error) {
+    console.error('月次情報取得エラー:', error);
+    res.status(500).json({ error: '月次情報の取得に失敗しました' });
   }
 });
 
