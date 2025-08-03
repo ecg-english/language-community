@@ -25,11 +25,36 @@
         const currentPath = window.location.pathname;
         const currentHash = window.location.hash;
         
+        console.log('URL Debug:', {
+          pathname: currentPath,
+          hash: currentHash,
+          href: window.location.href
+        });
+        
         // /language-communityが含まれていない場合
         if (!currentPath.includes('/language-community')) {
           const correctUrl = 'https://ecg-english.github.io/language-community/' + (currentHash || '#/');
+          console.log('Redirecting to:', correctUrl);
           window.location.replace(correctUrl);
         }
+        
+        // URL変更を監視
+        let lastUrl = window.location.href;
+        const observer = new MutationObserver(function() {
+          if (window.location.href !== lastUrl) {
+            console.log('URL changed from', lastUrl, 'to', window.location.href);
+            lastUrl = window.location.href;
+            
+            // /loginに変更された場合、正しいURLに戻す
+            if (window.location.href.includes('/login') && !window.location.href.includes('/language-community')) {
+              const correctUrl = 'https://ecg-english.github.io/language-community/#/login';
+              console.log('Fixing URL to:', correctUrl);
+              window.location.replace(correctUrl);
+            }
+          }
+        });
+        
+        observer.observe(document, { subtree: true, childList: true });
       })();
     </script>
 
