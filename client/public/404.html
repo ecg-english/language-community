@@ -16,15 +16,6 @@
     <script>
       // GitHub Pages用のSPAルーティング対応
       (function(){
-        // 現在のパスを取得
-        const path = window.location.pathname;
-        
-        // /language-community/で始まる場合、その部分を除去
-        if (path.startsWith('/language-community/')) {
-          const newPath = path.replace('/language-community', '');
-          window.history.replaceState(null, null, newPath);
-        }
-        
         // セッションストレージのリダイレクト処理
         let redirect = sessionStorage.redirect;
         delete sessionStorage.redirect;
