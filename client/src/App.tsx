@@ -21,7 +21,7 @@ const App: React.FC = () => {
     <LanguageProvider>
       <AuthProvider>
         <CommunityProvider>
-          <Router basename="/language-community">
+          <Router>
             <Layout>
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
