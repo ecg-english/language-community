@@ -22,25 +22,17 @@
     <script>
       // GitHub Pages用のSPAルーティング対応
       (function(){
-        const path = window.location.pathname;
+        console.log('SPA Routing Debug:', {
+          pathname: window.location.pathname,
+          href: window.location.href,
+          search: window.location.search
+        });
         
-        // /language-community/で始まる場合の処理
-        if (path.startsWith('/language-community/')) {
-          // /language-community部分を除去して内部パスを取得
-          const internalPath = path.replace('/language-community', '');
-          
-          // セッションストレージに保存
-          sessionStorage.redirect = window.location.href;
-          
-          // 内部パスにリダイレクト
-          window.location.replace(internalPath);
-          return;
-        }
-        
-        // 通常のリダイレクト処理
+        // セッションストレージのリダイレクト処理
         let redirect = sessionStorage.redirect;
         delete sessionStorage.redirect;
         if (redirect && redirect != location.href) {
+          console.log('Redirecting to:', redirect);
           history.replaceState(null, null, redirect);
         }
       })();
