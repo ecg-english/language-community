@@ -16,12 +16,17 @@
     <script>
       // GitHub Pages用のSPAルーティング対応
       (function(){
-        // セッションストレージのリダイレクト処理
-        let redirect = sessionStorage.redirect;
-        delete sessionStorage.redirect;
-        if (redirect && redirect != location.href) {
-          history.replaceState(null, null, redirect);
-        }
+        console.log('404.html Debug:', {
+          pathname: window.location.pathname,
+          href: window.location.href,
+          search: window.location.search
+        });
+        
+        // 現在のURLをセッションストレージに保存
+        sessionStorage.redirect = window.location.href;
+        
+        // index.htmlにリダイレクト
+        window.location.replace('/language-community/');
       })();
     </script>
     <script defer="defer" src="/language-community/static/js/main.b672bb84.js"></script>
