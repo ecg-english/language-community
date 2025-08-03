@@ -19,6 +19,19 @@
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
+    <script>
+      // 強制的に正しいURLにリダイレクト
+      (function(){
+        const currentPath = window.location.pathname;
+        const currentHash = window.location.hash;
+        
+        // /language-communityが含まれていない場合
+        if (!currentPath.includes('/language-community')) {
+          const correctUrl = 'https://ecg-english.github.io/language-community/' + (currentHash || '#/');
+          window.location.replace(correctUrl);
+        }
+      })();
+    </script>
 
   </body>
 </html> 
