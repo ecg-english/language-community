@@ -22,21 +22,35 @@
     <script>
       // 強制的に正しいURLにリダイレクト
       (function(){
-        const currentPath = window.location.pathname;
-        const currentHash = window.location.hash;
+        console.log('=== URL Correction Script Started ===');
         
-        console.log('URL Debug:', {
-          pathname: currentPath,
-          hash: currentHash,
-          href: window.location.href
-        });
-        
-        // /language-communityが含まれていない場合
-        if (!currentPath.includes('/language-community')) {
-          const correctUrl = 'https://ecg-english.github.io/language-community/' + (currentHash || '#/');
-          console.log('Redirecting to:', correctUrl);
-          window.location.replace(correctUrl);
+        // 即座にURLをチェックして修正
+        function fixUrl() {
+          const currentUrl = window.location.href;
+          console.log('Current URL:', currentUrl);
+          
+          // 正しいベースURL
+          const correctBase = 'https://ecg-english.github.io/language-community';
+          
+          // 現在のURLが正しくない場合
+          if (!currentUrl.includes('/language-community')) {
+            // Hash部分を取得
+            const hash = window.location.hash || '#/';
+            const correctUrl = correctBase + hash;
+            
+            console.log('URL is incorrect, redirecting to:', correctUrl);
+            window.location.replace(correctUrl);
+            return;
+          }
+          
+          console.log('URL is correct');
         }
+        
+        // 即座に実行
+        fixUrl();
+        
+        // 定期的にチェック（1秒ごと）
+        setInterval(fixUrl, 1000);
         
         // URL変更を監視
         let lastUrl = window.location.href;
@@ -44,17 +58,15 @@
           if (window.location.href !== lastUrl) {
             console.log('URL changed from', lastUrl, 'to', window.location.href);
             lastUrl = window.location.href;
-            
-            // /loginに変更された場合、正しいURLに戻す
-            if (window.location.href.includes('/login') && !window.location.href.includes('/language-community')) {
-              const correctUrl = 'https://ecg-english.github.io/language-community/#/login';
-              console.log('Fixing URL to:', correctUrl);
-              window.location.replace(correctUrl);
-            }
+            fixUrl();
           }
         });
         
         observer.observe(document, { subtree: true, childList: true });
+        
+        // ページロード時にも実行
+        window.addEventListener('load', fixUrl);
+        window.addEventListener('DOMContentLoaded', fixUrl);
       })();
     </script>
 
