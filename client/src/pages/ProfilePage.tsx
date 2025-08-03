@@ -108,9 +108,12 @@ const ProfilePage: React.FC = () => {
     setEditData({
       username: profileData?.username || '',
       bio: profileData?.bio || '',
-      goal: profileData?.goal || '',
       message: profileData?.message || '',
       avatar_url: profileData?.avatar_url || '',
+      native_language: profileData?.native_language || '',
+      target_languages: profileData?.target_languages || '',
+      country: profileData?.country || '',
+      timezone: profileData?.timezone || '',
     });
     setSelectedFile(null);
     setPreviewUrl(null);
