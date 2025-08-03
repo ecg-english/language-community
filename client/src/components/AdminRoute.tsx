@@ -9,7 +9,7 @@ interface AdminRouteProps {
 const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
   const { user } = useAuth();
 
-  return user?.role === 'サーバー管理者' ? <>{children}</> : <Navigate to="/community" />;
+  return user?.role === 'サーバー管理者' ? <>{children}</> : <Navigate to="/community" replace />;
 };
 
 export default AdminRoute; 
