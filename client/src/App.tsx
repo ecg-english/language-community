@@ -21,7 +21,7 @@ const App: React.FC = () => {
     <LanguageProvider>
       <AuthProvider>
         <CommunityProvider>
-          <Router basename="/language-community">
+          <Router basename={process.env.PUBLIC_URL}>
             <Layout>
               <Routes>
                 <Route path="/login" element={<LoginPage />} />

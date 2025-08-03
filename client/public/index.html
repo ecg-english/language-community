@@ -28,6 +28,16 @@
           history.replaceState(null, null, redirect);
         }
       })();
+      
+      // 404エラー対策
+      (function(){
+        const pathSegmentsToKeep = 1;
+        const l = window.location;
+        if (l.pathname.split('/').length > pathSegmentsToKeep) {
+          const newPath = '/' + l.pathname.split('/').slice(pathSegmentsToKeep).join('/');
+          window.history.replaceState(null, null, newPath);
+        }
+      })();
     </script>
   </body>
 </html> 
