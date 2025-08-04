@@ -268,6 +268,25 @@ router.get('/debug/db-status', (req, res) => {
   }
 });
 
+// デバッグ用：環境変数確認
+router.get('/debug/env', (req, res) => {
+  try {
+    console.log('=== Environment Debug ===');
+    console.log('JWT_SECRET present:', !!process.env.JWT_SECRET);
+    console.log('JWT_SECRET length:', process.env.JWT_SECRET ? process.env.JWT_SECRET.length : 0);
+    
+    res.json({
+      jwtSecretPresent: !!process.env.JWT_SECRET,
+      jwtSecretLength: process.env.JWT_SECRET ? process.env.JWT_SECRET.length : 0,
+      nodeEnv: process.env.NODE_ENV,
+      port: process.env.PORT
+    });
+  } catch (error) {
+    console.error('Environment debug error:', error);
+    res.status(500).json({ error: '環境変数デバッグエラー', details: error.message });
+  }
+});
+
 // テスト用：認証なしでユーザー一覧を取得
 router.get('/users/test', (req, res) => {
   try {
