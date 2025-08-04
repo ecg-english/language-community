@@ -164,7 +164,7 @@ const MonthlyHistoryPage: React.FC = () => {
               fontSize: { xs: '1.5rem', sm: '2rem' }
             }}
           >
-            月次振り返り・目標履歴
+            {t('monthlyHistoryTitle')}
           </Typography>
         </Box>
         <Typography 
@@ -172,7 +172,7 @@ const MonthlyHistoryPage: React.FC = () => {
           color="text.secondary"
           sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
         >
-          これまでに記録した月次振り返りと目標の履歴を確認できます
+          {t('monthlyHistoryDescription')}
         </Typography>
       </Box>
 
@@ -197,7 +197,7 @@ const MonthlyHistoryPage: React.FC = () => {
                   fontSize: { xs: '1.25rem', sm: '1.5rem' }
                 }}
               >
-                今月の振り返り・目標
+                {t('currentMonthTitle')}
               </Typography>
               <Chip 
                 label={formatDate(currentMonthData.year, currentMonthData.month)}
@@ -218,7 +218,7 @@ const MonthlyHistoryPage: React.FC = () => {
                       color: 'primary.main'
                     }}
                   >
-                    今月の目標
+                    {t('currentMonthGoal')}
                   </Typography>
                   <Typography 
                     variant="body1"
@@ -227,7 +227,7 @@ const MonthlyHistoryPage: React.FC = () => {
                       fontSize: { xs: '0.875rem', sm: '1rem' }
                     }}
                   >
-                    {currentMonthData.goal || 'まだ設定されていません'}
+                    {currentMonthData.goal || t('noRecord')}
                   </Typography>
                 </Paper>
               </Grid>
@@ -242,7 +242,7 @@ const MonthlyHistoryPage: React.FC = () => {
                       color: 'primary.main'
                     }}
                   >
-                    先月の振り返り
+                    {t('currentMonthReflection')}
                   </Typography>
                   <Typography 
                     variant="body1"
@@ -251,7 +251,7 @@ const MonthlyHistoryPage: React.FC = () => {
                       fontSize: { xs: '0.875rem', sm: '1rem' }
                     }}
                   >
-                    {currentMonthData.reflection || 'まだ記録されていません'}
+                    {currentMonthData.reflection || t('noRecord')}
                   </Typography>
                 </Paper>
               </Grid>
@@ -281,7 +281,7 @@ const MonthlyHistoryPage: React.FC = () => {
                   fontSize: { xs: '1.25rem', sm: '1.5rem' }
                 }}
               >
-                先月の振り返り・目標
+                {t('previousMonthTitle')}
               </Typography>
               <Chip 
                 label={formatDate(previousMonthData.year, previousMonthData.month)}
@@ -302,7 +302,7 @@ const MonthlyHistoryPage: React.FC = () => {
                       color: 'secondary.main'
                     }}
                   >
-                    先月の目標
+                    {t('previousMonthGoal')}
                   </Typography>
                   <Typography 
                     variant="body1"
@@ -311,7 +311,7 @@ const MonthlyHistoryPage: React.FC = () => {
                       fontSize: { xs: '0.875rem', sm: '1rem' }
                     }}
                   >
-                    {previousMonthData.goal || '記録されていません'}
+                    {previousMonthData.goal || t('noRecord')}
                   </Typography>
                 </Paper>
               </Grid>
@@ -326,7 +326,7 @@ const MonthlyHistoryPage: React.FC = () => {
                       color: 'secondary.main'
                     }}
                   >
-                    先月の振り返り
+                    {t('previousMonthReflection')}
                   </Typography>
                   <Typography 
                     variant="body1"
@@ -335,7 +335,7 @@ const MonthlyHistoryPage: React.FC = () => {
                       fontSize: { xs: '0.875rem', sm: '1rem' }
                     }}
                   >
-                    {previousMonthData.reflection || '記録されていません'}
+                    {previousMonthData.reflection || t('noRecord')}
                   </Typography>
                 </Paper>
               </Grid>
@@ -365,7 +365,7 @@ const MonthlyHistoryPage: React.FC = () => {
                   fontSize: { xs: '1.25rem', sm: '1.5rem' }
                 }}
               >
-                過去の履歴
+                {t('historicalTitle')}
               </Typography>
             </Box>
             
@@ -407,7 +407,7 @@ const MonthlyHistoryPage: React.FC = () => {
                               color: 'text.secondary'
                             }}
                           >
-                            目標
+                            {t('goal')}
                           </Typography>
                           <Typography 
                             variant="body2"
@@ -416,7 +416,7 @@ const MonthlyHistoryPage: React.FC = () => {
                               fontSize: { xs: '0.75rem', sm: '0.875rem' }
                             }}
                           >
-                            {entry.goal || '記録されていません'}
+                            {entry.goal || t('noRecord')}
                           </Typography>
                         </Grid>
                         
@@ -429,7 +429,7 @@ const MonthlyHistoryPage: React.FC = () => {
                               color: 'text.secondary'
                             }}
                           >
-                            振り返り
+                            {t('reflection')}
                           </Typography>
                           <Typography 
                             variant="body2"
@@ -438,7 +438,7 @@ const MonthlyHistoryPage: React.FC = () => {
                               fontSize: { xs: '0.75rem', sm: '0.875rem' }
                             }}
                           >
-                            {entry.reflection || '記録されていません'}
+                            {entry.reflection || t('noRecord')}
                           </Typography>
                         </Grid>
                       </Grid>
@@ -459,13 +459,13 @@ const MonthlyHistoryPage: React.FC = () => {
               color="text.secondary"
               sx={{ mb: 2 }}
             >
-              まだ月次振り返り・目標の記録がありません
+              {t('noMonthlyHistory')}
             </Typography>
             <Typography 
               variant="body2" 
               color="text.secondary"
             >
-              月次更新ダイアログで振り返りと目標を記録すると、ここに履歴が表示されます
+              {t('noMonthlyHistoryDescription')}
             </Typography>
           </CardContent>
         </Card>
