@@ -16,6 +16,7 @@ import {
 import { Language, EmailOutlined, LockOutlined } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -24,6 +25,7 @@ const LoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,7 +96,7 @@ const LoginPage: React.FC = () => {
                     fontSize: { xs: '1.5rem', sm: '2.125rem' },
                   }}
                 >
-                  言語学習コミュニティ
+                  {t('loginTitle')}
                 </Typography>
                 
                 <Typography 
@@ -108,9 +110,7 @@ const LoginPage: React.FC = () => {
                     fontSize: { xs: '0.875rem', sm: '1rem' },
                   }}
                 >
-                  英語を学ぶ日本人と日本語を学ぶ外国人のための
-                  <br />
-                  プレミアムコミュニティ
+                  {t('loginSubtitle')}
                 </Typography>
               </Box>
 
@@ -138,7 +138,7 @@ const LoginPage: React.FC = () => {
                   required
                   fullWidth
                   id="email"
-                  label="メールアドレス"
+                  label={t('email')}
                   name="email"
                   autoComplete="email"
                   autoFocus
@@ -165,7 +165,7 @@ const LoginPage: React.FC = () => {
                   required
                   fullWidth
                   name="password"
-                  label="パスワード"
+                  label={t('password')}
                   type="password"
                   id="password"
                   autoComplete="current-password"
@@ -208,7 +208,7 @@ const LoginPage: React.FC = () => {
                     },
                   }}
                 >
-                  {isLoading ? 'ログイン中...' : 'ログイン'}
+                  {isLoading ? t('loginInProgress') : t('login')}
                 </Button>
                 
                 <Box textAlign="center">
@@ -226,7 +226,7 @@ const LoginPage: React.FC = () => {
                       },
                     }}
                   >
-                    アカウントをお持ちでない方はこちら
+                    {t('noAccount')}
                   </Link>
                 </Box>
               </Box>

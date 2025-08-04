@@ -16,6 +16,7 @@ import {
 import { Language, PersonAddOutlined, EmailOutlined, LockOutlined } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const RegisterPage: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -26,18 +27,19 @@ const RegisterPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     if (password !== confirmPassword) {
-      setError('パスワードが一致しません');
+      setError(t('passwordMismatch'));
       return;
     }
 
     if (password.length < 6) {
-      setError('パスワードは6文字以上で入力してください');
+      setError(t('passwordTooShort'));
       return;
     }
 
@@ -107,7 +109,7 @@ const RegisterPage: React.FC = () => {
                     fontSize: { xs: '1.5rem', sm: '2.125rem' },
                   }}
                 >
-                  言語学習コミュニティ
+                  {t('languageLearningCommunity')}
                 </Typography>
                 
                 <Typography 
@@ -121,9 +123,7 @@ const RegisterPage: React.FC = () => {
                     fontSize: { xs: '0.875rem', sm: '1rem' },
                   }}
                 >
-                  英語を学ぶ日本人と日本語を学ぶ外国人のための
-                  <br />
-                  プレミアムコミュニティ
+                  {t('premiumCommunityDescription')}
                 </Typography>
               </Box>
 
@@ -151,7 +151,7 @@ const RegisterPage: React.FC = () => {
                   required
                   fullWidth
                   id="username"
-                  label="ユーザー名"
+                  label={t('username')}
                   name="username"
                   autoComplete="username"
                   autoFocus
@@ -178,7 +178,7 @@ const RegisterPage: React.FC = () => {
                   required
                   fullWidth
                   id="email"
-                  label="メールアドレス"
+                  label={t('email')}
                   name="email"
                   autoComplete="email"
                   value={email}
@@ -204,7 +204,7 @@ const RegisterPage: React.FC = () => {
                   required
                   fullWidth
                   name="password"
-                  label="パスワード"
+                  label={t('password')}
                   type="password"
                   id="password"
                   autoComplete="new-password"
@@ -231,7 +231,7 @@ const RegisterPage: React.FC = () => {
                   required
                   fullWidth
                   name="confirmPassword"
-                  label="パスワード確認"
+                  label={t('confirmPassword')}
                   type="password"
                   id="confirmPassword"
                   value={confirmPassword}
@@ -273,7 +273,7 @@ const RegisterPage: React.FC = () => {
                     },
                   }}
                 >
-                  {isLoading ? 'アカウント作成中...' : 'アカウント作成'}
+                  {isLoading ? t('creatingAccount') : t('register')}
                 </Button>
                 
                 <Box textAlign="center">
@@ -291,7 +291,7 @@ const RegisterPage: React.FC = () => {
                       },
                     }}
                   >
-                    既にアカウントをお持ちの方はこちら
+                    {t('haveAccount')}
                   </Link>
                 </Box>
               </Box>

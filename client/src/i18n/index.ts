@@ -52,6 +52,11 @@ const en = {
     loginFailed: 'Login failed',
     registrationFailed: 'Registration failed',
     passwordMismatch: 'Passwords do not match',
+    loginTitle: 'Language Learning Community',
+    loginSubtitle: 'Premium community for Japanese learning English and foreigners learning Japanese',
+    forgotPassword: 'Forgot your password?',
+    premiumCommunityDescription: 'Premium community for Japanese learning English and foreigners learning Japanese',
+    passwordTooShort: 'Password must be at least 6 characters long',
     
     // コミュニティ
     searchPosts: 'Search posts and users...',
@@ -215,6 +220,11 @@ const ja = {
     loginFailed: 'ログインに失敗しました',
     registrationFailed: 'ユーザー登録に失敗しました',
     passwordMismatch: 'パスワードが一致しません',
+    loginTitle: '言語学習コミュニティ',
+    loginSubtitle: '英語を学ぶ日本人と日本語を学ぶ外国人のためのプレミアムコミュニティ',
+    forgotPassword: 'パスワードをお忘れですか？',
+    premiumCommunityDescription: '英語を学ぶ日本人と日本語を学ぶ外国人のためのプレミアムコミュニティ',
+    passwordTooShort: 'パスワードは6文字以上で入力してください',
     
     // コミュニティ
     searchPosts: '投稿やユーザーを検索...',
@@ -375,6 +385,11 @@ const jaSimple = {
     loginFailed: 'ログインにしっぱいしました',
     registrationFailed: 'ユーザーとうろくにしっぱいしました',
     passwordMismatch: 'パスワードがいっちしません',
+    loginTitle: 'げんごがくしゅうコミュニティ',
+    loginSubtitle: 'えいごをまなぶにほんじんとにほんごをまなぶがいこくじんのためのプレミアムコミュニティ',
+    forgotPassword: 'パスワードをわすれましたか？',
+    premiumCommunityDescription: 'えいごをまなぶにほんじんとにほんごをまなぶがいこくじんのためのプレミアムコミュニティ',
+    passwordTooShort: 'パスワードは6もじいじょうでにゅうりょくしてください',
     
     // コミュニティ
     searchPosts: 'とうこうやユーザーをけんさく...',
