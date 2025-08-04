@@ -138,6 +138,57 @@ const initializeDatabase = () => {
       )
     `).run();
 
+    // データベースマイグレーション：ユーザーテーブルに新しいカラムを追加
+    console.log('Running database migrations...');
+    
+    // 新しいカラムが存在するかチェック
+    const columns = db.prepare("PRAGMA table_info(users)").all();
+    const columnNames = columns.map(col => col.name);
+    
+    // monthly_reflectionカラムを追加
+    if (!columnNames.includes('monthly_reflection')) {
+      console.log('Adding monthly_reflection column to users table...');
+      db.prepare('ALTER TABLE users ADD COLUMN monthly_reflection TEXT').run();
+    }
+    
+    // monthly_goalカラムを追加
+    if (!columnNames.includes('monthly_goal')) {
+      console.log('Adding monthly_goal column to users table...');
+      db.prepare('ALTER TABLE users ADD COLUMN monthly_goal TEXT').run();
+    }
+    
+    // last_monthly_updateカラムを追加
+    if (!columnNames.includes('last_monthly_update')) {
+      console.log('Adding last_monthly_update column to users table...');
+      db.prepare('ALTER TABLE users ADD COLUMN last_monthly_update DATE').run();
+    }
+    
+    // native_languageカラムを追加
+    if (!columnNames.includes('native_language')) {
+      console.log('Adding native_language column to users table...');
+      db.prepare('ALTER TABLE users ADD COLUMN native_language TEXT').run();
+    }
+    
+    // target_languagesカラムを追加
+    if (!columnNames.includes('target_languages')) {
+      console.log('Adding target_languages column to users table...');
+      db.prepare('ALTER TABLE users ADD COLUMN target_languages TEXT').run();
+    }
+    
+    // countryカラムを追加
+    if (!columnNames.includes('country')) {
+      console.log('Adding country column to users table...');
+      db.prepare('ALTER TABLE users ADD COLUMN country TEXT').run();
+    }
+    
+    // timezoneカラムを追加
+    if (!columnNames.includes('timezone')) {
+      console.log('Adding timezone column to users table...');
+      db.prepare('ALTER TABLE users ADD COLUMN timezone TEXT').run();
+    }
+    
+    console.log('Database migrations completed.');
+
     // 初期カテゴリの作成（存在しない場合のみ）
     const existingCategories = db.prepare('SELECT COUNT(*) as count FROM categories').get();
     if (existingCategories.count === 0) {
