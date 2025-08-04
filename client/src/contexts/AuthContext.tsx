@@ -59,16 +59,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return;
       }
       
-      if (token) {
-        try {
-          const tokenParts = token.split('.');
-          if (tokenParts.length === 3) {
-            const payload = JSON.parse(atob(tokenParts[1]));
-            console.log('Token payload in AuthContext:', payload);
+      // トークンの有効性をチェック
+      try {
+        const tokenParts = token.split('.');
+        if (tokenParts.length === 3) {
+          const payload = JSON.parse(atob(tokenParts[1]));
+          console.log('Token payload in AuthContext:', payload);
+          
+          // トークンの有効期限をチェック
+          const currentTime = Math.floor(Date.now() / 1000);
+          if (payload.exp && payload.exp < currentTime) {
+            console.log('Token has expired, removing from localStorage');
+            localStorage.removeItem('token');
+            delete axios.defaults.headers.common['Authorization'];
+            setIsLoading(false);
+            return;
           }
-        } catch (e) {
-          console.log('Could not decode token payload in AuthContext');
         }
+      } catch (e) {
+        console.log('Could not decode token payload in AuthContext, removing invalid token');
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        setIsLoading(false);
+        return;
       }
       
       const response = await axios.get('/api/auth/me');
