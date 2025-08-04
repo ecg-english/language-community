@@ -26,7 +26,7 @@ axios.interceptors.response.use(
       // 認証エラーの場合、ローカルストレージをクリアしてログインページにリダイレクト
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/#/login';
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { CommunityProvider } from './contexts/CommunityContext';
 import { LanguageProvider } from './contexts/LanguageContext';
@@ -21,7 +21,7 @@ const App: React.FC = () => {
     <LanguageProvider>
       <AuthProvider>
         <CommunityProvider>
-          <Router>
+          <Router basename="/language-community">
             <Layout>
               <Routes>
                 <Route path="/login" element={<LoginPage />} />

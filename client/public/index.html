@@ -28,21 +28,23 @@
         let redirect = sessionStorage.redirect;
         delete sessionStorage.redirect;
         
-        if (redirect && redirect != location.href) {
+        // location.href そのものではなく、pathnameが `/language-community/` でない場合だけリダイレクト
+        if (redirect && !location.pathname.startsWith('/language-community/')) {
           console.log('Redirecting from sessionStorage:', redirect);
           history.replaceState(null, null, redirect);
         }
         
-        // URL修正関数
+        // URL修正関数（無限リダイレクトを防ぐ）
         function fixUrl() {
           const currentUrl = window.location.href;
-          console.log('Current URL:', currentUrl);
+          const currentPath = window.location.pathname;
+          console.log('Current URL:', currentUrl, 'Path:', currentPath);
           
           // 正しいベースURL
           const correctBase = 'https://ecg-english.github.io/language-community';
           
-          // 現在のURLが正しくない場合
-          if (!currentUrl.includes('/language-community')) {
+          // 現在のURLが正しくない場合（無限リダイレクトを防ぐ）
+          if (!currentPath.startsWith('/language-community/')) {
             // Hash部分を取得
             const hash = window.location.hash || '#/';
             const correctUrl = correctBase + hash;
