@@ -24,9 +24,9 @@ app.use(cors({
   credentials: true,
 }));
 
-// ボディパーサー
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// ボディパーサー（画像アップロード用に制限を増加）
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // リクエストログミドルウェア
 app.use((req, res, next) => {

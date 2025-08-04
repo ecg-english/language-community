@@ -145,13 +145,41 @@ const ChannelPage: React.FC = () => {
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setSelectedImage(result);
-        setImagePreview(result);
+      // 画像をリサイズして圧縮
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        // 最大サイズを設定（1200x1200）
+        const maxSize = 1200;
+        let { width, height } = img;
+        
+        if (width > height) {
+          if (width > maxSize) {
+            height = (height * maxSize) / width;
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width = (width * maxSize) / height;
+            height = maxSize;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // 画像を描画
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        // 圧縮されたBase64データを取得
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        setSelectedImage(compressedDataUrl);
+        setImagePreview(compressedDataUrl);
       };
-      reader.readAsDataURL(file);
+      
+      img.src = URL.createObjectURL(file);
     }
   };
 

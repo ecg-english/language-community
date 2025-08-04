@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');
 const db = require('../database');
 const { authenticateToken, checkChannelViewPermission, checkChannelPostPermission } = require('../middleware/auth');
 
@@ -289,19 +290,20 @@ router.post('/upload/image', authenticateToken, (req, res) => {
       return res.status(400).json({ error: '対応していない画像形式です。PNG、JPEG形式のみ対応しています' });
     }
 
-    // 画像を保存（実際の実装ではクラウドストレージを使用することを推奨）
+    // 画像を保存
     const fileName = `post_image_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
-    const filePath = `./uploads/${fileName}`;
+    const filePath = path.join(__dirname, '../uploads', fileName);
     
     // uploadsディレクトリが存在しない場合は作成
     const fs = require('fs');
-    if (!fs.existsSync('./uploads')) {
-      fs.mkdirSync('./uploads', { recursive: true });
+    const uploadsDir = path.join(__dirname, '../uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
     }
     
     fs.writeFileSync(filePath, buffer);
     
-    // 画像URLを返す（実際の実装ではクラウドストレージのURLを使用）
+    // 画像URLを返す
     const imageUrl = `/uploads/${fileName}`;
     
     res.json({
