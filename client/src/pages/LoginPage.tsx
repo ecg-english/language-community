@@ -12,11 +12,15 @@ import {
   Fade,
   Avatar,
   Divider,
+  FormControl,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import { Language, EmailOutlined, LockOutlined } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -26,6 +30,7 @@ const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { currentLanguage, changeLanguage } = useLanguage();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,6 +47,10 @@ const LoginPage: React.FC = () => {
     }
   };
 
+  const handleLanguageChange = (event: any) => {
+    changeLanguage(event.target.value);
+  };
+
   return (
     <Box
       sx={{
@@ -51,8 +60,39 @@ const LoginPage: React.FC = () => {
         alignItems: 'center',
         justifyContent: 'center',
         padding: { xs: 1, sm: 2 },
+        position: 'relative',
       }}
     >
+      {/* 言語切り替えボタン */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: { xs: 16, sm: 24 },
+          right: { xs: 16, sm: 24 },
+          zIndex: 1,
+        }}
+      >
+        <FormControl size="small" sx={{ minWidth: { xs: 80, sm: 120 } }}>
+          <Select
+            value={currentLanguage}
+            onChange={handleLanguageChange}
+            displayEmpty
+            sx={{
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              backdropFilter: 'blur(10px)',
+              '& .MuiSelect-select': {
+                py: { xs: 0.5, sm: 1 },
+                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+              },
+            }}
+          >
+            <MenuItem value="en">English</MenuItem>
+            <MenuItem value="ja">日本語</MenuItem>
+            <MenuItem value="jaSimple">かんたんな、にほんご</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
+
       <Container component="main" maxWidth="sm">
         <Fade in timeout={800}>
           <Card 
