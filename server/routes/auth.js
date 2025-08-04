@@ -181,6 +181,10 @@ router.get('/users/:userId', authenticateToken, (req, res) => {
 // プロフィール更新
 router.put('/profile', authenticateToken, async (req, res) => {
   try {
+    console.log('=== Profile Update Request ===');
+    console.log('Request body:', req.body);
+    console.log('User ID:', req.user.userId);
+    
     const { 
       username, 
       bio, 
@@ -189,7 +193,9 @@ router.put('/profile', authenticateToken, async (req, res) => {
       native_language, 
       target_languages, 
       country, 
-      timezone 
+      timezone,
+      discord_username,
+      instagram_id
     } = req.body;
     const userId = req.user.userId;
 
@@ -221,8 +227,8 @@ router.put('/profile', authenticateToken, async (req, res) => {
       target_languages || '',
       country || '',
       timezone || '',
-      req.body.discord_username || '',
-      req.body.instagram_id || '',
+      discord_username || '',
+      instagram_id || '',
       userId
     );
 

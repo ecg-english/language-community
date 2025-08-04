@@ -156,6 +156,20 @@ const ProfilePage: React.FC = () => {
       }
 
       // プロフィール更新
+      console.log('=== Profile Update Debug ===');
+      console.log('Sending profile data:', {
+        username: editData.username,
+        bio: editData.bio,
+        message: editData.message,
+        avatar_url: avatarUrl,
+        native_language: editData.native_language,
+        target_languages: editData.target_languages,
+        country: editData.country,
+        timezone: editData.timezone,
+        discord_username: editData.discord_username,
+        instagram_id: editData.instagram_id,
+      });
+      
       const response = await axios.put('/api/auth/profile', {
         username: editData.username,
         bio: editData.bio,
@@ -168,6 +182,8 @@ const ProfilePage: React.FC = () => {
         discord_username: editData.discord_username,
         instagram_id: editData.instagram_id,
       });
+      
+      console.log('Profile update response:', response.data);
 
       setProfileData(response.data.user);
       setIsEditing(false);
