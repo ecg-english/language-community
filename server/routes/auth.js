@@ -257,10 +257,15 @@ router.get('/debug/db-status', (req, res) => {
     const latestUsers = db.prepare('SELECT id, username, role, created_at FROM users ORDER BY created_at DESC LIMIT 5').all();
     console.log('Latest users:', latestUsers);
     
+    // ユーザーテーブルのスキーマを確認
+    const userSchema = db.prepare("PRAGMA table_info(users)").all();
+    console.log('Users table schema:', userSchema);
+    
     res.json({
       tables: tables.map(t => t.name),
       userCount: userCount.count,
-      latestUsers: latestUsers
+      latestUsers: latestUsers,
+      userSchema: userSchema
     });
   } catch (error) {
     console.error('Database debug error:', error);
