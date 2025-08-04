@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const db = require('../database');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'language-community-secret-key-2024';
 
 // JWT認証ミドルウェア（簡素化版）
 const authenticateToken = (req, res, next) => {

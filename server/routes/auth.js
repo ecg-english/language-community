@@ -5,7 +5,7 @@ const router = express.Router();
 const db = require('../database');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'language-community-secret-key-2024';
 
 // ルーターのログ
 router.use((req, res, next) => {
