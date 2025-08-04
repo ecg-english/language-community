@@ -163,7 +163,9 @@ router.get('/users/:userId', authenticateToken, (req, res) => {
     const { userId } = req.params;
 
     const user = db.prepare(`
-      SELECT id, username, email, role, bio, avatar_url, goal, message, created_at
+      SELECT id, username, email, role, bio, avatar_url, message, 
+             native_language, target_languages, country, timezone,
+             discord_username, instagram_id, created_at
       FROM users WHERE id = ?
     `).get(userId);
 

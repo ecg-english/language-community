@@ -35,6 +35,8 @@ interface Member {
   target_languages?: string;
   country?: string;
   timezone?: string;
+  discord_username?: string;
+  instagram_id?: string;
   monthly_reflection?: string;
   monthly_goal?: string;
   created_at: string;
