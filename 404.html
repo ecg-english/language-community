@@ -14,16 +14,9 @@
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
     <script>
-      // GitHub Pages用のSPAルーティング対応
-      (function(){
-        console.log('404.html: Redirecting to index.html');
-        
-        // 現在のURLをセッションストレージに保存
-        sessionStorage.redirect = window.location.href;
-        
-        // index.htmlにリダイレクト
-        window.location.replace('/language-community/');
-      })();
+      // シンプルなリダイレクト
+      sessionStorage.redirect = window.location.href;
+      window.location.replace('/language-community/');
     </script>
     <script defer="defer" src="/language-community/static/js/main.af549da5.js"></script>
   </body>
