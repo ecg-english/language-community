@@ -20,11 +20,20 @@
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
     <script>
-      // 強制的に正しいURLにリダイレクト
+      // GitHub Pages用のSPAルーティング対応
       (function(){
-        console.log('=== URL Correction Script Started ===');
+        console.log('=== SPA Routing Script Started ===');
         
-        // 即座にURLをチェックして修正
+        // セッションストレージからリダイレクト情報を取得
+        let redirect = sessionStorage.redirect;
+        delete sessionStorage.redirect;
+        
+        if (redirect && redirect != location.href) {
+          console.log('Redirecting from sessionStorage:', redirect);
+          history.replaceState(null, null, redirect);
+        }
+        
+        // URL修正関数
         function fixUrl() {
           const currentUrl = window.location.href;
           console.log('Current URL:', currentUrl);
