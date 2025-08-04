@@ -26,17 +26,18 @@ const en = {
     confirm: 'Confirm',
     
     // Features Page
-    featuresTitle: 'What you can do in this community',
-    featuresSubtitle: 'Introducing the main content of the language learning community',
+    featuresTitle: 'What You Can Do in This Community',
+    featuresSubtitle: 'An Introduction to the Main Content of the Language Learning Community',
     welcomeMessage: 'Welcome, {{username}}!',
     pronunciationCorrection: 'Weekly Pronunciation Correction',
-    pronunciationDescription: 'Submit audio for weekly assignments! Pronunciation correction feedback is returned to everyone once a week.',
-    studyLog: 'Everyone\'s Study Log',
-    studyLogDescription: 'Let\'s share study logs and turn each other\'s growth into motivation.',
-    motivationPlace: 'Place to boost motivation',
-    pronunciationVideo: 'Pronunciation Video Course',
-    pronunciationVideoDescription: 'Send audio you want corrected to the chat group. Audio correction feedback is returned to everyone once a week.',
-    freePronunciationCourse: 'Part of the pronunciation course released for free!',
+    pronunciationDescription: 'Submit your audio once a week! We’ll correct it and send it back!',
+    studyLog: 'Everyone’s Study Log',
+    studyLogDescription: 'Share your study logs to motivate each other’s growth.',
+    motivationPlace: 'Motivation Space',
+    pronunciationVideo: 'Lecture Videos',
+    pronunciationVideoDescription: 'Video lectures available exclusively for Class1 members!',
+    freePronunciationCourse: 'Learn Language and Culture in Depth!',
+
     
     // ログイン・登録
     email: 'Email',
@@ -104,21 +105,22 @@ const en = {
     
 
     
-    // 月次履歴
-    monthlyHistoryTitle: '月次振り返り・目標履歴',
-    monthlyHistoryDescription: 'これまでに記録した月次振り返りと目標の履歴を確認できます',
-    currentMonthTitle: '今月の振り返り・目標',
-    previousMonthTitle: '先月の振り返り・目標',
-    historicalTitle: '過去の履歴',
-    currentMonthGoal: '今月の目標',
-    currentMonthReflection: '先月の振り返り',
-    previousMonthGoal: '先月の目標',
-    previousMonthReflection: '先月の振り返り',
-    goal: '目標',
-    reflection: '振り返り',
-    noRecord: '記録されていません',
-    noMonthlyHistory: 'まだ月次振り返り・目標の記録がありません',
-    noMonthlyHistoryDescription: '月次更新ダイアログで振り返りと目標を記録すると、ここに履歴が表示されます',
+    // Monthly History
+    monthlyHistoryTitle: 'Monthly Reflections & Goals History',
+    monthlyHistoryDescription: 'View the history of your recorded monthly reflections and goals',
+    currentMonthTitle: 'This Month’s Reflections & Goals',
+    previousMonthTitle: 'Last Month’s Reflections & Goals',
+    historicalTitle: 'Past History',
+    currentMonthGoal: 'This Month’s Goal',
+    currentMonthReflection: 'Last Month’s Reflection',
+    previousMonthGoal: 'Last Month’s Goal',
+    previousMonthReflection: 'Last Month’s Reflection',
+    goal: 'Goal',
+    reflection: 'Reflection',
+    noRecord: 'No records found',
+    noMonthlyHistory: 'No monthly reflections or goals recorded yet',
+    noMonthlyHistoryDescription: 'Once you record reflections and goals in the monthly update dialog, your history will appear here',
+
     
     // 管理者
     userManagement: 'User Management',
@@ -191,13 +193,13 @@ const ja = {
     featuresSubtitle: '言語学習コミュニティの主な内容を紹介',
     welcomeMessage: 'ようこそ、{{username}}！',
     pronunciationCorrection: '週間発音訂正',
-    pronunciationDescription: '週間の課題に音声を提出！発音訂正フィードバックは週に一度全員に返却されます。',
+    pronunciationDescription: '週に一回、音声を提出可能！添削して返信します！',
     studyLog: '全員の学習ログ',
     studyLogDescription: '学習ログを共有し、互いの成長を動機付けましょう。',
     motivationPlace: '動機付けの場所',
-    pronunciationVideo: '発音動画コース',
-    pronunciationVideoDescription: 'チャットグループに修正したい音声を送信。音声訂正フィードバックは週に一度全員に返却されます。',
-    freePronunciationCourse: '無料で公開されている発音コースの一部！',
+    pronunciationVideo: '講義動画',
+    pronunciationVideoDescription: 'Class1の人限定で動画講座を見ることができます！',
+    freePronunciationCourse: '言語と文化を詳しく学べます！',
     
     // ログイン・登録
     email: 'メールアドレス',
@@ -331,16 +333,16 @@ const jaSimple = {
     
     // Features Page
     featuresTitle: 'このコミュニティでできること',
-    featuresSubtitle: '言語学習コミュニティの主な内容を紹介',
+    featuresSubtitle: 'げんごがくしゅうコミュニティのおもなないようをしょうかい',
     welcomeMessage: 'ようこそ、{{username}}！',
-    pronunciationCorrection: '週間発音訂正',
-    pronunciationDescription: '週間の課題に音声を提出！発音訂正フィードバックは週に一度全員に返却されます。',
-    studyLog: '全員の学習ログ',
-    studyLogDescription: '学習ログを共有し、互いの成長を動機付けましょう。',
-    motivationPlace: '動機付けの場所',
-    pronunciationVideo: '発音動画コース',
-    pronunciationVideoDescription: 'チャットグループに修正したい音声を送信。音声訂正フィードバックは週に一度全員に返却されます。',
-    freePronunciationCourse: '無料で公開されている発音コースの一部！',
+    pronunciationCorrection: 'しゅうかんはつおんていせい',
+    pronunciationDescription: 'しゅうにいっかい、にほんごのおんせいをていしゅつかのう！てんさくしてへんしんします！',
+    studyLog: 'ぜんいんのがくしゅうログ',
+    studyLogDescription: 'がくしゅうログをきょうゆうし、おたがいのせいちょうをうながしましょう。',
+    motivationPlace: 'モチベーションこうじょう',
+    pronunciationVideo: 'こうぎどうが',
+    pronunciationVideoDescription: 'Class1のひとげんていで、どうがこうざをみることができます！',
+    freePronunciationCourse: 'げんごとぶんかをくわしくまなべる！',
     
     // ログイン・登録
     email: 'メールアドレス',
