@@ -229,6 +229,102 @@ router.post('/categories/:categoryId/channels', authenticateToken, requireAdmin,
   }
 });
 
+// カテゴリを更新（管理者のみ）
+router.put('/categories/:categoryId', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    const { name } = req.body;
+
+    if (!name || name.trim() === '') {
+      return res.status(400).json({ error: 'カテゴリ名を入力してください' });
+    }
+
+    const trimmedName = name.trim();
+
+    // 既存のカテゴリをチェック（自分以外）
+    const existingCategory = db.prepare('SELECT id FROM categories WHERE name = ? AND id != ?').get(trimmedName, categoryId);
+    if (existingCategory) {
+      return res.status(400).json({ error: 'このカテゴリ名は既に存在します' });
+    }
+
+    const updateCategory = db.prepare('UPDATE categories SET name = ? WHERE id = ?');
+    const result = updateCategory.run(trimmedName, categoryId);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'カテゴリが見つかりません' });
+    }
+
+    // 更新されたカテゴリを取得
+    const updatedCategory = db.prepare('SELECT * FROM categories WHERE id = ?').get(categoryId);
+
+    res.json({
+      message: 'カテゴリが更新されました',
+      category: updatedCategory
+    });
+  } catch (error) {
+    console.error('カテゴリ更新エラー:', error);
+    res.status(500).json({ error: 'カテゴリの更新に失敗しました' });
+  }
+});
+
+// チャンネルを更新（管理者のみ）
+router.put('/channels/:channelId', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const { channelId } = req.params;
+    const { name, description, channel_type } = req.body;
+
+    if (!name || name.trim() === '') {
+      return res.status(400).json({ error: 'チャンネル名を入力してください' });
+    }
+
+    const validChannelTypes = [
+      'admin_only_instructors_view',
+      'admin_only_all_view', 
+      'instructors_post_all_view',
+      'all_post_all_view',
+      'class1_post_class1_view'
+    ];
+
+    if (!channel_type || !validChannelTypes.includes(channel_type)) {
+      return res.status(400).json({ error: '有効なチャンネルタイプを選択してください' });
+    }
+
+    const updateChannel = db.prepare(`
+      UPDATE channels 
+      SET name = ?, description = ?, channel_type = ? 
+      WHERE id = ?
+    `);
+    
+    const result = updateChannel.run(
+      name.trim(), 
+      description || '', 
+      channel_type,
+      channelId
+    );
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'チャンネルが見つかりません' });
+    }
+
+    // 更新されたチャンネルを取得
+    const updatedChannel = db.prepare(`
+      SELECT 
+        c.*,
+        (SELECT COUNT(*) FROM posts p WHERE p.channel_id = c.id) as post_count
+      FROM channels c
+      WHERE c.id = ?
+    `).get(channelId);
+
+    res.json({
+      message: 'チャンネルが更新されました',
+      channel: updatedChannel
+    });
+  } catch (error) {
+    console.error('チャンネル更新エラー:', error);
+    res.status(500).json({ error: 'チャンネルの更新に失敗しました' });
+  }
+});
+
 // チャンネルを削除（管理者のみ）
 router.delete('/channels/:channelId', authenticateToken, requireAdmin, (req, res) => {
   try {

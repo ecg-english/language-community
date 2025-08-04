@@ -80,11 +80,13 @@ const AdminPanel: React.FC = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // カテゴリ作成用
+  // カテゴリ作成・編集用
   const [newCategoryName, setNewCategoryName] = useState('');
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [editCategoryName, setEditCategoryName] = useState('');
 
-  // チャンネル作成用
+  // チャンネル作成・編集用
   const [newChannelData, setNewChannelData] = useState({
     name: '',
     description: '',
@@ -92,6 +94,12 @@ const AdminPanel: React.FC = () => {
     channelType: ''
   });
   const [channelDialogOpen, setChannelDialogOpen] = useState(false);
+  const [editingChannel, setEditingChannel] = useState<any>(null);
+  const [editChannelData, setEditChannelData] = useState({
+    name: '',
+    description: '',
+    channelType: ''
+  });
 
   // ユーザーロール変更用
   const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -197,6 +205,62 @@ const AdminPanel: React.FC = () => {
     setSelectedUser(user);
     setNewRole(user.role);
     setRoleDialogOpen(true);
+  };
+
+  const handleEditCategory = async () => {
+    try {
+      if (!editCategoryName.trim()) {
+        setError('カテゴリ名を入力してください');
+        return;
+      }
+
+      const response = await axios.put(`/api/channels/categories/${editingCategory.id}`, {
+        name: editCategoryName
+      });
+
+      setSuccess('カテゴリが更新されました');
+      setEditingCategory(null);
+      setEditCategoryName('');
+      loadCategories();
+    } catch (error: any) {
+      setError(error.response?.data?.error || 'カテゴリの更新に失敗しました');
+    }
+  };
+
+  const handleEditChannel = async () => {
+    try {
+      if (!editChannelData.name || !editChannelData.channelType) {
+        setError('全ての必須フィールドを入力してください');
+        return;
+      }
+
+      const response = await axios.put(`/api/channels/channels/${editingChannel.id}`, {
+        name: editChannelData.name,
+        description: editChannelData.description,
+        channel_type: editChannelData.channelType
+      });
+
+      setSuccess('チャンネルが更新されました');
+      setEditingChannel(null);
+      setEditChannelData({ name: '', description: '', channelType: '' });
+      loadChannels();
+    } catch (error: any) {
+      setError(error.response?.data?.error || 'チャンネルの更新に失敗しました');
+    }
+  };
+
+  const openEditCategoryDialog = (category: any) => {
+    setEditingCategory(category);
+    setEditCategoryName(category.name);
+  };
+
+  const openEditChannelDialog = (channel: any) => {
+    setEditingChannel(channel);
+    setEditChannelData({
+      name: channel.name,
+      description: channel.description || '',
+      channelType: channel.channel_type
+    });
   };
 
   const getRoleGradient = (role: string) => {
@@ -355,6 +419,7 @@ const AdminPanel: React.FC = () => {
                     <TableRow>
                       <TableCell>カテゴリ名</TableCell>
                       <TableCell>作成日</TableCell>
+                      <TableCell>操作</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -362,6 +427,15 @@ const AdminPanel: React.FC = () => {
                       <TableRow key={category.id}>
                         <TableCell>{category.name}</TableCell>
                         <TableCell>{formatDate(category.created_at)}</TableCell>
+                        <TableCell>
+                          <IconButton
+                            size="small"
+                            onClick={() => openEditCategoryDialog(category)}
+                            color="primary"
+                          >
+                            <EditIcon />
+                          </IconButton>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -415,6 +489,14 @@ const AdminPanel: React.FC = () => {
                               </TableCell>
                               <TableCell>{channel.post_count}</TableCell>
                               <TableCell>
+                                <IconButton
+                                  size="small"
+                                  onClick={() => openEditChannelDialog(channel)}
+                                  color="primary"
+                                  sx={{ mr: 1 }}
+                                >
+                                  <EditIcon />
+                                </IconButton>
                                 <IconButton
                                   size="small"
                                   onClick={() => handleDeleteChannel(channel.id)}
@@ -510,6 +592,73 @@ const AdminPanel: React.FC = () => {
               <Button onClick={() => setChannelDialogOpen(false)}>キャンセル</Button>
               <Button onClick={handleCreateChannel} variant="contained">
                 作成
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* カテゴリ編集ダイアログ */}
+          <Dialog open={!!editingCategory} onClose={() => setEditingCategory(null)}>
+            <DialogTitle>カテゴリを編集</DialogTitle>
+            <DialogContent>
+              <TextField
+                autoFocus
+                margin="dense"
+                label="カテゴリ名"
+                fullWidth
+                variant="outlined"
+                value={editCategoryName}
+                onChange={(e) => setEditCategoryName(e.target.value)}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setEditingCategory(null)}>キャンセル</Button>
+              <Button onClick={handleEditCategory} variant="contained">
+                更新
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* チャンネル編集ダイアログ */}
+          <Dialog open={!!editingChannel} onClose={() => setEditingChannel(null)} maxWidth="sm" fullWidth>
+            <DialogTitle>チャンネルを編集</DialogTitle>
+            <DialogContent>
+              <Stack spacing={2} sx={{ mt: 1 }}>
+                <TextField
+                  label="チャンネル名"
+                  fullWidth
+                  variant="outlined"
+                  value={editChannelData.name}
+                  onChange={(e) => setEditChannelData({ ...editChannelData, name: e.target.value })}
+                  required
+                />
+                <TextField
+                  label="説明"
+                  fullWidth
+                  variant="outlined"
+                  multiline
+                  rows={2}
+                  value={editChannelData.description}
+                  onChange={(e) => setEditChannelData({ ...editChannelData, description: e.target.value })}
+                />
+                <FormControl fullWidth required>
+                  <InputLabel>チャンネルタイプ</InputLabel>
+                  <Select
+                    value={editChannelData.channelType}
+                    onChange={(e) => setEditChannelData({ ...editChannelData, channelType: e.target.value })}
+                  >
+                    {channelTypes.map((type) => (
+                      <MenuItem key={type.value} value={type.value}>
+                        {type.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Stack>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setEditingChannel(null)}>キャンセル</Button>
+              <Button onClick={handleEditChannel} variant="contained">
+                更新
               </Button>
             </DialogActions>
           </Dialog>
