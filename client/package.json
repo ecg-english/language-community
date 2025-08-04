@@ -46,5 +46,5 @@
     ]
   },
   "proxy": "http://localhost:3001",
-  "homepage": "https://ecg-english.github.io/language-community"
+  "homepage": "https://ecg-english.github.io/language-community/"
 }
