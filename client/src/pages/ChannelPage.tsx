@@ -537,7 +537,14 @@ const ChannelPage: React.FC = () => {
                   )}
                 </Box>
                 
-                <Typography variant="body1" sx={{ mb: 2 }}>
+                <Typography 
+                  variant="body1" 
+                  sx={{ 
+                    mb: 2,
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word'
+                  }}
+                >
                   {post.content}
                 </Typography>
                 
@@ -623,7 +630,13 @@ const ChannelPage: React.FC = () => {
                                 {formatDate(comment.created_at)}
                               </Typography>
                             </Stack>
-                            <Typography variant="body2">
+                            <Typography 
+                              variant="body2"
+                              sx={{
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-word'
+                              }}
+                            >
                               {comment.content}
                             </Typography>
                           </Box>
