@@ -173,7 +173,7 @@ const CommunityPage: React.FC = () => {
                   mb: 2,
                 }}
               >
-                {t('community.title')}
+                {t('membersCommunity')}
               </Typography>
               
               <Typography 
@@ -185,7 +185,7 @@ const CommunityPage: React.FC = () => {
                   lineHeight: 1.6,
                 }}
               >
-                {t('community.welcome', { username: user?.username })}
+                {t('communityWelcome', { username: user?.username })}
               </Typography>
               
               {/* 検索バー */}

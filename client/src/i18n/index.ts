@@ -59,6 +59,8 @@ const en = {
     passwordTooShort: 'Password must be at least 6 characters long',
     
     // コミュニティ
+    membersCommunity: 'Members Community',
+    communityWelcome: 'Hello {{username}}',
     searchPosts: 'Search posts and users...',
     memberListDescription: 'Check the list of community members',
     featuresDescription: 'Learn about community features',
@@ -227,6 +229,8 @@ const ja = {
     passwordTooShort: 'パスワードは6文字以上で入力してください',
     
     // コミュニティ
+    membersCommunity: 'メンバーズコミュニティ',
+    communityWelcome: 'こんにちは {{username}}',
     searchPosts: '投稿やユーザーを検索...',
     memberListDescription: 'コミュニティのメンバー一覧を確認',
     featuresDescription: 'コミュニティの機能を詳しく紹介',
@@ -392,6 +396,8 @@ const jaSimple = {
     passwordTooShort: 'パスワードは6もじいじょうでにゅうりょくしてください',
     
     // コミュニティ
+    membersCommunity: 'メンバーズコミュニティ',
+    communityWelcome: 'こんにちは {{username}}',
     searchPosts: 'とうこうやユーザーをけんさく...',
     memberListDescription: 'コミュニティのメンバーいちらんをかくにん',
     featuresDescription: 'コミュニティのきのうをくわしくしょうかい',
