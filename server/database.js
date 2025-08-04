@@ -187,6 +187,18 @@ const initializeDatabase = () => {
       db.prepare('ALTER TABLE users ADD COLUMN timezone TEXT').run();
     }
     
+    // discord_usernameカラムを追加
+    if (!columnNames.includes('discord_username')) {
+      console.log('Adding discord_username column to users table...');
+      db.prepare('ALTER TABLE users ADD COLUMN discord_username TEXT').run();
+    }
+    
+    // instagram_idカラムを追加
+    if (!columnNames.includes('instagram_id')) {
+      console.log('Adding instagram_id column to users table...');
+      db.prepare('ALTER TABLE users ADD COLUMN instagram_id TEXT').run();
+    }
+    
     console.log('Database migrations completed.');
 
     // 初期カテゴリの作成（存在しない場合のみ）

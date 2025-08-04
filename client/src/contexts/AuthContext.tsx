@@ -8,6 +8,8 @@ interface User {
   role: string;
   bio?: string;
   avatar_url?: string;
+  discord_username?: string;
+  instagram_id?: string;
 }
 
 interface AuthContextType {

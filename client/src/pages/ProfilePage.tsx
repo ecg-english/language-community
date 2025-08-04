@@ -25,6 +25,8 @@ import {
   School as SchoolIcon,
   Message as MessageIcon,
   PhotoCamera as PhotoCameraIcon,
+  Discord as DiscordIcon,
+  Instagram as InstagramIcon,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -44,6 +46,8 @@ interface ProfileData {
   target_languages?: string;
   country?: string;
   timezone?: string;
+  discord_username?: string;
+  instagram_id?: string;
   monthly_reflection?: string;
   monthly_goal?: string;
 }
@@ -81,6 +85,8 @@ const ProfilePage: React.FC = () => {
           target_languages: response.data.user.target_languages || '',
           country: response.data.user.country || '',
           timezone: response.data.user.timezone || '',
+          discord_username: response.data.user.discord_username || '',
+          instagram_id: response.data.user.instagram_id || '',
         });
       } catch (error: any) {
         console.error('プロフィール取得エラー:', error);
@@ -159,6 +165,8 @@ const ProfilePage: React.FC = () => {
         target_languages: editData.target_languages,
         country: editData.country,
         timezone: editData.timezone,
+        discord_username: editData.discord_username,
+        instagram_id: editData.instagram_id,
       });
 
       setProfileData(response.data.user);
@@ -693,6 +701,155 @@ const ProfilePage: React.FC = () => {
                 >
                   {profileData.bio || t('bioNotSet')}
                 </Typography>
+              )}
+            </Box>
+
+            {/* Discord */}
+            <Box>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                mb: 1,
+                gap: 1
+              }}>
+                <DiscordIcon sx={{ 
+                  mr: 1, 
+                  color: '#5865F2',
+                  fontSize: { xs: 20, sm: 24 }
+                }} />
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontWeight: 500,
+                    fontSize: { xs: '1rem', sm: '1.25rem' }
+                  }}
+                >
+                  Discord
+                </Typography>
+              </Box>
+              {isEditing ? (
+                <TextField
+                  fullWidth
+                  value={editData.discord_username || ''}
+                  onChange={(e) => setEditData({ ...editData, discord_username: e.target.value })}
+                  placeholder="Discord名を入力してください..."
+                  variant="outlined"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      fontSize: { xs: '0.875rem', sm: '1rem' },
+                    },
+                  }}
+                />
+              ) : (
+                <Typography
+                  variant="body1"
+                  sx={{
+                    p: { xs: 1.5, sm: 2 },
+                    bgcolor: 'grey.50',
+                    borderRadius: 1,
+                    minHeight: { xs: 50, sm: 60 },
+                    display: 'flex',
+                    alignItems: 'center',
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                  }}
+                >
+                  {profileData.discord_username || '未設定'}
+                </Typography>
+              )}
+            </Box>
+
+            {/* Instagram */}
+            <Box>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                mb: 1,
+                gap: 1
+              }}>
+                <InstagramIcon sx={{ 
+                  mr: 1, 
+                  color: '#E4405F',
+                  fontSize: { xs: 20, sm: 24 }
+                }} />
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontWeight: 500,
+                    fontSize: { xs: '1rem', sm: '1.25rem' }
+                  }}
+                >
+                  Instagram
+                </Typography>
+              </Box>
+              {isEditing ? (
+                <TextField
+                  fullWidth
+                  value={editData.instagram_id || ''}
+                  onChange={(e) => setEditData({ ...editData, instagram_id: e.target.value })}
+                  placeholder="Instagram IDを入力してください..."
+                  variant="outlined"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      fontSize: { xs: '0.875rem', sm: '1rem' },
+                    },
+                  }}
+                />
+              ) : (
+                <Box>
+                  {profileData.instagram_id ? (
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center',
+                      gap: 1
+                    }}>
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          p: { xs: 1.5, sm: 2 },
+                          bgcolor: 'grey.50',
+                          borderRadius: 1,
+                          minHeight: { xs: 50, sm: 60 },
+                          display: 'flex',
+                          alignItems: 'center',
+                          fontSize: { xs: '0.875rem', sm: '1rem' },
+                          flex: 1,
+                        }}
+                      >
+                        {profileData.instagram_id}
+                      </Typography>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        href={`https://www.instagram.com/${profileData.instagram_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{
+                          minWidth: 'auto',
+                          px: 2,
+                          py: 1,
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                        }}
+                      >
+                        開く
+                      </Button>
+                    </Box>
+                  ) : (
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        p: { xs: 1.5, sm: 2 },
+                        bgcolor: 'grey.50',
+                        borderRadius: 1,
+                        minHeight: { xs: 50, sm: 60 },
+                        display: 'flex',
+                        alignItems: 'center',
+                        fontSize: { xs: '0.875rem', sm: '1rem' },
+                      }}
+                    >
+                      未設定
+                    </Typography>
+                  )}
+                </Box>
               )}
             </Box>
           </Box>

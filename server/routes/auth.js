@@ -207,7 +207,8 @@ router.put('/profile', authenticateToken, async (req, res) => {
     const updateUser = db.prepare(`
       UPDATE users 
       SET username = ?, bio = ?, message = ?, avatar_url = ?, 
-          native_language = ?, target_languages = ?, country = ?, timezone = ?
+          native_language = ?, target_languages = ?, country = ?, timezone = ?,
+          discord_username = ?, instagram_id = ?
       WHERE id = ?
     `);
 
@@ -220,13 +221,16 @@ router.put('/profile', authenticateToken, async (req, res) => {
       target_languages || '',
       country || '',
       timezone || '',
+      req.body.discord_username || '',
+      req.body.instagram_id || '',
       userId
     );
 
     // 更新されたユーザー情報を取得
     const updatedUser = db.prepare(`
       SELECT id, username, email, role, bio, avatar_url, message, 
-             native_language, target_languages, country, timezone, created_at
+             native_language, target_languages, country, timezone,
+             discord_username, instagram_id, created_at
       FROM users WHERE id = ?
     `).get(userId);
 
@@ -300,6 +304,7 @@ router.get('/users/test', (req, res) => {
     const users = db.prepare(`
       SELECT id, username, role, avatar_url, bio, message, 
              native_language, target_languages, country, timezone,
+             discord_username, instagram_id,
              monthly_reflection, monthly_goal, created_at
       FROM users
       ORDER BY created_at DESC
@@ -332,6 +337,7 @@ router.get('/users/public', (req, res) => {
     const users = db.prepare(`
       SELECT id, username, role, avatar_url, bio, message, 
              native_language, target_languages, country, timezone,
+             discord_username, instagram_id,
              monthly_reflection, monthly_goal, created_at
       FROM users
       ORDER BY created_at DESC
