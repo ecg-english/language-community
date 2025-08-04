@@ -221,7 +221,8 @@ const AdminPanel: React.FC = () => {
       setSuccess('カテゴリが更新されました');
       setEditingCategory(null);
       setEditCategoryName('');
-      loadCategories();
+      // カテゴリ一覧を再読み込み
+      await loadData();
     } catch (error: any) {
       setError(error.response?.data?.error || 'カテゴリの更新に失敗しました');
     }
@@ -243,7 +244,8 @@ const AdminPanel: React.FC = () => {
       setSuccess('チャンネルが更新されました');
       setEditingChannel(null);
       setEditChannelData({ name: '', description: '', channelType: '' });
-      loadChannels();
+      // チャンネル一覧を再読み込み
+      await loadData();
     } catch (error: any) {
       setError(error.response?.data?.error || 'チャンネルの更新に失敗しました');
     }
