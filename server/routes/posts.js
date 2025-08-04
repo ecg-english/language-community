@@ -70,7 +70,7 @@ router.get('/user/:userId', authenticateToken, (req, res) => {
 router.post('/channels/:channelId/posts', authenticateToken, checkChannelPostPermission, (req, res) => {
   try {
     const { channelId } = req.params;
-    const { content } = req.body;
+    const { content, image_url } = req.body;
     const userId = req.user.userId;
 
     if (!content || content.trim() === '') {
@@ -78,11 +78,11 @@ router.post('/channels/:channelId/posts', authenticateToken, checkChannelPostPer
     }
 
     const insertPost = db.prepare(`
-      INSERT INTO posts (content, user_id, channel_id) 
-      VALUES (?, ?, ?)
+      INSERT INTO posts (content, user_id, channel_id, image_url) 
+      VALUES (?, ?, ?, ?)
     `);
     
-    const result = insertPost.run(content.trim(), userId, channelId);
+    const result = insertPost.run(content.trim(), userId, channelId, image_url || null);
 
     // 作成された投稿を取得
     const newPost = db.prepare(`
@@ -260,6 +260,57 @@ router.delete('/comments/:commentId', authenticateToken, (req, res) => {
   } catch (error) {
     console.error('コメント削除エラー:', error);
     res.status(500).json({ error: 'コメントの削除に失敗しました' });
+  }
+});
+
+// 画像アップロード
+router.post('/upload/image', authenticateToken, (req, res) => {
+  try {
+    const { imageData } = req.body;
+    
+    if (!imageData) {
+      return res.status(400).json({ error: '画像データが提供されていません' });
+    }
+
+    // Base64データをデコードしてバリデーション
+    const base64Data = imageData.replace(/^data:image\/[a-z]+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+    
+    // ファイルサイズチェック（5MB制限）
+    if (buffer.length > 5 * 1024 * 1024) {
+      return res.status(400).json({ error: '画像サイズは5MB以下にしてください' });
+    }
+
+    // 画像形式チェック
+    const header = buffer.toString('hex', 0, 4);
+    const validFormats = ['89504e47', 'ffd8ffdb', 'ffd8ffe0', 'ffd8ffe1', 'ffd8ffe2', 'ffd8ffe3', 'ffd8ffe8'];
+    
+    if (!validFormats.some(format => header.startsWith(format))) {
+      return res.status(400).json({ error: '対応していない画像形式です。PNG、JPEG形式のみ対応しています' });
+    }
+
+    // 画像を保存（実際の実装ではクラウドストレージを使用することを推奨）
+    const fileName = `post_image_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
+    const filePath = `./uploads/${fileName}`;
+    
+    // uploadsディレクトリが存在しない場合は作成
+    const fs = require('fs');
+    if (!fs.existsSync('./uploads')) {
+      fs.mkdirSync('./uploads', { recursive: true });
+    }
+    
+    fs.writeFileSync(filePath, buffer);
+    
+    // 画像URLを返す（実際の実装ではクラウドストレージのURLを使用）
+    const imageUrl = `/uploads/${fileName}`;
+    
+    res.json({
+      message: '画像がアップロードされました',
+      imageUrl: imageUrl
+    });
+  } catch (error) {
+    console.error('画像アップロードエラー:', error);
+    res.status(500).json({ error: '画像のアップロードに失敗しました' });
   }
 });
 

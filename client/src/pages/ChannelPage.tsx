@@ -26,6 +26,8 @@ import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
   Delete as DeleteIcon,
+  Image as ImageIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -41,6 +43,7 @@ interface Post {
   like_count: number;
   comment_count: number;
   user_liked: number;
+  image_url?: string;
 }
 
 interface Comment {
@@ -74,6 +77,8 @@ const ChannelPage: React.FC = () => {
   const [expandedComments, setExpandedComments] = useState<{ [postId: number]: boolean }>({});
   const [canPost, setCanPost] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const numChannelId = parseInt(channelId || '0');
 
@@ -132,22 +137,60 @@ const ChannelPage: React.FC = () => {
     }
   };
 
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError('画像サイズは5MB以下にしてください');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setSelectedImage(result);
+        setImagePreview(result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+  };
+
   const handleSubmitPost = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPost.trim() || !canPost || isSubmitting) return;
 
     try {
       setIsSubmitting(true);
+      
+      let imageUrl = null;
+      if (selectedImage) {
+        // 画像をアップロード
+        const uploadResponse = await axios.post('/api/posts/upload/image', {
+          imageData: selectedImage
+        });
+        imageUrl = uploadResponse.data.imageUrl;
+      }
+
       await axios.post(`/api/posts/channels/${numChannelId}/posts`, {
-        content: newPost
+        content: newPost,
+        image_url: imageUrl
       });
+      
       setNewPost('');
+      setSelectedImage(null);
+      setImagePreview(null);
+      
       // 投稿を再読み込み
       const postsResponse = await axios.get(`/api/posts/channels/${numChannelId}/posts`);
       setPosts(postsResponse.data.posts || []);
     } catch (error: any) {
       console.error('投稿の作成に失敗しました:', error);
-      setError(t('postsLoadFailed'));
+      setError(error.response?.data?.error || t('postsLoadFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -363,7 +406,58 @@ const ChannelPage: React.FC = () => {
                 variant="outlined"
                 sx={{ mb: 2 }}
               />
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+              
+              {/* 画像プレビュー */}
+              {imagePreview && (
+                <Box sx={{ mb: 2, position: 'relative' }}>
+                  <img
+                    src={imagePreview}
+                    alt="プレビュー"
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '300px',
+                      borderRadius: '8px',
+                      objectFit: 'contain'
+                    }}
+                  />
+                  <IconButton
+                    onClick={handleRemoveImage}
+                    sx={{
+                      position: 'absolute',
+                      top: 8,
+                      right: 8,
+                      bgcolor: 'rgba(0, 0, 0, 0.5)',
+                      color: 'white',
+                      '&:hover': {
+                        bgcolor: 'rgba(0, 0, 0, 0.7)',
+                      }
+                    }}
+                  >
+                    <CloseIcon />
+                  </IconButton>
+                </Box>
+              )}
+              
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    style={{ display: 'none' }}
+                    id="image-upload-input"
+                  />
+                  <label htmlFor="image-upload-input">
+                    <Button
+                      component="span"
+                      variant="outlined"
+                      startIcon={<ImageIcon />}
+                      disabled={isSubmitting}
+                    >
+                      画像を追加
+                    </Button>
+                  </label>
+                </Box>
                 <Button
                   type="submit"
                   variant="contained"
@@ -418,6 +512,22 @@ const ChannelPage: React.FC = () => {
                 <Typography variant="body1" sx={{ mb: 2 }}>
                   {post.content}
                 </Typography>
+                
+                {/* 画像表示 */}
+                {post.image_url && (
+                  <Box sx={{ mb: 2 }}>
+                    <img
+                      src={post.image_url}
+                      alt="投稿画像"
+                      style={{
+                        maxWidth: '100%',
+                        maxHeight: '400px',
+                        borderRadius: '8px',
+                        objectFit: 'contain'
+                      }}
+                    />
+                  </Box>
+                )}
                 
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <Button

@@ -199,6 +199,15 @@ const initializeDatabase = () => {
       db.prepare('ALTER TABLE users ADD COLUMN instagram_id TEXT').run();
     }
     
+    // postsテーブルにimage_urlカラムを追加
+    const postsColumns = db.prepare("PRAGMA table_info(posts)").all();
+    const postsColumnNames = postsColumns.map(col => col.name);
+    
+    if (!postsColumnNames.includes('image_url')) {
+      console.log('Adding image_url column to posts table...');
+      db.prepare('ALTER TABLE posts ADD COLUMN image_url TEXT').run();
+    }
+    
     console.log('Database migrations completed.');
 
     // 初期カテゴリの作成（存在しない場合のみ）
