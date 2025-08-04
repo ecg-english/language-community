@@ -297,7 +297,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         >
           <HistoryIcon sx={{ mr: 2, color: 'primary.main' }} />
           <Typography variant="body2" fontWeight={500}>
-            月次履歴
+            {t('monthlyHistory')}
           </Typography>
         </MenuItem>
 
