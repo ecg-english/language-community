@@ -292,19 +292,20 @@ router.post('/upload/image', authenticateToken, (req, res) => {
 
     // 画像を保存
     const fileName = `post_image_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
-    const filePath = path.join(__dirname, '../uploads', fileName);
+    const uploadsDir = path.join(__dirname, '../uploads');
+    const filePath = path.join(uploadsDir, fileName);
     
     // uploadsディレクトリが存在しない場合は作成
     const fs = require('fs');
-    const uploadsDir = path.join(__dirname, '../uploads');
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
     }
     
     fs.writeFileSync(filePath, buffer);
     
-    // 画像URLを返す
-    const imageUrl = `/uploads/${fileName}`;
+    // 画像URLを返す（バックエンドのURLを含む）
+    const backendUrl = process.env.BACKEND_URL || 'https://language-community-backend.onrender.com';
+    const imageUrl = `${backendUrl}/uploads/${fileName}`;
     
     res.json({
       message: '画像がアップロードされました',

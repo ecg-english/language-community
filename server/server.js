@@ -66,8 +66,13 @@ const upload = multer({
   }
 });
 
-// 静的ファイル配信
-app.use('/uploads', express.static(uploadsDir));
+// 静的ファイル配信（CORSヘッダーを追加）
+app.use('/uploads', (req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  next();
+}, express.static(uploadsDir));
 
 // テスト用エンドポイント（直接サーバーに追加）
 app.get('/api/test/users', (req, res) => {
