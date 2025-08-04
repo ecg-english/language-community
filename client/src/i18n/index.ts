@@ -102,21 +102,7 @@ const en = {
     eventDeleted: 'Event deleted successfully',
     eventFailed: 'Failed to manage event',
     
-    // 月次履歴
-    monthlyHistoryTitle: 'げつじふりかえり・もくひょうれきし',
-    monthlyHistoryDescription: 'これまでにきろくしたげつじふりかえりともくひょうのれきしをかくにんできます',
-    currentMonthTitle: 'こんげつのふりかえり・もくひょう',
-    previousMonthTitle: 'せんげつのふりかえり・もくひょう',
-    historicalTitle: 'かこのれきし',
-    currentMonthGoal: 'こんげつのもくひょう',
-    currentMonthReflection: 'せんげつのふりかえり',
-    previousMonthGoal: 'せんげつのもくひょう',
-    previousMonthReflection: 'せんげつのふりかえり',
-    goal: 'もくひょう',
-    reflection: 'ふりかえり',
-    noRecord: 'きろくされていません',
-    noMonthlyHistory: 'まだげつじふりかえり・もくひょうのきろくがありません',
-    noMonthlyHistoryDescription: 'げつじこうしんダイアログでふりかえりともくひょうをきろくすると、ここにれきしがひょうじされます',
+
     
     // 月次履歴
     monthlyHistoryTitle: '月次振り返り・目標履歴',
@@ -419,6 +405,22 @@ const jaSimple = {
     eventUpdated: 'イベントがこうしんされました',
     eventDeleted: 'イベントがさくじょされました',
     eventFailed: 'イベントのそうさにしっぱいしました',
+    
+    // 月次履歴
+    monthlyHistoryTitle: 'げつじふりかえり・もくひょうれきし',
+    monthlyHistoryDescription: 'これまでにきろくしたげつじふりかえりともくひょうのれきしをかくにんできます',
+    currentMonthTitle: 'こんげつのふりかえり・もくひょう',
+    previousMonthTitle: 'せんげつのふりかえり・もくひょう',
+    historicalTitle: 'かこのれきし',
+    currentMonthGoal: 'こんげつのもくひょう',
+    currentMonthReflection: 'せんげつのふりかえり',
+    previousMonthGoal: 'せんげつのもくひょう',
+    previousMonthReflection: 'せんげつのふりかえり',
+    goal: 'もくひょう',
+    reflection: 'ふりかえり',
+    noRecord: 'きろくされていません',
+    noMonthlyHistory: 'まだげつじふりかえり・もくひょうのきろくがありません',
+    noMonthlyHistoryDescription: 'げつじこうしんダイアログでふりかえりともくひょうをきろくすると、ここにれきしがひょうじされます',
     
     // 管理者
     userManagement: 'ユーザーかんり',
