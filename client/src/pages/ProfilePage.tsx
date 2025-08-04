@@ -408,7 +408,7 @@ const ProfilePage: React.FC = () => {
             {/* アバター */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <Typography variant="h6" sx={{ fontWeight: 500 }}>
-                アバター
+                {t('avatar')}
               </Typography>
               <input
                 type="file"
@@ -464,7 +464,7 @@ const ProfilePage: React.FC = () => {
                     fontSize: { xs: '1rem', sm: '1.25rem' }
                   }}
                 >
-                  母語
+                  {t('nativeLanguage')}
                 </Typography>
               </Box>
               {isEditing ? (
@@ -472,7 +472,7 @@ const ProfilePage: React.FC = () => {
                   fullWidth
                   value={editData.native_language || ''}
                   onChange={(e) => setEditData({ ...editData, native_language: e.target.value })}
-                  placeholder="母語を入力してください..."
+                  placeholder={t('nativeLanguage') + 'を入力してください...'}
                   variant="outlined"
                   sx={{
                     '& .MuiOutlinedInput-root': {
@@ -493,7 +493,7 @@ const ProfilePage: React.FC = () => {
                     fontSize: { xs: '0.875rem', sm: '1rem' },
                   }}
                 >
-                  {profileData.native_language || '未設定'}
+                  {profileData.native_language || t('goalNotSet')}
                 </Typography>
               )}
             </Box>
@@ -518,7 +518,7 @@ const ProfilePage: React.FC = () => {
                     fontSize: { xs: '1rem', sm: '1.25rem' }
                   }}
                 >
-                  学習したい言語
+                  {t('targetLanguages')}
                 </Typography>
               </Box>
               {isEditing ? (
@@ -528,7 +528,7 @@ const ProfilePage: React.FC = () => {
                   rows={2}
                   value={editData.target_languages || ''}
                   onChange={(e) => setEditData({ ...editData, target_languages: e.target.value })}
-                  placeholder="学習したい言語を入力してください..."
+                  placeholder={t('targetLanguages') + 'を入力してください...'}
                   variant="outlined"
                   sx={{
                     '& .MuiOutlinedInput-root': {
@@ -549,7 +549,7 @@ const ProfilePage: React.FC = () => {
                     fontSize: { xs: '0.875rem', sm: '1rem' },
                   }}
                 >
-                  {profileData.target_languages || '未設定'}
+                  {profileData.target_languages || t('goalNotSet')}
                 </Typography>
               )}
             </Box>
@@ -574,7 +574,7 @@ const ProfilePage: React.FC = () => {
                     fontSize: { xs: '1rem', sm: '1.25rem' }
                   }}
                 >
-                  現在の国
+                  {t('currentCountry')}
                 </Typography>
               </Box>
               {isEditing ? (
@@ -582,7 +582,7 @@ const ProfilePage: React.FC = () => {
                   fullWidth
                   value={editData.country || ''}
                   onChange={(e) => setEditData({ ...editData, country: e.target.value })}
-                  placeholder="現在の国を入力してください..."
+                  placeholder={t('currentCountry') + 'を入力してください...'}
                   variant="outlined"
                   sx={{
                     '& .MuiOutlinedInput-root': {
@@ -603,7 +603,7 @@ const ProfilePage: React.FC = () => {
                     fontSize: { xs: '0.875rem', sm: '1rem' },
                   }}
                 >
-                  {profileData.country || '未設定'}
+                  {profileData.country || t('goalNotSet')}
                 </Typography>
               )}
             </Box>

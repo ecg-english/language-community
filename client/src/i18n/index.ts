@@ -78,6 +78,11 @@ const en = {
     registrationDate: 'Registration Date',
     profileUpdateSuccess: 'Profile updated successfully',
     profileUpdateFailed: 'Failed to update profile',
+    nativeLanguage: 'Native Language',
+    targetLanguages: 'Languages to Learn',
+    currentCountry: 'Current Country',
+    avatar: 'Avatar',
+    uploadAvatar: 'Upload Avatar',
     
     // イベント
     upcomingEvents: 'Upcoming Events',
@@ -128,22 +133,6 @@ const en = {
     noRecord: '記録されていません',
     noMonthlyHistory: 'まだ月次振り返り・目標の記録がありません',
     noMonthlyHistoryDescription: '月次更新ダイアログで振り返りと目標を記録すると、ここに履歴が表示されます',
-    
-    // 月次履歴
-    monthlyHistoryTitle: 'Monthly Review & Goal History',
-    monthlyHistoryDescription: 'Check the history of monthly reviews and goals recorded so far',
-    currentMonthTitle: 'This Month\'s Review & Goals',
-    previousMonthTitle: 'Last Month\'s Review & Goals',
-    historicalTitle: 'Past History',
-    currentMonthGoal: 'This Month\'s Goal',
-    currentMonthReflection: 'Last Month\'s Review',
-    previousMonthGoal: 'Last Month\'s Goal',
-    previousMonthReflection: 'Last Month\'s Review',
-    goal: 'Goal',
-    reflection: 'Review',
-    noRecord: 'No record',
-    noMonthlyHistory: 'No monthly review and goal records yet',
-    noMonthlyHistoryDescription: 'When you record reviews and goals in the monthly update dialog, the history will be displayed here',
     
     // 管理者
     userManagement: 'User Management',
@@ -264,6 +253,11 @@ const ja = {
     registrationDate: '登録日',
     profileUpdateSuccess: 'プロフィールが更新されました',
     profileUpdateFailed: 'プロフィールの更新に失敗しました',
+    nativeLanguage: '母語',
+    targetLanguages: '学習したい言語',
+    currentCountry: '現在の国',
+    avatar: 'アバター',
+    uploadAvatar: 'アバターをアップロード',
     
     // イベント
     upcomingEvents: '今後のイベント',
@@ -402,6 +396,11 @@ const jaSimple = {
     registrationDate: 'とうろくび',
     profileUpdateSuccess: 'プロフィールがこうしんされました',
     profileUpdateFailed: 'プロフィールのこうしんにしっぱいしました',
+    nativeLanguage: 'ぼご',
+    targetLanguages: 'がくしゅうしたいげんご',
+    currentCountry: 'げんざいのくに',
+    avatar: 'アバター',
+    uploadAvatar: 'アバターをアップロード',
     
     // イベント
     upcomingEvents: 'こんごのイベント',
