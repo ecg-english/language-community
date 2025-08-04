@@ -25,7 +25,7 @@ import {
   School as SchoolIcon,
   Message as MessageIcon,
   PhotoCamera as PhotoCameraIcon,
-  Discord as DiscordIcon,
+  Chat as DiscordIcon,
   Instagram as InstagramIcon,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
