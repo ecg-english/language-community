@@ -503,4 +503,36 @@ router.get('/monthly-info/:userId', async (req, res) => {
   }
 });
 
+// ユーザーの月次履歴を取得
+router.get('/monthly-history/:userId', authenticateToken, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // 月次通知テーブルから履歴を取得
+    const monthlyEntries = db.prepare(`
+      SELECT mn.year, mn.month, mn.is_completed,
+             u.monthly_reflection, u.monthly_goal, u.last_monthly_update
+      FROM monthly_notifications mn
+      LEFT JOIN users u ON mn.user_id = u.id
+      WHERE mn.user_id = ? AND mn.is_completed = 1
+      ORDER BY mn.year DESC, mn.month DESC
+    `).all(userId);
+
+    console.log(`Found ${monthlyEntries.length} monthly entries for user ${userId}`);
+
+    res.json({
+      monthlyEntries: monthlyEntries.map(entry => ({
+        year: entry.year,
+        month: entry.month,
+        reflection: entry.monthly_reflection,
+        goal: entry.monthly_goal,
+        last_monthly_update: entry.last_monthly_update
+      }))
+    });
+  } catch (error) {
+    console.error('月次履歴取得エラー:', error);
+    res.status(500).json({ error: '月次履歴の取得に失敗しました' });
+  }
+});
+
 module.exports = router; 

@@ -21,6 +21,7 @@ import {
   Event as EventIcon,
   Logout as LogoutIcon,
   Language as LanguageIcon,
+  History as HistoryIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -282,6 +283,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <EventIcon sx={{ mr: 2, color: 'primary.main' }} />
           <Typography variant="body2" fontWeight={500}>
             {t('events')}
+          </Typography>
+        </MenuItem>
+
+        <MenuItem
+          onClick={() => navigate('/monthly-history')}
+          sx={{
+            py: 1.5,
+            '&:hover': {
+              backgroundColor: 'rgba(30, 64, 175, 0.04)',
+            },
+          }}
+        >
+          <HistoryIcon sx={{ mr: 2, color: 'primary.main' }} />
+          <Typography variant="body2" fontWeight={500}>
+            月次履歴
           </Typography>
         </MenuItem>
 
