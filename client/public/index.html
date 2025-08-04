@@ -18,26 +18,6 @@
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-    <script>
-      (function(){
-        console.log('=== SPA Routing Script Started ===');
-      
-        let redirect = sessionStorage.redirect;
-        delete sessionStorage.redirect;
-      
-        const currentPath = window.location.pathname;
-      
-        // 正しくないURLのときのみ、リダイレクトを行う
-        if (
-          redirect &&
-          !currentPath.startsWith('/language-community/') &&
-          !window.location.href.includes('404')
-        ) {
-          console.log('Redirecting from sessionStorage:', redirect);
-          history.replaceState(null, null, redirect);
-        }
-      })();
-      </script>      
+    <div id="root"></div>      
   </body>
 </html> 
