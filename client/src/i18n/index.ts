@@ -338,7 +338,7 @@ const jaSimple = {
     adminPanel: 'かんりしゃパネル',
     features: 'このコミュニティでできること',
     events: 'イベントスケジュール',
-    monthlyHistory: 'げつじれきし',
+    monthlyHistory: 'まいつきのりれき',
     save: 'ほぞん',
     cancel: 'キャンセル',
     edit: 'へんしゅう',
