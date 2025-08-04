@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Container,
@@ -344,6 +344,33 @@ const ChannelPage: React.FC = () => {
     return new Date(dateString).toLocaleString('ja-JP');
   };
 
+  // URLを検出してリンクに変換する関数
+  const convertUrlsToLinks = (text: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    
+    return parts.map((part, index) => {
+      if (urlRegex.test(part)) {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: '#1976d2',
+              textDecoration: 'underline',
+              wordBreak: 'break-all'
+            }}
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+  };
+
   if (loading) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -545,7 +572,7 @@ const ChannelPage: React.FC = () => {
                     wordBreak: 'break-word'
                   }}
                 >
-                  {post.content}
+                  {convertUrlsToLinks(post.content)}
                 </Typography>
                 
                 {/* 画像表示 */}
@@ -637,7 +664,7 @@ const ChannelPage: React.FC = () => {
                                 wordBreak: 'break-word'
                               }}
                             >
-                              {comment.content}
+                              {convertUrlsToLinks(comment.content)}
                             </Typography>
                           </Box>
                           {(user?.id === comment.user_id || user?.role === 'サーバー管理者') && (
