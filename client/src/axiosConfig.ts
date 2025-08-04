@@ -23,10 +23,11 @@ axios.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      // 認証エラーの場合、ローカルストレージをクリアしてログインページにリダイレクト
+      // 認証エラーの場合、ローカルストレージをクリア
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/#/login';
+      console.log('401 error detected, but not redirecting to avoid infinite loop');
+      // window.location.href = '/#/login'; // 一時的に無効化
     }
     return Promise.reject(error);
   }

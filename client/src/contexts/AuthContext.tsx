@@ -53,6 +53,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const token = localStorage.getItem('token');
       console.log('Token in localStorage:', !!token);
       
+      if (!token) {
+        console.log('No token found, setting loading to false');
+        setIsLoading(false);
+        return;
+      }
+      
       if (token) {
         try {
           const tokenParts = token.split('.');
