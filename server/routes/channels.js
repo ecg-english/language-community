@@ -348,18 +348,25 @@ router.delete('/channels/:channelId', authenticateToken, requireAdmin, (req, res
 // カテゴリの並び替え（管理者のみ）
 router.put('/categories/reorder', authenticateToken, requireAdmin, (req, res) => {
   try {
+    console.log('カテゴリ並び替えAPIが呼ばれました:', req.body);
     const { categoryIds } = req.body;
 
     if (!Array.isArray(categoryIds)) {
+      console.log('カテゴリIDが配列ではありません:', categoryIds);
       return res.status(400).json({ error: 'カテゴリIDの配列が必要です' });
     }
+
+    console.log('並び替え対象のカテゴリID:', categoryIds);
 
     const updateCategoryOrder = db.prepare('UPDATE categories SET display_order = ? WHERE id = ?');
     
     categoryIds.forEach((categoryId, index) => {
-      updateCategoryOrder.run(index, categoryId);
+      console.log(`カテゴリID ${categoryId} を順序 ${index} に設定`);
+      const result = updateCategoryOrder.run(index, categoryId);
+      console.log(`更新結果: ${result.changes} 行が更新されました`);
     });
 
+    console.log('カテゴリ並び替えが完了しました');
     res.json({ message: 'カテゴリの並び順が更新されました' });
   } catch (error) {
     console.error('カテゴリ並び替えエラー:', error);
@@ -370,18 +377,25 @@ router.put('/categories/reorder', authenticateToken, requireAdmin, (req, res) =>
 // チャンネルの並び替え（管理者のみ）
 router.put('/channels/reorder', authenticateToken, requireAdmin, (req, res) => {
   try {
+    console.log('チャンネル並び替えAPIが呼ばれました:', req.body);
     const { channelIds } = req.body;
 
     if (!Array.isArray(channelIds)) {
+      console.log('チャンネルIDが配列ではありません:', channelIds);
       return res.status(400).json({ error: 'チャンネルIDの配列が必要です' });
     }
+
+    console.log('並び替え対象のチャンネルID:', channelIds);
 
     const updateChannelOrder = db.prepare('UPDATE channels SET display_order = ? WHERE id = ?');
     
     channelIds.forEach((channelId, index) => {
-      updateChannelOrder.run(index, channelId);
+      console.log(`チャンネルID ${channelId} を順序 ${index} に設定`);
+      const result = updateChannelOrder.run(index, channelId);
+      console.log(`更新結果: ${result.changes} 行が更新されました`);
     });
 
+    console.log('チャンネル並び替えが完了しました');
     res.json({ message: 'チャンネルの並び順が更新されました' });
   } catch (error) {
     console.error('チャンネル並び替えエラー:', error);
