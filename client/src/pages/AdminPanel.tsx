@@ -36,7 +36,9 @@ import {
   Delete as DeleteIcon,
   Edit as EditIcon,
   AdminPanelSettings,
+  DragIndicator,
 } from '@mui/icons-material';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { useAuth } from '../contexts/AuthContext';
 import { useCommunity } from '../contexts/CommunityContext';
 import axios from 'axios';
@@ -73,6 +75,8 @@ const AdminPanel: React.FC = () => {
     createCategory,
     createChannel,
     deleteChannel,
+    reorderCategories,
+    reorderChannels,
   } = useCommunity();
 
   const [tabValue, setTabValue] = useState(0);
@@ -251,6 +255,45 @@ const AdminPanel: React.FC = () => {
     }
   };
 
+  // カテゴリの並び替え
+  const handleCategoryReorder = async (result: any) => {
+    if (!result.destination) return;
+
+    try {
+      const reorderedCategories = Array.from(categories);
+      const [removed] = reorderedCategories.splice(result.source.index, 1);
+      reorderedCategories.splice(result.destination.index, 0, removed);
+
+      const categoryIds = reorderedCategories.map(cat => cat.id);
+      await reorderCategories(categoryIds);
+      
+      setSuccess('カテゴリの並び順が更新されました');
+      await loadData();
+    } catch (error: any) {
+      setError(error.response?.data?.error || 'カテゴリの並び替えに失敗しました');
+    }
+  };
+
+  // チャンネルの並び替え
+  const handleChannelReorder = async (categoryId: number, result: any) => {
+    if (!result.destination) return;
+
+    try {
+      const categoryChannels = channels[categoryId] || [];
+      const reorderedChannels = Array.from(categoryChannels);
+      const [removed] = reorderedChannels.splice(result.source.index, 1);
+      reorderedChannels.splice(result.destination.index, 0, removed);
+
+      const channelIds = reorderedChannels.map(channel => channel.id);
+      await reorderChannels(channelIds);
+      
+      setSuccess('チャンネルの並び順が更新されました');
+      await loadData();
+    } catch (error: any) {
+      setError(error.response?.data?.error || 'チャンネルの並び替えに失敗しました');
+    }
+  };
+
   const openEditCategoryDialog = (category: any) => {
     setEditingCategory(category);
     setEditCategoryName(category.name);
@@ -415,34 +458,66 @@ const AdminPanel: React.FC = () => {
                 </Button>
               </Box>
               
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>カテゴリ名</TableCell>
-                      <TableCell>作成日</TableCell>
-                      <TableCell>操作</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {categories.map((category) => (
-                      <TableRow key={category.id}>
-                        <TableCell>{category.name}</TableCell>
-                        <TableCell>{formatDate(category.created_at)}</TableCell>
-                        <TableCell>
-                          <IconButton
-                            size="small"
-                            onClick={() => openEditCategoryDialog(category)}
-                            color="primary"
-                          >
-                            <EditIcon />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+              <DragDropContext onDragEnd={handleCategoryReorder}>
+                <Droppable droppableId="categories">
+                  {(provided) => (
+                    <div {...provided.droppableProps} ref={provided.innerRef}>
+                      {categories.map((category, index) => (
+                        <Draggable key={category.id} draggableId={`category-${category.id}`} index={index}>
+                          {(provided, snapshot) => (
+                            <Paper
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              elevation={snapshot.isDragging ? 8 : 1}
+                              sx={{
+                                mb: 2,
+                                p: 2,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                backgroundColor: snapshot.isDragging ? 'rgba(30, 64, 175, 0.1)' : 'white',
+                                border: snapshot.isDragging ? '2px solid #1e40af' : '1px solid rgba(0, 0, 0, 0.12)',
+                                borderRadius: 2,
+                                transition: 'all 0.2s ease',
+                              }}
+                            >
+                              <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                                <Box
+                                  {...provided.dragHandleProps}
+                                  sx={{
+                                    mr: 2,
+                                    cursor: 'grab',
+                                    color: 'text.secondary',
+                                    '&:hover': { color: 'primary.main' },
+                                  }}
+                                >
+                                  <DragIndicator />
+                                </Box>
+                                <Box sx={{ flex: 1 }}>
+                                  <Typography variant="h6" fontWeight={500}>
+                                    {category.name}
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    作成日: {formatDate(category.created_at)}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                              <IconButton
+                                size="small"
+                                onClick={() => openEditCategoryDialog(category)}
+                                color="primary"
+                              >
+                                <EditIcon />
+                              </IconButton>
+                            </Paper>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
             </TabPanel>
 
             {/* チャンネル管理タブ */}
@@ -466,52 +541,85 @@ const AdminPanel: React.FC = () => {
                     <Typography variant="h6" gutterBottom>
                       {category.name}
                     </Typography>
-                    <TableContainer component={Paper} variant="outlined">
-                      <Table size="small">
-                        <TableHead>
-                          <TableRow>
-                            <TableCell>チャンネル名</TableCell>
-                            <TableCell>説明</TableCell>
-                            <TableCell>タイプ</TableCell>
-                            <TableCell>投稿数</TableCell>
-                            <TableCell>操作</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {categoryChannels.map((channel) => (
-                            <TableRow key={channel.id}>
-                              <TableCell>{channel.name}</TableCell>
-                              <TableCell>{channel.description}</TableCell>
-                              <TableCell>
-                                <Chip
-                                  label={channelTypeLabels[channel.channel_type as keyof typeof channelTypeLabels]}
-                                  size="small"
-                                  variant="outlined"
-                                />
-                              </TableCell>
-                              <TableCell>{channel.post_count}</TableCell>
-                              <TableCell>
-                                <IconButton
-                                  size="small"
-                                  onClick={() => openEditChannelDialog(channel)}
-                                  color="primary"
-                                  sx={{ mr: 1 }}
-                                >
-                                  <EditIcon />
-                                </IconButton>
-                                <IconButton
-                                  size="small"
-                                  onClick={() => handleDeleteChannel(channel.id)}
-                                  color="error"
-                                >
-                                  <DeleteIcon />
-                                </IconButton>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
+                    <DragDropContext onDragEnd={(result) => handleChannelReorder(category.id, result)}>
+                      <Droppable droppableId={`channels-${category.id}`}>
+                        {(provided) => (
+                          <div {...provided.droppableProps} ref={provided.innerRef}>
+                            {categoryChannels.map((channel, index) => (
+                              <Draggable key={channel.id} draggableId={`channel-${channel.id}`} index={index}>
+                                {(provided, snapshot) => (
+                                  <Paper
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    elevation={snapshot.isDragging ? 8 : 1}
+                                    sx={{
+                                      mb: 2,
+                                      p: 2,
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'space-between',
+                                      backgroundColor: snapshot.isDragging ? 'rgba(30, 64, 175, 0.1)' : 'white',
+                                      border: snapshot.isDragging ? '2px solid #1e40af' : '1px solid rgba(0, 0, 0, 0.12)',
+                                      borderRadius: 2,
+                                      transition: 'all 0.2s ease',
+                                    }}
+                                  >
+                                    <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                                      <Box
+                                        {...provided.dragHandleProps}
+                                        sx={{
+                                          mr: 2,
+                                          cursor: 'grab',
+                                          color: 'text.secondary',
+                                          '&:hover': { color: 'primary.main' },
+                                        }}
+                                      >
+                                        <DragIndicator />
+                                      </Box>
+                                      <Box sx={{ flex: 1 }}>
+                                        <Typography variant="subtitle1" fontWeight={500}>
+                                          {channel.name}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                          {channel.description}
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                                          <Chip
+                                            label={channelTypeLabels[channel.channel_type as keyof typeof channelTypeLabels]}
+                                            size="small"
+                                            variant="outlined"
+                                          />
+                                          <Typography variant="caption" color="text.secondary">
+                                            投稿数: {channel.post_count}
+                                          </Typography>
+                                        </Box>
+                                      </Box>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', gap: 1 }}>
+                                      <IconButton
+                                        size="small"
+                                        onClick={() => openEditChannelDialog(channel)}
+                                        color="primary"
+                                      >
+                                        <EditIcon />
+                                      </IconButton>
+                                      <IconButton
+                                        size="small"
+                                        onClick={() => handleDeleteChannel(channel.id)}
+                                        color="error"
+                                      >
+                                        <DeleteIcon />
+                                      </IconButton>
+                                    </Box>
+                                  </Paper>
+                                )}
+                              </Draggable>
+                            ))}
+                            {provided.placeholder}
+                          </div>
+                        )}
+                      </Droppable>
+                    </DragDropContext>
                   </Box>
                 );
               })}

@@ -1,18 +1,19 @@
 {
-  "name": "language-learning-community",
+  "name": "language-community",
   "version": "1.0.0",
-  "description": "言語学習オンラインコミュニティプラットフォーム",
+  "description": "言語学習コミュニティプラットフォーム",
   "scripts": {
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "cd server && npm run dev",
-    "client": "cd client && npm start",
+    "install-all": "npm install && cd client && npm install && cd ../server && npm install",
+    "dev": "concurrently \"cd server && npm run dev\" \"cd client && npm start\"",
     "build": "cd client && npm run build",
-    "install-all": "npm install && cd server && npm install && cd ../client && npm install"
+    "start": "cd server && npm start",
+    "deploy:frontend": "cd client && npm run build",
+    "deploy:backend": "cd server && npm start"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
   },
-  "dependencies": {
-    "multer": "^2.0.2"
-  }
+  "keywords": ["language", "community", "react", "nodejs", "express"],
+  "author": "ECG English",
+  "license": "MIT"
 }

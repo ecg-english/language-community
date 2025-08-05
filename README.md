@@ -84,6 +84,56 @@ npm run dev
 2. 「アカウント作成」からユーザー登録
 3. 最初に作成されたユーザーを管理者に昇格する場合は、データベースを直接編集するか、別の管理者ユーザーが必要です
 
+## デプロイ
+
+### 自動デプロイ設定
+
+このプロジェクトは自動デプロイが設定されています：
+
+#### フロントエンド（GitHub Pages）
+- **設定ファイル**: `.github/workflows/gh-pages.yml`
+- **デプロイ先**: https://ecg-english.github.io/language-community/
+- **トリガー**: mainブランチへのプッシュ
+- **自動化**: GitHub Actions
+
+#### バックエンド（Render）
+- **設定ファイル**: `render.yaml`
+- **デプロイ先**: https://language-community-backend.onrender.com
+- **トリガー**: mainブランチへのプッシュ
+- **自動化**: Render Auto Deploy
+
+### 手動デプロイ手順
+
+#### フロントエンド
+1. GitHubリポジトリのSettings > Pages
+2. Source: Deploy from a branch
+3. Branch: gh-pages
+4. 保存
+
+#### バックエンド
+1. Render.comでアカウント作成
+2. New Web Service
+3. GitHubリポジトリを接続
+4. 環境変数設定：
+   - `NODE_ENV`: production
+   - `DATABASE_PATH`: /opt/render/data/language-community.db
+   - `PORT`: 10000
+
+### 環境変数設定
+
+#### GitHub Secrets（フロントエンド用）
+- `REACT_APP_API_URL`: バックエンドのURL（例：https://language-community-backend.onrender.com）
+
+#### Render環境変数（バックエンド用）
+- `NODE_ENV`: production
+- `DATABASE_PATH`: /opt/render/data/language-community.db
+- `PORT`: 10000
+
+### デプロイ確認
+
+1. **フロントエンド**: https://ecg-english.github.io/language-community/
+2. **バックエンド**: https://language-community-backend.onrender.com/api/health
+
 ## API エンドポイント
 
 ### 認証

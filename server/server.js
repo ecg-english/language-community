@@ -74,6 +74,15 @@ app.use('/uploads', (req, res, next) => {
   next();
 }, express.static(uploadsDir));
 
+// ヘルスチェックエンドポイント（Render用）
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 // テスト用エンドポイント（直接サーバーに追加）
 app.get('/api/test/users', (req, res) => {
   try {

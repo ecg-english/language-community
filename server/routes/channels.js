@@ -13,9 +13,10 @@ router.get('/categories', authenticateToken, (req, res) => {
         id, 
         name, 
         is_collapsed,
+        display_order,
         created_at
       FROM categories 
-      ORDER BY id ASC
+      ORDER BY display_order ASC, id ASC
     `).all();
 
     console.log('取得されたカテゴリ数:', categories.length);
@@ -65,7 +66,7 @@ router.get('/categories/:categoryId/channels', authenticateToken, (req, res) => 
         (SELECT COUNT(*) FROM posts p WHERE p.channel_id = c.id) as post_count
       FROM channels c
       WHERE c.category_id = ?
-      ORDER BY c.created_at ASC
+      ORDER BY c.display_order ASC, c.created_at ASC
     `).all(categoryId);
 
     // ユーザーの権限に基づいてチャンネルをフィルタリング
@@ -341,6 +342,50 @@ router.delete('/channels/:channelId', authenticateToken, requireAdmin, (req, res
   } catch (error) {
     console.error('チャンネル削除エラー:', error);
     res.status(500).json({ error: 'チャンネルの削除に失敗しました' });
+  }
+});
+
+// カテゴリの並び替え（管理者のみ）
+router.put('/categories/reorder', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const { categoryIds } = req.body;
+
+    if (!Array.isArray(categoryIds)) {
+      return res.status(400).json({ error: 'カテゴリIDの配列が必要です' });
+    }
+
+    const updateCategoryOrder = db.prepare('UPDATE categories SET display_order = ? WHERE id = ?');
+    
+    categoryIds.forEach((categoryId, index) => {
+      updateCategoryOrder.run(index, categoryId);
+    });
+
+    res.json({ message: 'カテゴリの並び順が更新されました' });
+  } catch (error) {
+    console.error('カテゴリ並び替えエラー:', error);
+    res.status(500).json({ error: 'カテゴリの並び替えに失敗しました' });
+  }
+});
+
+// チャンネルの並び替え（管理者のみ）
+router.put('/channels/reorder', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const { channelIds } = req.body;
+
+    if (!Array.isArray(channelIds)) {
+      return res.status(400).json({ error: 'チャンネルIDの配列が必要です' });
+    }
+
+    const updateChannelOrder = db.prepare('UPDATE channels SET display_order = ? WHERE id = ?');
+    
+    channelIds.forEach((channelId, index) => {
+      updateChannelOrder.run(index, channelId);
+    });
+
+    res.json({ message: 'チャンネルの並び順が更新されました' });
+  } catch (error) {
+    console.error('チャンネル並び替えエラー:', error);
+    res.status(500).json({ error: 'チャンネルの並び替えに失敗しました' });
   }
 });
 

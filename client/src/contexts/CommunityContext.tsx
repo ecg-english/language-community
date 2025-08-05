@@ -5,6 +5,7 @@ interface Category {
   id: number;
   name: string;
   is_collapsed: boolean;
+  display_order: number;
   created_at: string;
 }
 
@@ -15,6 +16,7 @@ interface Channel {
   category_id: number;
   channel_type: string;
   post_count: number;
+  display_order: number;
   created_at: string;
 }
 
@@ -54,6 +56,8 @@ interface CommunityContextType {
   createCategory: (name: string) => Promise<void>;
   createChannel: (categoryId: number, name: string, description: string, channelType: string) => Promise<void>;
   deleteChannel: (channelId: number) => Promise<void>;
+  reorderCategories: (categoryIds: number[]) => Promise<void>;
+  reorderChannels: (channelIds: number[]) => Promise<void>;
   loadPosts: (channelId: number) => Promise<void>;
   createPost: (channelId: number, content: string) => Promise<void>;
   deletePost: (postId: number) => Promise<void>;
@@ -339,6 +343,27 @@ export const CommunityProvider: React.FC<CommunityProviderProps> = ({ children }
     createCategory,
     createChannel,
     deleteChannel,
+    reorderCategories: async (categoryIds: number[]) => {
+      try {
+        await axios.put('/api/channels/categories/reorder', { categoryIds });
+        await loadCategories();
+      } catch (error) {
+        console.error('カテゴリ並び替えエラー:', error);
+        throw error;
+      }
+    },
+    reorderChannels: async (channelIds: number[]) => {
+      try {
+        await axios.put('/api/channels/channels/reorder', { channelIds });
+        // 全カテゴリのチャンネルを再読み込み
+        for (const category of categories) {
+          await loadChannels(category.id);
+        }
+      } catch (error) {
+        console.error('チャンネル並び替えエラー:', error);
+        throw error;
+      }
+    },
     loadPosts,
     createPost,
     deletePost,

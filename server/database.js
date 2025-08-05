@@ -50,6 +50,7 @@ const initializeDatabase = () => {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT UNIQUE NOT NULL,
         is_collapsed BOOLEAN DEFAULT 0,
+        display_order INTEGER DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `).run();
@@ -62,6 +63,7 @@ const initializeDatabase = () => {
         channel_type TEXT NOT NULL,
         description TEXT,
         category_id INTEGER,
+        display_order INTEGER DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (category_id) REFERENCES categories (id)
       )
@@ -206,6 +208,24 @@ const initializeDatabase = () => {
     if (!postsColumnNames.includes('image_url')) {
       console.log('Adding image_url column to posts table...');
       db.prepare('ALTER TABLE posts ADD COLUMN image_url TEXT').run();
+    }
+    
+    // categoriesテーブルにdisplay_orderカラムを追加
+    const categoriesColumns = db.prepare("PRAGMA table_info(categories)").all();
+    const categoriesColumnNames = categoriesColumns.map(col => col.name);
+    
+    if (!categoriesColumnNames.includes('display_order')) {
+      console.log('Adding display_order column to categories table...');
+      db.prepare('ALTER TABLE categories ADD COLUMN display_order INTEGER DEFAULT 0').run();
+    }
+    
+    // channelsテーブルにdisplay_orderカラムを追加
+    const channelsColumns = db.prepare("PRAGMA table_info(channels)").all();
+    const channelsColumnNames = channelsColumns.map(col => col.name);
+    
+    if (!channelsColumnNames.includes('display_order')) {
+      console.log('Adding display_order column to channels table...');
+      db.prepare('ALTER TABLE channels ADD COLUMN display_order INTEGER DEFAULT 0').run();
     }
     
     console.log('Database migrations completed.');
