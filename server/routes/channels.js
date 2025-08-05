@@ -348,58 +348,164 @@ router.delete('/channels/:channelId', authenticateToken, requireAdmin, (req, res
 // カテゴリの並び替え（管理者のみ）
 router.put('/categories/reorder', authenticateToken, requireAdmin, (req, res) => {
   try {
-    console.log('カテゴリ並び替えAPIが呼ばれました:', req.body);
+    console.log('=== カテゴリ並び替えAPI開始 ===');
+    console.log('リクエストボディ:', JSON.stringify(req.body, null, 2));
+    console.log('リクエストヘッダー:', req.headers);
+    
     const { categoryIds } = req.body;
 
+    if (!categoryIds) {
+      console.log('categoryIdsが存在しません');
+      return res.status(400).json({ error: 'categoryIdsが必要です' });
+    }
+
     if (!Array.isArray(categoryIds)) {
-      console.log('カテゴリIDが配列ではありません:', categoryIds);
+      console.log('カテゴリIDが配列ではありません:', typeof categoryIds, categoryIds);
       return res.status(400).json({ error: 'カテゴリIDの配列が必要です' });
+    }
+
+    if (categoryIds.length === 0) {
+      console.log('カテゴリID配列が空です');
+      return res.status(400).json({ error: 'カテゴリID配列が空です' });
     }
 
     console.log('並び替え対象のカテゴリID:', categoryIds);
 
+    // データベース接続確認
+    const db = require('../database');
+    console.log('データベース接続確認完了');
+
+    // display_orderカラムの存在確認
+    const columns = db.prepare("PRAGMA table_info(categories)").all();
+    const columnNames = columns.map(col => col.name);
+    console.log('categoriesテーブルのカラム:', columnNames);
+
+    if (!columnNames.includes('display_order')) {
+      console.log('display_orderカラムが存在しません。追加します...');
+      try {
+        db.prepare('ALTER TABLE categories ADD COLUMN display_order INTEGER DEFAULT 0').run();
+        console.log('display_orderカラムを追加しました');
+      } catch (alterError) {
+        console.error('カラム追加エラー:', alterError);
+        return res.status(500).json({ error: 'データベーススキーマの更新に失敗しました' });
+      }
+    }
+
     const updateCategoryOrder = db.prepare('UPDATE categories SET display_order = ? WHERE id = ?');
     
+    let successCount = 0;
     categoryIds.forEach((categoryId, index) => {
-      console.log(`カテゴリID ${categoryId} を順序 ${index} に設定`);
-      const result = updateCategoryOrder.run(index, categoryId);
-      console.log(`更新結果: ${result.changes} 行が更新されました`);
+      try {
+        console.log(`カテゴリID ${categoryId} を順序 ${index} に設定`);
+        const result = updateCategoryOrder.run(index, categoryId);
+        console.log(`更新結果: ${result.changes} 行が更新されました`);
+        if (result.changes > 0) {
+          successCount++;
+        }
+      } catch (updateError) {
+        console.error(`カテゴリID ${categoryId} の更新でエラー:`, updateError);
+      }
     });
 
-    console.log('カテゴリ並び替えが完了しました');
-    res.json({ message: 'カテゴリの並び順が更新されました' });
+    console.log(`成功した更新: ${successCount}/${categoryIds.length}`);
+    console.log('=== カテゴリ並び替えAPI完了 ===');
+    
+    res.json({ 
+      message: 'カテゴリの並び順が更新されました',
+      updatedCount: successCount
+    });
   } catch (error) {
-    console.error('カテゴリ並び替えエラー:', error);
-    res.status(500).json({ error: 'カテゴリの並び替えに失敗しました' });
+    console.error('=== カテゴリ並び替えエラー ===');
+    console.error('エラータイプ:', error.constructor.name);
+    console.error('エラーメッセージ:', error.message);
+    console.error('エラースタック:', error.stack);
+    console.error('=== エラー終了 ===');
+    res.status(500).json({ 
+      error: 'カテゴリの並び替えに失敗しました',
+      details: error.message
+    });
   }
 });
 
 // チャンネルの並び替え（管理者のみ）
 router.put('/channels/reorder', authenticateToken, requireAdmin, (req, res) => {
   try {
-    console.log('チャンネル並び替えAPIが呼ばれました:', req.body);
+    console.log('=== チャンネル並び替えAPI開始 ===');
+    console.log('リクエストボディ:', JSON.stringify(req.body, null, 2));
+    console.log('リクエストヘッダー:', req.headers);
+    
     const { channelIds } = req.body;
 
+    if (!channelIds) {
+      console.log('channelIdsが存在しません');
+      return res.status(400).json({ error: 'channelIdsが必要です' });
+    }
+
     if (!Array.isArray(channelIds)) {
-      console.log('チャンネルIDが配列ではありません:', channelIds);
+      console.log('チャンネルIDが配列ではありません:', typeof channelIds, channelIds);
       return res.status(400).json({ error: 'チャンネルIDの配列が必要です' });
+    }
+
+    if (channelIds.length === 0) {
+      console.log('チャンネルID配列が空です');
+      return res.status(400).json({ error: 'チャンネルID配列が空です' });
     }
 
     console.log('並び替え対象のチャンネルID:', channelIds);
 
+    // データベース接続確認
+    const db = require('../database');
+    console.log('データベース接続確認完了');
+
+    // display_orderカラムの存在確認
+    const columns = db.prepare("PRAGMA table_info(channels)").all();
+    const columnNames = columns.map(col => col.name);
+    console.log('channelsテーブルのカラム:', columnNames);
+
+    if (!columnNames.includes('display_order')) {
+      console.log('display_orderカラムが存在しません。追加します...');
+      try {
+        db.prepare('ALTER TABLE channels ADD COLUMN display_order INTEGER DEFAULT 0').run();
+        console.log('display_orderカラムを追加しました');
+      } catch (alterError) {
+        console.error('カラム追加エラー:', alterError);
+        return res.status(500).json({ error: 'データベーススキーマの更新に失敗しました' });
+      }
+    }
+
     const updateChannelOrder = db.prepare('UPDATE channels SET display_order = ? WHERE id = ?');
     
+    let successCount = 0;
     channelIds.forEach((channelId, index) => {
-      console.log(`チャンネルID ${channelId} を順序 ${index} に設定`);
-      const result = updateChannelOrder.run(index, channelId);
-      console.log(`更新結果: ${result.changes} 行が更新されました`);
+      try {
+        console.log(`チャンネルID ${channelId} を順序 ${index} に設定`);
+        const result = updateChannelOrder.run(index, channelId);
+        console.log(`更新結果: ${result.changes} 行が更新されました`);
+        if (result.changes > 0) {
+          successCount++;
+        }
+      } catch (updateError) {
+        console.error(`チャンネルID ${channelId} の更新でエラー:`, updateError);
+      }
     });
 
-    console.log('チャンネル並び替えが完了しました');
-    res.json({ message: 'チャンネルの並び順が更新されました' });
+    console.log(`成功した更新: ${successCount}/${channelIds.length}`);
+    console.log('=== チャンネル並び替えAPI完了 ===');
+    
+    res.json({ 
+      message: 'チャンネルの並び順が更新されました',
+      updatedCount: successCount
+    });
   } catch (error) {
-    console.error('チャンネル並び替えエラー:', error);
-    res.status(500).json({ error: 'チャンネルの並び替えに失敗しました' });
+    console.error('=== チャンネル並び替えエラー ===');
+    console.error('エラータイプ:', error.constructor.name);
+    console.error('エラーメッセージ:', error.message);
+    console.error('エラースタック:', error.stack);
+    console.error('=== エラー終了 ===');
+    res.status(500).json({ 
+      error: 'チャンネルの並び替えに失敗しました',
+      details: error.message
+    });
   }
 });
 
