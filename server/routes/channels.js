@@ -248,23 +248,68 @@ router.put('/categories/:categoryId', authenticateToken, requireAdmin, (req, res
       return res.status(400).json({ error: 'このカテゴリ名は既に存在します' });
     }
 
-    const updateCategory = db.prepare('UPDATE categories SET name = ? WHERE id = ?');
-    const result = updateCategory.run(trimmedName, categoryId);
-
-    if (result.changes === 0) {
+    // カテゴリの存在確認
+    const category = db.prepare('SELECT id FROM categories WHERE id = ?').get(categoryId);
+    if (!category) {
       return res.status(404).json({ error: 'カテゴリが見つかりません' });
     }
 
-    // 更新されたカテゴリを取得
-    const updatedCategory = db.prepare('SELECT * FROM categories WHERE id = ?').get(categoryId);
+    // カテゴリを更新
+    const updateCategory = db.prepare('UPDATE categories SET name = ? WHERE id = ?');
+    updateCategory.run(trimmedName, categoryId);
+
+    console.log('カテゴリが更新されました:', { id: categoryId, name: trimmedName });
 
     res.json({
       message: 'カテゴリが更新されました',
-      category: updatedCategory
+      category: {
+        id: categoryId,
+        name: trimmedName
+      }
     });
   } catch (error) {
     console.error('カテゴリ更新エラー:', error);
     res.status(500).json({ error: 'カテゴリの更新に失敗しました' });
+  }
+});
+
+// カテゴリを削除（管理者のみ）
+router.delete('/categories/:categoryId', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const { categoryId } = req.params;
+
+    console.log('カテゴリ削除APIが呼ばれました:', { categoryId });
+
+    // カテゴリの存在確認
+    const category = db.prepare('SELECT id, name FROM categories WHERE id = ?').get(categoryId);
+    if (!category) {
+      console.log('カテゴリが見つかりません:', categoryId);
+      return res.status(404).json({ error: 'カテゴリが見つかりません' });
+    }
+
+    // カテゴリ内のチャンネル数を確認
+    const channelCount = db.prepare('SELECT COUNT(*) as count FROM channels WHERE category_id = ?').get(categoryId);
+    if (channelCount.count > 0) {
+      console.log('カテゴリ内にチャンネルが存在します:', { categoryId, channelCount: channelCount.count });
+      return res.status(400).json({ error: 'チャンネルが存在するカテゴリは削除できません' });
+    }
+
+    // カテゴリを削除
+    const deleteCategory = db.prepare('DELETE FROM categories WHERE id = ?');
+    const result = deleteCategory.run(categoryId);
+
+    console.log('カテゴリが削除されました:', { categoryId, name: category.name });
+
+    res.json({
+      message: 'カテゴリが削除されました',
+      deletedCategory: {
+        id: categoryId,
+        name: category.name
+      }
+    });
+  } catch (error) {
+    console.error('カテゴリ削除エラー:', error);
+    res.status(500).json({ error: 'カテゴリの削除に失敗しました' });
   }
 });
 
@@ -409,9 +454,6 @@ router.put('/categories/reorder', authenticateToken, requireAdmin, (req, res) =>
 
     console.log('並び替え対象のカテゴリID:', categoryIds);
 
-    // データベース接続
-    const db = require('../database');
-
     // display_orderカラムの存在確認と追加
     const columns = db.prepare("PRAGMA table_info(categories)").all();
     const columnNames = columns.map(col => col.name);
@@ -457,9 +499,6 @@ router.put('/channels/reorder', authenticateToken, requireAdmin, (req, res) => {
     }
 
     console.log('並び替え対象のチャンネルID:', channelIds);
-
-    // データベース接続
-    const db = require('../database');
 
     // display_orderカラムの存在確認と追加
     const columns = db.prepare("PRAGMA table_info(channels)").all();
