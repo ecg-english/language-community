@@ -345,18 +345,48 @@ router.delete('/channels/:channelId', authenticateToken, requireAdmin, (req, res
   }
 });
 
+// テスト用エンドポイント（並び替えAPIの動作確認）
+router.get('/test', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    console.log('=== テストエンドポイント開始 ===');
+    console.log('リクエストURL:', req.url);
+    console.log('リクエストメソッド:', req.method);
+    console.log('ユーザー情報:', req.user);
+    
+    res.json({ 
+      message: 'テストエンドポイント正常動作',
+      user: req.user,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('テストエンドポイントエラー:', error);
+    res.status(500).json({ 
+      error: 'テストエンドポイントエラー',
+      details: error.message
+    });
+  }
+});
+
 // カテゴリの並び替え（管理者のみ）
 router.put('/categories/reorder', authenticateToken, requireAdmin, (req, res) => {
+  console.log('=== カテゴリ並び替えAPI開始 ===');
+  console.log('リクエストボディ:', req.body);
+  
   try {
-    console.log('=== カテゴリ並び替えAPI開始 ===');
-    console.log('リクエストボディ:', req.body);
-    
+    // リクエストボディの検証
+    if (!req.body || !req.body.categoryIds) {
+      console.log('エラー: categoryIdsが存在しません');
+      return res.status(400).json({ error: 'categoryIdsが必要です' });
+    }
+
     const { categoryIds } = req.body;
 
-    // 基本的なバリデーション
-    if (!categoryIds || !Array.isArray(categoryIds) || categoryIds.length === 0) {
+    if (!Array.isArray(categoryIds) || categoryIds.length === 0) {
+      console.log('エラー: 有効なカテゴリID配列ではありません');
       return res.status(400).json({ error: '有効なカテゴリID配列が必要です' });
     }
+
+    console.log('並び替え対象のカテゴリID:', categoryIds);
 
     // データベース接続
     const db = require('../database');
@@ -366,6 +396,7 @@ router.put('/categories/reorder', authenticateToken, requireAdmin, (req, res) =>
     const columnNames = columns.map(col => col.name);
     
     if (!columnNames.includes('display_order')) {
+      console.log('display_orderカラムを追加します');
       db.prepare('ALTER TABLE categories ADD COLUMN display_order INTEGER DEFAULT 0').run();
     }
 
@@ -373,6 +404,7 @@ router.put('/categories/reorder', authenticateToken, requireAdmin, (req, res) =>
     const updateStmt = db.prepare('UPDATE categories SET display_order = ? WHERE id = ?');
     
     categoryIds.forEach((categoryId, index) => {
+      console.log(`カテゴリID ${categoryId} を順序 ${index} に設定`);
       updateStmt.run(index, categoryId);
     });
 
@@ -393,16 +425,24 @@ router.put('/categories/reorder', authenticateToken, requireAdmin, (req, res) =>
 
 // チャンネルの並び替え（管理者のみ）
 router.put('/channels/reorder', authenticateToken, requireAdmin, (req, res) => {
+  console.log('=== チャンネル並び替えAPI開始 ===');
+  console.log('リクエストボディ:', req.body);
+  
   try {
-    console.log('=== チャンネル並び替えAPI開始 ===');
-    console.log('リクエストボディ:', req.body);
-    
+    // リクエストボディの検証
+    if (!req.body || !req.body.channelIds) {
+      console.log('エラー: channelIdsが存在しません');
+      return res.status(400).json({ error: 'channelIdsが必要です' });
+    }
+
     const { channelIds } = req.body;
 
-    // 基本的なバリデーション
-    if (!channelIds || !Array.isArray(channelIds) || channelIds.length === 0) {
+    if (!Array.isArray(channelIds) || channelIds.length === 0) {
+      console.log('エラー: 有効なチャンネルID配列ではありません');
       return res.status(400).json({ error: '有効なチャンネルID配列が必要です' });
     }
+
+    console.log('並び替え対象のチャンネルID:', channelIds);
 
     // データベース接続
     const db = require('../database');
@@ -412,6 +452,7 @@ router.put('/channels/reorder', authenticateToken, requireAdmin, (req, res) => {
     const columnNames = columns.map(col => col.name);
     
     if (!columnNames.includes('display_order')) {
+      console.log('display_orderカラムを追加します');
       db.prepare('ALTER TABLE channels ADD COLUMN display_order INTEGER DEFAULT 0').run();
     }
 
@@ -419,6 +460,7 @@ router.put('/channels/reorder', authenticateToken, requireAdmin, (req, res) => {
     const updateStmt = db.prepare('UPDATE channels SET display_order = ? WHERE id = ?');
     
     channelIds.forEach((channelId, index) => {
+      console.log(`チャンネルID ${channelId} を順序 ${index} に設定`);
       updateStmt.run(index, channelId);
     });
 
