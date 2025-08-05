@@ -255,6 +255,17 @@ const AdminPanel: React.FC = () => {
     }
   };
 
+  // カテゴリを削除
+  const handleDeleteCategory = async (categoryId: number) => {
+    try {
+      await axios.delete(`/api/channels/categories/${categoryId}`);
+      setSuccess('カテゴリが削除されました');
+      await loadData();
+    } catch (error: any) {
+      setError(error.response?.data?.error || 'カテゴリの削除に失敗しました');
+    }
+  };
+
   // カテゴリを上に移動
   const moveCategoryUp = async (categoryIndex: number) => {
     if (categoryIndex === 0) return; // 最初のカテゴリは上に移動できない
@@ -266,11 +277,14 @@ const AdminPanel: React.FC = () => {
       reorderedCategories[categoryIndex - 1] = temp;
 
       const categoryIds = reorderedCategories.map(cat => cat.id);
+      console.log('並び替え対象のカテゴリID:', categoryIds);
+      
       await reorderCategories(categoryIds);
       
       setSuccess('カテゴリの並び順が更新されました');
       await loadData();
     } catch (error: any) {
+      console.error('カテゴリ並び替えエラー:', error);
       setError(error.response?.data?.error || 'カテゴリの並び替えに失敗しました');
     }
   };
@@ -286,11 +300,14 @@ const AdminPanel: React.FC = () => {
       reorderedCategories[categoryIndex + 1] = temp;
 
       const categoryIds = reorderedCategories.map(cat => cat.id);
+      console.log('並び替え対象のカテゴリID:', categoryIds);
+      
       await reorderCategories(categoryIds);
       
       setSuccess('カテゴリの並び順が更新されました');
       await loadData();
     } catch (error: any) {
+      console.error('カテゴリ並び替えエラー:', error);
       setError(error.response?.data?.error || 'カテゴリの並び替えに失敗しました');
     }
   };
@@ -555,6 +572,14 @@ const AdminPanel: React.FC = () => {
                         title="下に移動"
                       >
                         <KeyboardArrowDown />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleDeleteCategory(category.id)}
+                        color="error"
+                        title="カテゴリを削除"
+                      >
+                        <DeleteIcon />
                       </IconButton>
                     </Box>
                   </Paper>
