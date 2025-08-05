@@ -367,23 +367,62 @@ router.get('/test', authenticateToken, requireAdmin, (req, res) => {
   }
 });
 
+// 簡単な並び替えテストエンドポイント
+router.post('/test-reorder', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    console.log('=== 簡単な並び替えテスト開始 ===');
+    console.log('リクエストボディ:', req.body);
+    
+    const { categoryIds } = req.body;
+    
+    if (!categoryIds || !Array.isArray(categoryIds)) {
+      return res.status(400).json({ error: 'categoryIds配列が必要です' });
+    }
+    
+    console.log('テスト用カテゴリID:', categoryIds);
+    
+    res.json({ 
+      message: 'テスト成功',
+      receivedIds: categoryIds,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('テスト並び替えエラー:', error);
+    res.status(500).json({ 
+      error: 'テスト並び替えエラー',
+      details: error.message
+    });
+  }
+});
+
 // カテゴリの並び替え（管理者のみ）
 router.put('/categories/reorder', authenticateToken, requireAdmin, (req, res) => {
   console.log('=== カテゴリ並び替えAPI開始 ===');
   console.log('リクエストボディ:', req.body);
+  console.log('リクエストヘッダー:', req.headers);
   
   try {
     // リクエストボディの検証
-    if (!req.body || !req.body.categoryIds) {
+    if (!req.body) {
+      console.log('エラー: リクエストボディが存在しません');
+      return res.status(400).json({ error: 'リクエストボディが必要です' });
+    }
+
+    if (!req.body.categoryIds) {
       console.log('エラー: categoryIdsが存在しません');
       return res.status(400).json({ error: 'categoryIdsが必要です' });
     }
 
     const { categoryIds } = req.body;
 
-    if (!Array.isArray(categoryIds) || categoryIds.length === 0) {
-      console.log('エラー: 有効なカテゴリID配列ではありません');
-      return res.status(400).json({ error: '有効なカテゴリID配列が必要です' });
+    if (!Array.isArray(categoryIds)) {
+      console.log('エラー: categoryIdsが配列ではありません');
+      return res.status(400).json({ error: 'categoryIdsは配列である必要があります' });
+    }
+
+    if (categoryIds.length === 0) {
+      console.log('エラー: categoryIdsが空です');
+      return res.status(400).json({ error: 'categoryIdsは空であってはいけません' });
     }
 
     console.log('並び替え対象のカテゴリID:', categoryIds);
@@ -427,19 +466,30 @@ router.put('/categories/reorder', authenticateToken, requireAdmin, (req, res) =>
 router.put('/channels/reorder', authenticateToken, requireAdmin, (req, res) => {
   console.log('=== チャンネル並び替えAPI開始 ===');
   console.log('リクエストボディ:', req.body);
+  console.log('リクエストヘッダー:', req.headers);
   
   try {
     // リクエストボディの検証
-    if (!req.body || !req.body.channelIds) {
+    if (!req.body) {
+      console.log('エラー: リクエストボディが存在しません');
+      return res.status(400).json({ error: 'リクエストボディが必要です' });
+    }
+
+    if (!req.body.channelIds) {
       console.log('エラー: channelIdsが存在しません');
       return res.status(400).json({ error: 'channelIdsが必要です' });
     }
 
     const { channelIds } = req.body;
 
-    if (!Array.isArray(channelIds) || channelIds.length === 0) {
-      console.log('エラー: 有効なチャンネルID配列ではありません');
-      return res.status(400).json({ error: '有効なチャンネルID配列が必要です' });
+    if (!Array.isArray(channelIds)) {
+      console.log('エラー: channelIdsが配列ではありません');
+      return res.status(400).json({ error: 'channelIdsは配列である必要があります' });
+    }
+
+    if (channelIds.length === 0) {
+      console.log('エラー: channelIdsが空です');
+      return res.status(400).json({ error: 'channelIdsは空であってはいけません' });
     }
 
     console.log('並び替え対象のチャンネルID:', channelIds);
