@@ -230,6 +230,52 @@ router.post('/categories/:categoryId/channels', authenticateToken, requireAdmin,
   }
 });
 
+// カテゴリの並び替え（管理者のみ）
+router.put('/categories/reorder', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    console.log('=== カテゴリ並び替えAPI開始 ===');
+    console.log('リクエストボディ:', req.body);
+    
+    const { categoryIds } = req.body;
+    
+    if (!categoryIds || !Array.isArray(categoryIds) || categoryIds.length === 0) {
+      return res.status(400).json({ error: '有効なカテゴリID配列が必要です' });
+    }
+
+    console.log('並び替え対象のカテゴリID:', categoryIds);
+
+    // display_orderカラムの存在確認と追加
+    const columns = db.prepare("PRAGMA table_info(categories)").all();
+    const columnNames = columns.map(col => col.name);
+    
+    if (!columnNames.includes('display_order')) {
+      console.log('display_orderカラムを追加します');
+      db.prepare('ALTER TABLE categories ADD COLUMN display_order INTEGER DEFAULT 0').run();
+    }
+
+    // 並び替え処理
+    const updateStmt = db.prepare('UPDATE categories SET display_order = ? WHERE id = ?');
+    
+    categoryIds.forEach((categoryId, index) => {
+      console.log(`カテゴリID ${categoryId} を順序 ${index} に設定`);
+      updateStmt.run(index, categoryId);
+    });
+
+    console.log('=== カテゴリ並び替えAPI完了 ===');
+    
+    res.json({ 
+      message: 'カテゴリの並び順が更新されました',
+      updatedCount: categoryIds.length
+    });
+  } catch (error) {
+    console.error('カテゴリ並び替えエラー:', error);
+    res.status(500).json({ 
+      error: 'カテゴリの並び替えに失敗しました',
+      details: error.message
+    });
+  }
+});
+
 // カテゴリを更新（管理者のみ）
 router.put('/categories/:categoryId', authenticateToken, requireAdmin, (req, res) => {
   try {
@@ -435,52 +481,6 @@ router.post('/test-reorder', authenticateToken, requireAdmin, (req, res) => {
     console.error('テスト並び替えエラー:', error);
     res.status(500).json({ 
       error: 'テスト並び替えエラー',
-      details: error.message
-    });
-  }
-});
-
-// カテゴリの並び替え（管理者のみ）
-router.put('/categories/reorder', authenticateToken, requireAdmin, (req, res) => {
-  try {
-    console.log('=== カテゴリ並び替えAPI開始 ===');
-    console.log('リクエストボディ:', req.body);
-    
-    const { categoryIds } = req.body;
-    
-    if (!categoryIds || !Array.isArray(categoryIds) || categoryIds.length === 0) {
-      return res.status(400).json({ error: '有効なカテゴリID配列が必要です' });
-    }
-
-    console.log('並び替え対象のカテゴリID:', categoryIds);
-
-    // display_orderカラムの存在確認と追加
-    const columns = db.prepare("PRAGMA table_info(categories)").all();
-    const columnNames = columns.map(col => col.name);
-    
-    if (!columnNames.includes('display_order')) {
-      console.log('display_orderカラムを追加します');
-      db.prepare('ALTER TABLE categories ADD COLUMN display_order INTEGER DEFAULT 0').run();
-    }
-
-    // 並び替え処理
-    const updateStmt = db.prepare('UPDATE categories SET display_order = ? WHERE id = ?');
-    
-    categoryIds.forEach((categoryId, index) => {
-      console.log(`カテゴリID ${categoryId} を順序 ${index} に設定`);
-      updateStmt.run(index, categoryId);
-    });
-
-    console.log('=== カテゴリ並び替えAPI完了 ===');
-    
-    res.json({ 
-      message: 'カテゴリの並び順が更新されました',
-      updatedCount: categoryIds.length
-    });
-  } catch (error) {
-    console.error('カテゴリ並び替えエラー:', error);
-    res.status(500).json({ 
-      error: 'カテゴリの並び替えに失敗しました',
       details: error.message
     });
   }
