@@ -345,13 +345,57 @@ router.delete('/channels/:channelId', authenticateToken, requireAdmin, (req, res
   }
 });
 
+// テスト用エンドポイント（並び替えAPIの動作確認）
+router.get('/test-reorder', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    console.log('=== テストエンドポイント開始 ===');
+    console.log('リクエストヘッダー:', req.headers);
+    console.log('ユーザー情報:', req.user);
+    
+    // データベース接続確認
+    const db = require('../database');
+    console.log('データベース接続確認完了');
+
+    // カテゴリテーブルの構造確認
+    const columns = db.prepare("PRAGMA table_info(categories)").all();
+    const columnNames = columns.map(col => col.name);
+    console.log('categoriesテーブルのカラム:', columnNames);
+
+    // カテゴリ一覧取得
+    const categories = db.prepare('SELECT * FROM categories LIMIT 5').all();
+    console.log('カテゴリ一覧:', categories);
+
+    res.json({ 
+      message: 'テストエンドポイント正常動作',
+      columns: columnNames,
+      categories: categories,
+      user: req.user
+    });
+  } catch (error) {
+    console.error('テストエンドポイントエラー:', error);
+    res.status(500).json({ 
+      error: 'テストエンドポイントエラー',
+      details: error.message
+    });
+  }
+});
+
 // カテゴリの並び替え（管理者のみ）
 router.put('/categories/reorder', authenticateToken, requireAdmin, (req, res) => {
   try {
     console.log('=== カテゴリ並び替えAPI開始 ===');
+    console.log('リクエストメソッド:', req.method);
+    console.log('リクエストURL:', req.url);
     console.log('リクエストボディ:', JSON.stringify(req.body, null, 2));
-    console.log('リクエストヘッダー:', req.headers);
+    console.log('リクエストヘッダー:', JSON.stringify(req.headers, null, 2));
+    console.log('ユーザー情報:', req.user);
     
+    // リクエストボディの検証
+    if (!req.body) {
+      console.log('リクエストボディが存在しません');
+      return res.status(400).json({ error: 'リクエストボディが必要です' });
+    }
+
     const { categoryIds } = req.body;
 
     if (!categoryIds) {
@@ -391,6 +435,15 @@ router.put('/categories/reorder', authenticateToken, requireAdmin, (req, res) =>
       }
     }
 
+    // カテゴリの存在確認
+    const existingCategories = db.prepare('SELECT id FROM categories WHERE id IN (' + categoryIds.map(() => '?').join(',') + ')').all(categoryIds);
+    console.log('存在するカテゴリID:', existingCategories.map(c => c.id));
+    
+    if (existingCategories.length !== categoryIds.length) {
+      console.log('一部のカテゴリIDが存在しません');
+      return res.status(400).json({ error: '一部のカテゴリIDが存在しません' });
+    }
+
     const updateCategoryOrder = db.prepare('UPDATE categories SET display_order = ? WHERE id = ?');
     
     let successCount = 0;
@@ -412,7 +465,8 @@ router.put('/categories/reorder', authenticateToken, requireAdmin, (req, res) =>
     
     res.json({ 
       message: 'カテゴリの並び順が更新されました',
-      updatedCount: successCount
+      updatedCount: successCount,
+      totalCount: categoryIds.length
     });
   } catch (error) {
     console.error('=== カテゴリ並び替えエラー ===');
