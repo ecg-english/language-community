@@ -382,86 +382,99 @@ router.get('/test-reorder', authenticateToken, requireAdmin, (req, res) => {
 
 // カテゴリの並び替え（管理者のみ）
 router.put('/categories/reorder', authenticateToken, requireAdmin, (req, res) => {
+  console.log('=== カテゴリ並び替えAPI開始 ===');
+  
   try {
-    console.log('=== カテゴリ並び替えAPI開始 ===');
-    console.log('リクエストメソッド:', req.method);
-    console.log('リクエストURL:', req.url);
-    console.log('リクエストボディ:', JSON.stringify(req.body, null, 2));
-    console.log('リクエストヘッダー:', JSON.stringify(req.headers, null, 2));
-    console.log('ユーザー情報:', req.user);
+    console.log('1. リクエストメソッド:', req.method);
+    console.log('2. リクエストURL:', req.url);
+    console.log('3. リクエストボディの型:', typeof req.body);
+    console.log('4. リクエストボディ:', JSON.stringify(req.body, null, 2));
+    console.log('5. リクエストヘッダー:', JSON.stringify(req.headers, null, 2));
+    console.log('6. ユーザー情報:', req.user);
     
     // リクエストボディの検証
     if (!req.body) {
-      console.log('リクエストボディが存在しません');
+      console.log('エラー: リクエストボディが存在しません');
       return res.status(400).json({ error: 'リクエストボディが必要です' });
     }
 
+    console.log('7. リクエストボディ検証完了');
+
     const { categoryIds } = req.body;
+    console.log('8. categoryIds抽出:', categoryIds);
 
     if (!categoryIds) {
-      console.log('categoryIdsが存在しません');
+      console.log('エラー: categoryIdsが存在しません');
       return res.status(400).json({ error: 'categoryIdsが必要です' });
     }
 
     if (!Array.isArray(categoryIds)) {
-      console.log('カテゴリIDが配列ではありません:', typeof categoryIds, categoryIds);
+      console.log('エラー: カテゴリIDが配列ではありません:', typeof categoryIds, categoryIds);
       return res.status(400).json({ error: 'カテゴリIDの配列が必要です' });
     }
 
     if (categoryIds.length === 0) {
-      console.log('カテゴリID配列が空です');
+      console.log('エラー: カテゴリID配列が空です');
       return res.status(400).json({ error: 'カテゴリID配列が空です' });
     }
 
-    console.log('並び替え対象のカテゴリID:', categoryIds);
+    console.log('9. 並び替え対象のカテゴリID:', categoryIds);
 
     // データベース接続確認
+    console.log('10. データベース接続開始');
     const db = require('../database');
-    console.log('データベース接続確認完了');
+    console.log('11. データベース接続確認完了');
 
     // display_orderカラムの存在確認
+    console.log('12. テーブル構造確認開始');
     const columns = db.prepare("PRAGMA table_info(categories)").all();
     const columnNames = columns.map(col => col.name);
-    console.log('categoriesテーブルのカラム:', columnNames);
+    console.log('13. categoriesテーブルのカラム:', columnNames);
 
     if (!columnNames.includes('display_order')) {
-      console.log('display_orderカラムが存在しません。追加します...');
+      console.log('14. display_orderカラムが存在しません。追加します...');
       try {
         db.prepare('ALTER TABLE categories ADD COLUMN display_order INTEGER DEFAULT 0').run();
-        console.log('display_orderカラムを追加しました');
+        console.log('15. display_orderカラムを追加しました');
       } catch (alterError) {
-        console.error('カラム追加エラー:', alterError);
+        console.error('16. カラム追加エラー:', alterError);
         return res.status(500).json({ error: 'データベーススキーマの更新に失敗しました' });
       }
+    } else {
+      console.log('14. display_orderカラムは既に存在します');
     }
 
     // カテゴリの存在確認
+    console.log('17. カテゴリ存在確認開始');
     const existingCategories = db.prepare('SELECT id FROM categories WHERE id IN (' + categoryIds.map(() => '?').join(',') + ')').all(categoryIds);
-    console.log('存在するカテゴリID:', existingCategories.map(c => c.id));
+    console.log('18. 存在するカテゴリID:', existingCategories.map(c => c.id));
     
     if (existingCategories.length !== categoryIds.length) {
-      console.log('一部のカテゴリIDが存在しません');
+      console.log('19. エラー: 一部のカテゴリIDが存在しません');
       return res.status(400).json({ error: '一部のカテゴリIDが存在しません' });
     }
+
+    console.log('19. カテゴリ存在確認完了');
 
     const updateCategoryOrder = db.prepare('UPDATE categories SET display_order = ? WHERE id = ?');
     
     let successCount = 0;
+    console.log('20. 並び替え処理開始');
     categoryIds.forEach((categoryId, index) => {
       try {
-        console.log(`カテゴリID ${categoryId} を順序 ${index} に設定`);
+        console.log(`21. カテゴリID ${categoryId} を順序 ${index} に設定`);
         const result = updateCategoryOrder.run(index, categoryId);
-        console.log(`更新結果: ${result.changes} 行が更新されました`);
+        console.log(`22. 更新結果: ${result.changes} 行が更新されました`);
         if (result.changes > 0) {
           successCount++;
         }
       } catch (updateError) {
-        console.error(`カテゴリID ${categoryId} の更新でエラー:`, updateError);
+        console.error(`23. カテゴリID ${categoryId} の更新でエラー:`, updateError);
       }
     });
 
-    console.log(`成功した更新: ${successCount}/${categoryIds.length}`);
-    console.log('=== カテゴリ並び替えAPI完了 ===');
+    console.log(`24. 成功した更新: ${successCount}/${categoryIds.length}`);
+    console.log('25. === カテゴリ並び替えAPI完了 ===');
     
     res.json({ 
       message: 'カテゴリの並び順が更新されました',
