@@ -224,7 +224,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
       username.trim(),
       bio || '',
       message || '',
-      avatar_url || null,
+      avatar_url || '',
       native_language || '',
       target_languages || '',
       country || '',
@@ -234,21 +234,52 @@ router.put('/profile', authenticateToken, async (req, res) => {
       userId
     );
 
-    // 更新されたユーザー情報を取得
-    const updatedUser = db.prepare(`
-      SELECT id, username, email, role, bio, avatar_url, message, 
-             native_language, target_languages, country, timezone,
-             discord_username, instagram_id, created_at
-      FROM users WHERE id = ?
-    `).get(userId);
+    console.log('プロフィールが更新されました:', { userId, username: username.trim() });
 
     res.json({
       message: 'プロフィールが更新されました',
-      user: updatedUser
+      user: {
+        id: userId,
+        username: username.trim(),
+        bio: bio || '',
+        message: message || '',
+        avatar_url: avatar_url || '',
+        native_language: native_language || '',
+        target_languages: target_languages || '',
+        country: country || '',
+        timezone: timezone || '',
+        discord_username: discord_username || '',
+        instagram_id: instagram_id || ''
+      }
     });
   } catch (error) {
     console.error('プロフィール更新エラー:', error);
     res.status(500).json({ error: 'プロフィールの更新に失敗しました' });
+  }
+});
+
+// プロフィール情報を取得（テンプレート投稿用）
+router.get('/profile/template', authenticateToken, (req, res) => {
+  try {
+    const userId = req.user.userId;
+    
+    const user = db.prepare(`
+      SELECT bio, message 
+      FROM users 
+      WHERE id = ?
+    `).get(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: 'ユーザーが見つかりません' });
+    }
+
+    res.json({
+      bio: user.bio || '',
+      message: user.message || ''
+    });
+  } catch (error) {
+    console.error('プロフィール情報取得エラー:', error);
+    res.status(500).json({ error: 'プロフィール情報の取得に失敗しました' });
   }
 });
 

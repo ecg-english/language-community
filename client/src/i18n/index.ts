@@ -76,6 +76,8 @@ const en = {
     noComments: 'No comments yet',
     writeComment: 'Write a comment...',
     sendComment: 'Send',
+    addImage: 'Add Image',
+    templatePost: 'Template Post',
     
     // プロフィール
     learningGoal: 'Learning Goal',
@@ -246,6 +248,8 @@ const ja = {
     noComments: 'コメントがありません',
     writeComment: 'コメントを書く...',
     sendComment: '送信',
+    addImage: '画像を追加',
+    templatePost: 'テンプレート投稿',
     
     // プロフィール
     learningGoal: '学習目標',
@@ -413,6 +417,8 @@ const jaSimple = {
     noComments: 'コメントがありません',
     writeComment: 'コメントをかく...',
     sendComment: 'そうしん',
+    addImage: '画像を追加',
+    templatePost: 'テンプレート投稿',
     
     // プロフィール
     learningGoal: 'がくしゅうもくひょう',

@@ -28,6 +28,7 @@ import {
   Delete as DeleteIcon,
   Image as ImageIcon,
   Close as CloseIcon,
+  AutoAwesome as AutoAwesomeIcon,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -186,6 +187,35 @@ const ChannelPage: React.FC = () => {
   const handleRemoveImage = () => {
     setSelectedImage(null);
     setImagePreview(null);
+  };
+
+  // テンプレート投稿機能
+  const handleTemplatePost = async () => {
+    try {
+      // プロフィール情報を取得
+      const response = await axios.get('/api/auth/profile/template');
+      const { bio, message } = response.data;
+
+      // テンプレートを作成
+      const template = `---
+Hello!
+${bio}
+
+${message}
+---`;
+
+      // 投稿フォームに設定
+      setNewPost(template);
+    } catch (error) {
+      console.error('テンプレート投稿エラー:', error);
+      // エラーが発生した場合は基本的なテンプレートを使用
+      const basicTemplate = `---
+Hello!
+
+---
+`;
+      setNewPost(basicTemplate);
+    }
   };
 
   const handleSubmitPost = async (e: React.FormEvent) => {
@@ -494,7 +524,7 @@ const ChannelPage: React.FC = () => {
               )}
               
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box>
+                <Box sx={{ display: 'flex', gap: 1 }}>
                   <input
                     type="file"
                     accept="image/*"
@@ -509,9 +539,30 @@ const ChannelPage: React.FC = () => {
                       startIcon={<ImageIcon />}
                       disabled={isSubmitting}
                     >
-                      画像を追加
+                      {t('addImage')}
                     </Button>
                   </label>
+                  
+                  {/* テンプレート投稿ボタン（Introduce Yourselfチャンネルのみ） */}
+                  {channel?.name === 'Introduce Yourself' && (
+                    <Button
+                      variant="outlined"
+                      startIcon={<AutoAwesomeIcon />}
+                      onClick={handleTemplatePost}
+                      disabled={isSubmitting}
+                      sx={{
+                        borderColor: 'primary.main',
+                        color: 'primary.main',
+                        '&:hover': {
+                          borderColor: 'primary.dark',
+                          backgroundColor: 'primary.light',
+                          color: 'primary.dark',
+                        }
+                      }}
+                    >
+                      {t('templatePost')}
+                    </Button>
+                  )}
                 </Box>
                 <Button
                   type="submit"
