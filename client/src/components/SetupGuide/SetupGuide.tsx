@@ -15,6 +15,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Button,
 } from '@mui/material';
 import {
   CheckCircle as CheckCircleIcon,
@@ -39,6 +40,7 @@ const SetupGuide: React.FC = () => {
   const { user } = useAuth();
   const [expanded, setExpanded] = useState(true);
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
+  const [isHidden, setIsHidden] = useState(false);
 
   // チェックリストの初期化と翻訳の更新
   useEffect(() => {
@@ -85,6 +87,14 @@ const SetupGuide: React.FC = () => {
     }
   }, [t]); // tが変更されたときに再実行
 
+  // 非表示状態をローカルストレージから読み込み
+  useEffect(() => {
+    const hidden = localStorage.getItem('setupGuideHidden');
+    if (hidden === 'true') {
+      setIsHidden(true);
+    }
+  }, []);
+
   // チェックリストの状態をローカルストレージに保存
   useEffect(() => {
     localStorage.setItem('setupGuideChecklist', JSON.stringify(checklist));
@@ -100,16 +110,27 @@ const SetupGuide: React.FC = () => {
     );
   };
 
+  const handleHideSetupGuide = () => {
+    setIsHidden(true);
+    localStorage.setItem('setupGuideHidden', 'true');
+  };
+
   const completedCount = checklist.filter(item => item.completed).length;
   const totalCount = checklist.length;
   const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+  const allCompleted = progress === 100;
 
   const isClass1Member = user?.role === 'Class1 Members';
+
+  // 非表示の場合は何も表示しない
+  if (isHidden) {
+    return null;
+  }
 
   return (
     <Card sx={{ mb: 3, border: '1px solid rgba(0, 0, 0, 0.08)' }}>
       <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2, position: 'relative' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <SettingsIcon sx={{ color: 'primary.main' }} />
             <Typography variant="h6" fontWeight={600}>
@@ -119,6 +140,7 @@ const SetupGuide: React.FC = () => {
           <IconButton
             onClick={() => setExpanded(!expanded)}
             size="small"
+            sx={{ position: 'absolute', right: 0 }}
           >
             {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
           </IconButton>
@@ -270,6 +292,24 @@ const SetupGuide: React.FC = () => {
                 </List>
               </AccordionDetails>
             </Accordion>
+          )}
+
+          {/* 全て完了した時に「非表示にする」ボタンを表示 */}
+          {allCompleted && (
+            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={handleHideSetupGuide}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 500,
+                }}
+              >
+                {t('hideSetupGuide')}
+              </Button>
+            </Box>
           )}
         </Collapse>
       </CardContent>

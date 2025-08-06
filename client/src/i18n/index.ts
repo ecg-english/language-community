@@ -105,6 +105,7 @@ const en = {
     nextStep: 'Next step',
     completed: 'Completed',
     pending: 'Pending',
+    hideSetupGuide: 'Hide Setup Guide',
     
     // このコミュニティでできること
     whatYouCanDo: 'What You Can Do',
@@ -308,6 +309,7 @@ const ja = {
     nextStep: '次のステップ',
     completed: '完了済み',
     pending: '保留中',
+    hideSetupGuide: 'セットアップガイドを非表示にする',
     
     // このコミュニティでできること
     whatYouCanDo: 'このコミュニティでできること',
@@ -508,6 +510,7 @@ const jaSimple = {
     nextStep: 'つぎのステップ',
     completed: 'かんりょうずみ',
     pending: 'ほりゅうちゅう',
+    hideSetupGuide: 'セットアップガイドをひひょうじにする',
     
     // このコミュニティでできること
     whatYouCanDo: 'このコミュニティでできること',
