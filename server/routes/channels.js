@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require('../database');
 const { authenticateToken, requireAdmin, checkChannelViewPermission } = require('../middleware/auth');
 
-// カテゴリ一覧を取得
+// カテゴリ一覧を取得（チャンネル情報付き）
 router.get('/categories', authenticateToken, (req, res) => {
   try {
     console.log('カテゴリ取得APIが呼ばれました:', new Date().toISOString());
@@ -20,7 +20,29 @@ router.get('/categories', authenticateToken, (req, res) => {
     `).all();
 
     console.log('取得されたカテゴリ数:', categories.length);
-    res.json({ categories });
+
+    // 各カテゴリにチャンネル情報を追加
+    const categoriesWithChannels = categories.map(category => {
+      const channels = db.prepare(`
+        SELECT 
+          id,
+          name,
+          channel_type,
+          description,
+          display_order,
+          created_at
+        FROM channels 
+        WHERE category_id = ?
+        ORDER BY display_order ASC, created_at ASC
+      `).all(category.id);
+
+      return {
+        ...category,
+        channels: channels
+      };
+    });
+
+    res.json({ categories: categoriesWithChannels });
   } catch (error) {
     console.error('カテゴリ取得エラー:', error);
     res.status(500).json({ error: 'カテゴリの取得に失敗しました' });
