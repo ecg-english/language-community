@@ -109,7 +109,7 @@ const en = {
     
     // このコミュニティでできること
     whatYouCanDo: 'What You Can Do',
-    whatYouCanDoDescription: '',
+    whatYouCanDoDescription: 'An Introduction to the Main Content of the Language Learning Community',
     
     // プロフィール
     learningGoal: 'Learning Goal',
@@ -313,7 +313,7 @@ const ja = {
     
     // このコミュニティでできること
     whatYouCanDo: 'このコミュニティでできること',
-    whatYouCanDoDescription: '',
+    whatYouCanDoDescription: '言語学習コミュニティの主な内容を紹介',
     
     // プロフィール
     learningGoal: '学習目標',
@@ -514,7 +514,7 @@ const jaSimple = {
     
     // このコミュニティでできること
     whatYouCanDo: 'このコミュニティでできること',
-    whatYouCanDoDescription: '',
+    whatYouCanDoDescription: 'このコミュニティのおもなないようをしょうかい！',
     
     // プロフィール
     learningGoal: 'がくしゅうもくひょう',
