@@ -136,9 +136,17 @@ const ChannelPage: React.FC = () => {
       try {
         const response = await axios.get('/api/channels/categories');
         const categoriesData = response.data.categories || [];
-        setCategories(categoriesData);
+        
+        // データの検証
+        if (Array.isArray(categoriesData)) {
+          setCategories(categoriesData);
+        } else {
+          console.warn('Invalid categories data received:', categoriesData);
+          setCategories([]);
+        }
       } catch (error) {
         console.error('カテゴリ取得エラー:', error);
+        setCategories([]);
       }
     };
 
@@ -480,10 +488,14 @@ Hello!
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
           <IconButton
             onClick={() => setSidebarOpen(true)}
+            disabled={categories.length === 0}
             sx={{ 
               border: '1px solid rgba(0, 0, 0, 0.12)',
               '&:hover': {
                 backgroundColor: 'grey.100',
+              },
+              '&:disabled': {
+                opacity: 0.5,
               }
             }}
           >

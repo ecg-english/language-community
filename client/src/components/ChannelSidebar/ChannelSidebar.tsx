@@ -56,9 +56,16 @@ const ChannelSidebar: React.FC<ChannelSidebarProps> = ({
 
   // カテゴリの展開状態を初期化
   React.useEffect(() => {
+    if (!categories || !Array.isArray(categories)) {
+      console.warn('Categories data is invalid:', categories);
+      return;
+    }
+
     const initialExpanded: { [key: number]: boolean } = {};
     categories.forEach(category => {
-      initialExpanded[category.id] = !category.is_collapsed;
+      if (category && typeof category === 'object' && 'id' in category) {
+        initialExpanded[category.id] = !category.is_collapsed;
+      }
     });
     setExpandedCategories(initialExpanded);
   }, [categories]);
@@ -129,6 +136,12 @@ const ChannelSidebar: React.FC<ChannelSidebarProps> = ({
     }
   };
 
+  // データの検証
+  if (!categories || !Array.isArray(categories)) {
+    console.warn('Invalid categories data:', categories);
+    return null;
+  }
+
   return (
     <Drawer
       anchor="left"
@@ -167,93 +180,108 @@ const ChannelSidebar: React.FC<ChannelSidebarProps> = ({
         <Divider sx={{ my: 2 }} />
 
         {/* カテゴリとチャンネル */}
-        {categories.map((category) => (
-          <Box key={category.id} sx={{ mb: 1 }}>
-            <ListItem
-              button
-              onClick={() => handleCategoryToggle(category.id)}
-              sx={{
-                borderRadius: 1,
-                '&:hover': {
-                  backgroundColor: 'grey.100',
-                },
-              }}
-            >
-              <ListItemText 
-                primary={category.name}
-                primaryTypographyProps={{
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
-                }}
-              />
-              {expandedCategories[category.id] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            </ListItem>
+        {categories.map((category) => {
+          // カテゴリデータの検証
+          if (!category || typeof category !== 'object' || !category.channels) {
+            console.warn('Invalid category data:', category);
+            return null;
+          }
 
-            <Collapse in={expandedCategories[category.id]} timeout="auto" unmountOnExit>
-              <List component="div" disablePadding>
-                {category.channels
-                  .filter(channel => checkChannelViewPermission(channel.channel_type, user?.role || ''))
-                  .map((channel) => (
-                    <ListItem
-                      key={channel.id}
-                      button
-                      onClick={() => handleChannelClick(channel.id)}
-                      sx={{
-                        pl: 4,
-                        borderRadius: 1,
-                        mx: 1,
-                        mb: 0.5,
-                        backgroundColor: currentChannelId === channel.id ? 'primary.light' : 'transparent',
-                        '&:hover': {
-                          backgroundColor: currentChannelId === channel.id ? 'primary.light' : 'grey.50',
-                        },
-                      }}
-                    >
-                      <ListItemIcon sx={{ minWidth: 36 }}>
-                        <ChatIcon fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                fontWeight: currentChannelId === channel.id ? 600 : 400,
-                              }}
-                            >
-                              {channel.name}
-                            </Typography>
-                            <Chip
-                              label={getChannelTypeLabel(channel.channel_type)}
-                              color={getChannelTypeColor(channel.channel_type) as any}
-                              size="small"
-                              sx={{ fontSize: '0.6rem', height: 20 }}
-                            />
-                          </Box>
-                        }
-                        secondary={
-                          channel.description && (
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical',
-                                overflow: 'hidden',
-                              }}
-                            >
-                              {channel.description}
-                            </Typography>
-                          )
-                        }
-                      />
-                    </ListItem>
-                  ))}
-              </List>
-            </Collapse>
-          </Box>
-        ))}
+          return (
+            <Box key={category.id} sx={{ mb: 1 }}>
+              <ListItem
+                button
+                onClick={() => handleCategoryToggle(category.id)}
+                sx={{
+                  borderRadius: 1,
+                  '&:hover': {
+                    backgroundColor: 'grey.100',
+                  },
+                }}
+              >
+                <ListItemText 
+                  primary={category.name}
+                  primaryTypographyProps={{
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                  }}
+                />
+                {expandedCategories[category.id] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </ListItem>
+
+              <Collapse in={expandedCategories[category.id]} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding>
+                  {category.channels
+                    .filter(channel => {
+                      // チャンネルデータの検証
+                      if (!channel || typeof channel !== 'object') {
+                        console.warn('Invalid channel data:', channel);
+                        return false;
+                      }
+                      return checkChannelViewPermission(channel.channel_type, user?.role || '');
+                    })
+                    .map((channel) => (
+                      <ListItem
+                        key={channel.id}
+                        button
+                        onClick={() => handleChannelClick(channel.id)}
+                        sx={{
+                          pl: 4,
+                          borderRadius: 1,
+                          mx: 1,
+                          mb: 0.5,
+                          backgroundColor: currentChannelId === channel.id ? 'primary.light' : 'transparent',
+                          '&:hover': {
+                            backgroundColor: currentChannelId === channel.id ? 'primary.light' : 'grey.50',
+                          },
+                        }}
+                      >
+                        <ListItemIcon sx={{ minWidth: 36 }}>
+                          <ChatIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  fontWeight: currentChannelId === channel.id ? 600 : 400,
+                                }}
+                              >
+                                {channel.name}
+                              </Typography>
+                              <Chip
+                                label={getChannelTypeLabel(channel.channel_type)}
+                                color={getChannelTypeColor(channel.channel_type) as any}
+                                size="small"
+                                sx={{ fontSize: '0.6rem', height: 20 }}
+                              />
+                            </Box>
+                          }
+                          secondary={
+                            channel.description && (
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{
+                                  display: '-webkit-box',
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: 'vertical',
+                                  overflow: 'hidden',
+                                }}
+                              >
+                                {channel.description}
+                              </Typography>
+                            )
+                          }
+                        />
+                      </ListItem>
+                    ))}
+                </List>
+              </Collapse>
+            </Box>
+          );
+        })}
       </Box>
     </Drawer>
   );
