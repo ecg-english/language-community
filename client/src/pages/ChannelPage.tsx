@@ -338,16 +338,16 @@ Hello!
 
   const getChannelTypeLabel = (type: string) => {
     switch (type) {
-      case 'all_post_all_view':
-        return t('allPostAllView');
-      case 'admin_only_all_view':
-        return t('adminOnlyAllView');
       case 'admin_only_instructors_view':
-        return t('adminOnlyInstructorsView');
+        return 'スタッフ専用通知';
+      case 'admin_only_all_view':
+        return 'お知らせ';
       case 'instructors_post_all_view':
-        return t('instructorsPostAllView');
+        return '講師投稿';
+      case 'all_post_all_view':
+        return '一般投稿';
       case 'class1_post_class1_view':
-        return t('class1PostClass1View');
+        return 'Class1限定';
       default:
         return type;
     }
@@ -355,14 +355,14 @@ Hello!
 
   const getChannelTypeColor = (type: string) => {
     switch (type) {
-      case 'all_post_all_view':
-        return 'success';
-      case 'admin_only_all_view':
-        return 'warning';
       case 'admin_only_instructors_view':
         return 'error';
+      case 'admin_only_all_view':
+        return 'warning';
       case 'instructors_post_all_view':
         return 'info';
+      case 'all_post_all_view':
+        return 'success';
       case 'class1_post_class1_view':
         return 'secondary';
       default:
@@ -462,6 +462,9 @@ Hello!
           <Typography variant="h4" sx={{ fontWeight: 600 }}>
             #{channel.name}
           </Typography>
+        </Box>
+        
+        <Box sx={{ mb: 2 }}>
           <Chip
             label={getChannelTypeLabel(channel.channel_type)}
             color={getChannelTypeColor(channel.channel_type) as any}
@@ -544,7 +547,7 @@ Hello!
                   </label>
                   
                   {/* テンプレート投稿ボタン（Introduce Yourselfチャンネルのみ） */}
-                  {channel?.name === 'Introduce Yourself' && (
+                  {(channel?.name === 'Introduce Yourself' || channel?.name === '👋 Introduce Yourself') && (
                     <Button
                       variant="outlined"
                       startIcon={<AutoAwesomeIcon />}
