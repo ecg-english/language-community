@@ -282,28 +282,27 @@ const CommunityPage: React.FC = () => {
                 <Card
                   elevation={0}
                   sx={{
-                    backgroundColor: '#ffffff',
                     border: '1px solid rgba(0, 0, 0, 0.08)',
                     borderRadius: 3,
-                    maxWidth: 300,
-                    mx: 'auto',
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease-in-out',
+                    transition: 'all 0.2s ease',
                     '&:hover': {
-                      transform: 'translateY(-1px)',
-                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                      border: '1px solid rgba(30, 64, 175, 0.3)',
+                      backgroundColor: 'rgba(30, 64, 175, 0.04)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                     },
                   }}
                   onClick={handleFeatures}
                 >
-                  <CardContent sx={{ p: { xs: 2, sm: 3 }, textAlign: 'center' }}>
-                    <InfoIcon sx={{ fontSize: { xs: 40, sm: 48 }, color: 'primary.main', mb: 2 }} />
-                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                      {t('community.whatYouCanDo')}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {t('community.whatYouCanDoDescription')}
+                  <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+                      <InfoIcon sx={{ fontSize: { xs: 24, sm: 28 }, color: 'primary.main' }} />
+                      <Typography variant="h6" fontWeight={600}>
+                        {t('whatYouCanDo')}
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                      {t('whatYouCanDoDescription')}
                     </Typography>
                   </CardContent>
                 </Card>

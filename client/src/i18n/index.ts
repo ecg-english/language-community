@@ -106,6 +106,10 @@ const en = {
     completed: 'Completed',
     pending: 'Pending',
     
+    // このコミュニティでできること
+    whatYouCanDo: 'What You Can Do',
+    whatYouCanDoDescription: 'Learn about community features and how to use them',
+    
     // プロフィール
     learningGoal: 'Learning Goal',
     oneWordMessage: 'One-word Message',
@@ -305,6 +309,10 @@ const ja = {
     completed: '完了済み',
     pending: '保留中',
     
+    // このコミュニティでできること
+    whatYouCanDo: 'このコミュニティでできること',
+    whatYouCanDoDescription: 'このコミュニティでできることを学び、それらを活用する方法を知る',
+    
     // プロフィール
     learningGoal: '学習目標',
     oneWordMessage: '一言メッセージ',
@@ -500,6 +508,10 @@ const jaSimple = {
     nextStep: 'つぎのステップ',
     completed: 'かんりょうずみ',
     pending: 'ほりゅうちゅう',
+    
+    // このコミュニティでできること
+    whatYouCanDo: 'このコミュニティでできること',
+    whatYouCanDoDescription: 'このコミュニティでできることを学び、それらを活用する方法を知る',
     
     // プロフィール
     learningGoal: 'がくしゅうもくひょう',
