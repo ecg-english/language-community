@@ -107,6 +107,9 @@ const en = {
     pending: 'Pending',
     hideSetupGuide: 'Hide Setup Guide',
     
+    // チャンネル
+    channels: 'Channels',
+    
     // このコミュニティでできること
     whatYouCanDo: 'What You Can Do',
     whatYouCanDoDescription: 'An Introduction to the Main Content of the Language Learning Community',
@@ -311,6 +314,9 @@ const ja = {
     pending: '保留中',
     hideSetupGuide: 'セットアップガイドを非表示にする',
     
+    // チャンネル
+    channels: 'チャンネル',
+    
     // このコミュニティでできること
     whatYouCanDo: 'このコミュニティでできること',
     whatYouCanDoDescription: '言語学習コミュニティの主な内容を紹介',
@@ -511,6 +517,9 @@ const jaSimple = {
     completed: 'かんりょうずみ',
     pending: 'ほりゅうちゅう',
     hideSetupGuide: 'セットアップガイドをひひょうじにする',
+    
+    // チャンネル
+    channels: 'チャンネル',
     
     // このコミュニティでできること
     whatYouCanDo: 'このコミュニティでできること',

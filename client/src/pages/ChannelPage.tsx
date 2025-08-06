@@ -29,11 +29,13 @@ import {
   Image as ImageIcon,
   Close as CloseIcon,
   AutoAwesome as AutoAwesomeIcon,
+  Menu as MenuIcon,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
+import ChannelSidebar from '../components/ChannelSidebar/ChannelSidebar';
 
 interface Post {
   id: number;
@@ -63,6 +65,13 @@ interface Channel {
   description: string;
 }
 
+interface Category {
+  id: number;
+  name: string;
+  is_collapsed: boolean;
+  channels: Channel[];
+}
+
 const ChannelPage: React.FC = () => {
   const { channelId } = useParams<{ channelId: string }>();
   const navigate = useNavigate();
@@ -80,6 +89,8 @@ const ChannelPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   const numChannelId = parseInt(channelId || '0');
 
@@ -98,10 +109,10 @@ const ChannelPage: React.FC = () => {
         const hasPermission = checkPostPermission(channelData.channel_type, user?.role || '');
         setCanPost(hasPermission);
 
-        // 投稿を読み込み
+        // 投稿を取得
         const postsResponse = await axios.get(`/api/posts/channels/${numChannelId}/posts`);
         setPosts(postsResponse.data.posts || []);
-        
+
         setLoading(false);
       } catch (error: any) {
         console.error('チャンネル情報の取得エラー:', error);
@@ -118,6 +129,23 @@ const ChannelPage: React.FC = () => {
       fetchChannelInfo();
     }
   }, [numChannelId, user?.role, navigate, t]);
+
+  // カテゴリとチャンネルのデータを取得
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get('/api/channels/categories');
+        const categoriesData = response.data.categories || [];
+        setCategories(categoriesData);
+      } catch (error) {
+        console.error('カテゴリ取得エラー:', error);
+      }
+    };
+
+    if (user) {
+      fetchCategories();
+    }
+  }, [user]);
 
   // 投稿権限をチェックする関数
   const checkPostPermission = (channelType: string, userRole: string): boolean => {
@@ -449,14 +477,26 @@ Hello!
     <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* ヘッダー */}
       <Box sx={{ mb: 4 }}>
-        <Button
-          variant="outlined"
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/community')}
-          sx={{ mb: 2 }}
-        >
-          {t('back')}
-        </Button>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+          <IconButton
+            onClick={() => setSidebarOpen(true)}
+            sx={{ 
+              border: '1px solid rgba(0, 0, 0, 0.12)',
+              '&:hover': {
+                backgroundColor: 'grey.100',
+              }
+            }}
+          >
+            <MenuIcon />
+          </IconButton>
+          <Button
+            variant="outlined"
+            startIcon={<ArrowBackIcon />}
+            onClick={() => navigate('/community')}
+          >
+            {t('back')}
+          </Button>
+        </Box>
         
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
           <Typography variant="h4" sx={{ fontWeight: 600 }}>
@@ -770,6 +810,14 @@ Hello!
           ))
         )}
       </Box>
+
+      {/* サイドバー */}
+      <ChannelSidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        categories={categories}
+        currentChannelId={numChannelId}
+      />
     </Container>
   );
 };
