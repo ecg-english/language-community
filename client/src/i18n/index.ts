@@ -86,6 +86,26 @@ const en = {
     channelTypeGeneralPost: 'General Post',
     channelTypeClass1Only: 'Class1 Only',
     
+    // チェックリストガイド
+    setupGuide: 'Setup Guide',
+    setupGuideTitle: 'What to do when joining the community',
+    setupGuideSubtitle: 'Complete these steps to get started',
+    profileCompletion: 'Complete your profile!',
+    profileCompletionDesc: 'Set up your profile with self-introduction and one-word message',
+    introduceYourself: 'Post a greeting message in the "🙋 Introduce Yourself" channel!',
+    introduceYourselfDesc: 'Use the template post feature to introduce yourself',
+    checkAnnouncements: 'Check the "📢 Announcements" channel for updates!',
+    checkAnnouncementsDesc: 'Stay updated with community announcements',
+    class1Section: 'Class1 Members Only',
+    contactInstructor: 'Contact your instructor via Instagram or Discord!',
+    contactInstructorDesc: 'Set up your first lesson date with your instructor',
+    markComplete: 'Mark as complete',
+    markIncomplete: 'Mark as incomplete',
+    progress: 'Progress',
+    nextStep: 'Next step',
+    completed: 'Completed',
+    pending: 'Pending',
+    
     // プロフィール
     learningGoal: 'Learning Goal',
     oneWordMessage: 'One-word Message',
@@ -259,11 +279,31 @@ const ja = {
     templatePost: 'テンプレート投稿',
     
     // チャンネルタイプ
-    channelTypeStaffOnly: 'スタッフ専用',
+    channelTypeStaffOnly: 'スタッフ専用通知',
     channelTypeAnnouncement: 'お知らせ',
     channelTypeInstructorPost: '講師投稿',
     channelTypeGeneralPost: '一般投稿',
-    channelTypeClass1Only: 'Class1専用',
+    channelTypeClass1Only: 'Class1限定',
+    
+    // チェックリストガイド
+    setupGuide: 'セットアップガイド',
+    setupGuideTitle: 'コミュニティに参加する際の手順',
+    setupGuideSubtitle: 'スタートするためにこれらの手順を完了させましょう',
+    profileCompletion: 'プロフィールを完成させましょう！',
+    profileCompletionDesc: '自己紹介と一言メッセージを設定してください',
+    introduceYourself: '「🙋 自己紹介」チャンネルに挨拶メッセージを投稿しましょう！',
+    introduceYourselfDesc: '自己紹介をするためにテンプレート投稿機能を使用します',
+    checkAnnouncements: '「📢 お知らせ」チャンネルをチェックして更新を受け取りましょう！',
+    checkAnnouncementsDesc: 'コミュニティのお知らせを最新情報として受け取ります',
+    class1Section: 'Class1メンバーのみ',
+    contactInstructor: 'InstagramやDiscordで講師に連絡しましょう！',
+    contactInstructorDesc: '講師と最初のレッスン日を設定します',
+    markComplete: '完了としてマーク',
+    markIncomplete: '未完了としてマーク',
+    progress: '進捗',
+    nextStep: '次のステップ',
+    completed: '完了済み',
+    pending: '保留中',
     
     // プロフィール
     learningGoal: '学習目標',
@@ -435,11 +475,31 @@ const jaSimple = {
     templatePost: 'テンプレートとうこう',
     
     // チャンネルタイプ
-    channelTypeStaffOnly: 'スタッフ専用',
-    channelTypeAnnouncement: 'お知らせ',
-    channelTypeInstructorPost: '講師投稿',
-    channelTypeGeneralPost: '一般投稿',
-    channelTypeClass1Only: 'Class1専用',
+    channelTypeStaffOnly: 'スタッフせんよう',
+    channelTypeAnnouncement: 'おしらせ',
+    channelTypeInstructorPost: 'きょうしのとうこう',
+    channelTypeGeneralPost: 'みんなのとうこう',
+    channelTypeClass1Only: 'Class1せんよう',
+    
+    // チェックリストガイド
+    setupGuide: 'セットアップガイド',
+    setupGuideTitle: 'コミュニティにさんかするときのてじゅん',
+    setupGuideSubtitle: 'スタートするためにこれらのてじゅんをかんりょうさせましょう',
+    profileCompletion: 'プロフィールをかんせいさせましょう！',
+    profileCompletionDesc: 'じこしょうかいとひとことメッセージをせっていしてください',
+    introduceYourself: '「🙋 Introduce Yourself」チャンネルにあいさつメッセージをとうこうしましょう！',
+    introduceYourselfDesc: '自己紹介をするためにテンプレートとうこうきのうをつかいます',
+    checkAnnouncements: '「📢 Announcements」チャンネルをチェックしておしらせをかくにんしましょう！',
+    checkAnnouncementsDesc: 'コミュニティのおしらせをさいしんじょうほうとしてうけとります',
+    class1Section: 'Class1メンバーのみ',
+    contactInstructor: 'InstagramやDiscordできょうしからのれんらくをまちましょう！',
+    contactInstructorDesc: 'きょうしとさいしょのレッスンのひをせっていします',
+    markComplete: 'かんりょうとしてマーク',
+    markIncomplete: 'みかんりょうとしてマーク',
+    progress: 'しんちょく',
+    nextStep: 'つぎのステップ',
+    completed: 'かんりょうずみ',
+    pending: 'ほりゅうちゅう',
     
     // プロフィール
     learningGoal: 'がくしゅうもくひょう',
