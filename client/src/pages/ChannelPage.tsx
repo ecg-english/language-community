@@ -526,8 +526,19 @@ Hello!
                 </Box>
               )}
               
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box sx={{ display: 'flex', gap: 1 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: { xs: 'column', sm: 'row' },
+                justifyContent: 'space-between', 
+                alignItems: { xs: 'stretch', sm: 'center' },
+                gap: { xs: 1, sm: 0 }
+              }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  gap: 1, 
+                  flexWrap: 'wrap',
+                  justifyContent: { xs: 'center', sm: 'flex-start' }
+                }}>
                   <input
                     type="file"
                     accept="image/*"
@@ -541,6 +552,13 @@ Hello!
                       variant="outlined"
                       startIcon={<ImageIcon />}
                       disabled={isSubmitting}
+                      size="small"
+                      sx={{
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                        px: { xs: 1, sm: 2 },
+                        py: { xs: 0.5, sm: 1 },
+                        minWidth: { xs: 'auto', sm: 'auto' },
+                      }}
                     >
                       {t('addImage')}
                     </Button>
@@ -553,9 +571,14 @@ Hello!
                       startIcon={<AutoAwesomeIcon />}
                       onClick={handleTemplatePost}
                       disabled={isSubmitting}
+                      size="small"
                       sx={{
                         borderColor: 'primary.main',
                         color: 'primary.main',
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                        px: { xs: 1, sm: 2 },
+                        py: { xs: 0.5, sm: 1 },
+                        minWidth: { xs: 'auto', sm: 'auto' },
                         '&:hover': {
                           borderColor: 'primary.dark',
                           backgroundColor: 'primary.light',
@@ -572,6 +595,13 @@ Hello!
                   variant="contained"
                   endIcon={<SendIcon />}
                   disabled={!newPost.trim() || isSubmitting}
+                  size="small"
+                  sx={{
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                    px: { xs: 1, sm: 2 },
+                    py: { xs: 0.5, sm: 1 },
+                    minWidth: { xs: 'auto', sm: 'auto' },
+                  }}
                 >
                   {isSubmitting ? t('loading') : t('post')}
                 </Button>
