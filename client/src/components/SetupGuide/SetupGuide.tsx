@@ -198,7 +198,7 @@ const SetupGuide: React.FC = () => {
                   />
                 </ListItem>
               );
-            })})}
+            })}
           </List>
 
           {/* Class1限定セクションの折りたたみ可能なセクション */}
