@@ -35,7 +35,15 @@ app.use((req, res, next) => {
 });
 
 // ファイルアップロード用のディレクトリ作成
-const uploadsDir = path.join(__dirname, 'uploads');
+let uploadsDir;
+if (process.env.NODE_ENV === 'production') {
+  // Renderの永続化ディスクを使用
+  uploadsDir = '/opt/render/data/uploads';
+} else {
+  // 開発環境
+  uploadsDir = path.join(__dirname, 'uploads');
+}
+
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }

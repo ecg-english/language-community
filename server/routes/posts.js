@@ -290,9 +290,18 @@ router.post('/upload/image', authenticateToken, (req, res) => {
       return res.status(400).json({ error: '対応していない画像形式です。PNG、JPEG形式のみ対応しています' });
     }
 
-    // 画像を保存
+    // 画像を保存（Renderの永続化ディスクを使用）
     const fileName = `post_image_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
-    const uploadsDir = path.join(__dirname, '../uploads');
+    let uploadsDir;
+    
+    if (process.env.NODE_ENV === 'production') {
+      // Renderの永続化ディスクを使用
+      uploadsDir = '/opt/render/data/uploads';
+    } else {
+      // 開発環境
+      uploadsDir = path.join(__dirname, '../uploads');
+    }
+    
     const filePath = path.join(uploadsDir, fileName);
     
     // uploadsディレクトリが存在しない場合は作成
