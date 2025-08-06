@@ -38,41 +38,52 @@ const SetupGuide: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [expanded, setExpanded] = useState(true);
-  const [checklist, setChecklist] = useState<ChecklistItem[]>([
-    {
-      id: 'profile',
-      title: t('profileCompletion'),
-      description: t('profileCompletionDesc'),
-      completed: false,
-    },
-    {
-      id: 'introduce',
-      title: t('introduceYourself'),
-      description: t('introduceYourselfDesc'),
-      completed: false,
-    },
-    {
-      id: 'announcements',
-      title: t('checkAnnouncements'),
-      description: t('checkAnnouncementsDesc'),
-      completed: false,
-    },
-    {
-      id: 'contact',
-      title: t('contactInstructor'),
-      description: t('contactInstructorDesc'),
-      completed: false,
-      isClass1Only: true,
-    },
-  ]);
+  const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
 
-  // ローカルストレージからチェックリストの状態を読み込み
+  // チェックリストの初期化と翻訳の更新
   useEffect(() => {
+    const newChecklist: ChecklistItem[] = [
+      {
+        id: 'profile',
+        title: t('profileCompletion'),
+        description: t('profileCompletionDesc'),
+        completed: false,
+      },
+      {
+        id: 'introduce',
+        title: t('introduceYourself'),
+        description: t('introduceYourselfDesc'),
+        completed: false,
+      },
+      {
+        id: 'announcements',
+        title: t('checkAnnouncements'),
+        description: t('checkAnnouncementsDesc'),
+        completed: false,
+      },
+      {
+        id: 'contact',
+        title: t('contactInstructor'),
+        description: t('contactInstructorDesc'),
+        completed: false,
+        isClass1Only: true,
+      },
+    ];
+
+    // ローカルストレージからチェックリストの状態を読み込み
     const savedChecklist = localStorage.getItem('setupGuideChecklist');
     if (savedChecklist) {
-      setChecklist(JSON.parse(savedChecklist));
+      const savedItems = JSON.parse(savedChecklist);
+      // 保存された完了状態を新しいチェックリストに適用
+      const updatedChecklist = newChecklist.map(item => {
+        const savedItem = savedItems.find((saved: any) => saved.id === item.id);
+        return savedItem ? { ...item, completed: savedItem.completed } : item;
+      });
+      setChecklist(updatedChecklist);
+    } else {
+      setChecklist(newChecklist);
     }
-  }, []);
+  }, [t]); // tが変更されたときに再実行
 
   // チェックリストの状態をローカルストレージに保存
   useEffect(() => {
@@ -174,14 +185,6 @@ const SetupGuide: React.FC = () => {
                         >
                           {item.title}
                         </Typography>
-                        {item.isClass1Only && (
-                          <Chip
-                            label={t('class1Section')}
-                            size="small"
-                            color="secondary"
-                            variant="outlined"
-                          />
-                        )}
                       </Box>
                     }
                     secondary={
@@ -248,12 +251,6 @@ const SetupGuide: React.FC = () => {
                               >
                                 {item.title}
                               </Typography>
-                              <Chip
-                                label={t('class1Section')}
-                                size="small"
-                                color="secondary"
-                                variant="outlined"
-                              />
                             </Box>
                           }
                           secondary={
