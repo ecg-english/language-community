@@ -97,12 +97,21 @@ const ChannelPage: React.FC = () => {
   useEffect(() => {
     const fetchChannelInfo = async () => {
       try {
+        console.log('チャンネル情報取得開始:', { channelId: numChannelId, user: user?.username });
         setLoading(true);
         setError(null);
+        
+        // 状態をリセット
+        setChannel(null);
+        setPosts([]);
+        setComments({});
+        setExpandedComments({});
+        setNewComment({});
 
         // チャンネル情報を取得
         const channelResponse = await axios.get(`/api/channels/channels/${numChannelId}`);
         const channelData = channelResponse.data.channel;
+        console.log('チャンネル情報取得成功:', channelData);
         setChannel(channelData);
         
         // 投稿権限をチェック
@@ -111,7 +120,9 @@ const ChannelPage: React.FC = () => {
 
         // 投稿を取得
         const postsResponse = await axios.get(`/api/posts/channels/${numChannelId}/posts`);
-        setPosts(postsResponse.data.posts || []);
+        const postsData = postsResponse.data.posts || [];
+        console.log('投稿取得成功:', { count: postsData.length });
+        setPosts(postsData);
 
         setLoading(false);
       } catch (error: any) {
@@ -128,7 +139,7 @@ const ChannelPage: React.FC = () => {
     if (numChannelId && user) {
       fetchChannelInfo();
     }
-  }, [numChannelId, user?.role, navigate, t]);
+  }, [numChannelId, user?.role, user, t]);
 
   // カテゴリとチャンネルのデータを取得
   useEffect(() => {
