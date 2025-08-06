@@ -97,7 +97,7 @@ const en = {
     checkAnnouncements: 'Check the "📢 Announcements" channel for updates!',
     checkAnnouncementsDesc: 'Stay updated with community announcements',
     class1Section: 'Class1 Members Only',
-    contactInstructor: 'Contact your instructor via Instagram or Discord!',
+    contactInstructor: 'Let’s wait to hear from the instructor on Instagram or Discord!',
     contactInstructorDesc: 'Set up your first lesson date with your instructor',
     markComplete: 'Mark as complete',
     markIncomplete: 'Mark as incomplete',
@@ -108,7 +108,7 @@ const en = {
     
     // このコミュニティでできること
     whatYouCanDo: 'What You Can Do',
-    whatYouCanDoDescription: 'Learn about community features and how to use them',
+    whatYouCanDoDescription: '',
     
     // プロフィール
     learningGoal: 'Learning Goal',
@@ -300,7 +300,7 @@ const ja = {
     checkAnnouncements: '「📢 お知らせ」チャンネルをチェックして更新を受け取りましょう！',
     checkAnnouncementsDesc: 'コミュニティのお知らせを最新情報として受け取ります',
     class1Section: 'Class1メンバーのみ',
-    contactInstructor: 'InstagramやDiscordで講師に連絡しましょう！',
+    contactInstructor: 'InstagramやDiscordで講師からの連絡を待ちましょう！',
     contactInstructorDesc: '講師と最初のレッスン日を設定します',
     markComplete: '完了としてマーク',
     markIncomplete: '未完了としてマーク',
@@ -311,7 +311,7 @@ const ja = {
     
     // このコミュニティでできること
     whatYouCanDo: 'このコミュニティでできること',
-    whatYouCanDoDescription: 'このコミュニティでできることを学び、それらを活用する方法を知る',
+    whatYouCanDoDescription: '',
     
     // プロフィール
     learningGoal: '学習目標',
@@ -511,7 +511,7 @@ const jaSimple = {
     
     // このコミュニティでできること
     whatYouCanDo: 'このコミュニティでできること',
-    whatYouCanDoDescription: 'このコミュニティでできることを学び、それらを活用する方法を知る',
+    whatYouCanDoDescription: '',
     
     // プロフィール
     learningGoal: 'がくしゅうもくひょう',
