@@ -73,32 +73,40 @@ const SetupGuide: React.FC = () => {
     ];
 
     // ローカルストレージからチェックリストの状態を読み込み
-    const savedChecklist = localStorage.getItem('setupGuideChecklist');
-    if (savedChecklist) {
-      const savedItems = JSON.parse(savedChecklist);
-      // 保存された完了状態を新しいチェックリストに適用
-      const updatedChecklist = newChecklist.map(item => {
-        const savedItem = savedItems.find((saved: any) => saved.id === item.id);
-        return savedItem ? { ...item, completed: savedItem.completed } : item;
-      });
-      setChecklist(updatedChecklist);
+    if (user?.id) {
+      const savedChecklist = localStorage.getItem(`setupGuideChecklist_${user.id}`);
+      if (savedChecklist) {
+        const savedItems = JSON.parse(savedChecklist);
+        // 保存された完了状態を新しいチェックリストに適用
+        const updatedChecklist = newChecklist.map(item => {
+          const savedItem = savedItems.find((saved: any) => saved.id === item.id);
+          return savedItem ? { ...item, completed: savedItem.completed } : item;
+        });
+        setChecklist(updatedChecklist);
+      } else {
+        setChecklist(newChecklist);
+      }
     } else {
       setChecklist(newChecklist);
     }
-  }, [t]); // tが変更されたときに再実行
+  }, [t, user?.id]); // tが変更されたときに再実行
 
   // 非表示状態をローカルストレージから読み込み
   useEffect(() => {
-    const hidden = localStorage.getItem('setupGuideHidden');
-    if (hidden === 'true') {
-      setIsHidden(true);
+    if (user?.id) {
+      const hidden = localStorage.getItem(`setupGuideHidden_${user.id}`);
+      if (hidden === 'true') {
+        setIsHidden(true);
+      }
     }
-  }, []);
+  }, [user?.id]);
 
   // チェックリストの状態をローカルストレージに保存
   useEffect(() => {
-    localStorage.setItem('setupGuideChecklist', JSON.stringify(checklist));
-  }, [checklist]);
+    if (user?.id) {
+      localStorage.setItem(`setupGuideChecklist_${user.id}`, JSON.stringify(checklist));
+    }
+  }, [checklist, user?.id]);
 
   const toggleItem = (itemId: string) => {
     setChecklist(prev => 
@@ -112,7 +120,9 @@ const SetupGuide: React.FC = () => {
 
   const handleHideSetupGuide = () => {
     setIsHidden(true);
-    localStorage.setItem('setupGuideHidden', 'true');
+    if (user?.id) {
+      localStorage.setItem(`setupGuideHidden_${user.id}`, 'true');
+    }
   };
 
   const completedCount = checklist.filter(item => item.completed).length;
