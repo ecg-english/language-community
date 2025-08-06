@@ -359,6 +359,52 @@ router.delete('/categories/:categoryId', authenticateToken, requireAdmin, (req, 
   }
 });
 
+// チャンネルの並び替え（管理者のみ）
+router.put('/channels/reorder', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    console.log('=== チャンネル並び替えAPI開始 ===');
+    console.log('リクエストボディ:', req.body);
+    
+    const { channelIds } = req.body;
+    
+    if (!channelIds || !Array.isArray(channelIds) || channelIds.length === 0) {
+      return res.status(400).json({ error: '有効なチャンネルID配列が必要です' });
+    }
+
+    console.log('並び替え対象のチャンネルID:', channelIds);
+
+    // display_orderカラムの存在確認と追加
+    const columns = db.prepare("PRAGMA table_info(channels)").all();
+    const columnNames = columns.map(col => col.name);
+    
+    if (!columnNames.includes('display_order')) {
+      console.log('display_orderカラムを追加します');
+      db.prepare('ALTER TABLE channels ADD COLUMN display_order INTEGER DEFAULT 0').run();
+    }
+
+    // 並び替え処理
+    const updateStmt = db.prepare('UPDATE channels SET display_order = ? WHERE id = ?');
+    
+    channelIds.forEach((channelId, index) => {
+      console.log(`チャンネルID ${channelId} を順序 ${index} に設定`);
+      updateStmt.run(index, channelId);
+    });
+
+    console.log('=== チャンネル並び替えAPI完了 ===');
+    
+    res.json({ 
+      message: 'チャンネルの並び順が更新されました',
+      updatedCount: channelIds.length
+    });
+  } catch (error) {
+    console.error('チャンネル並び替えエラー:', error);
+    res.status(500).json({ 
+      error: 'チャンネルの並び替えに失敗しました',
+      details: error.message
+    });
+  }
+});
+
 // チャンネルを更新（管理者のみ）
 router.put('/channels/:channelId', authenticateToken, requireAdmin, (req, res) => {
   try {
@@ -481,52 +527,6 @@ router.post('/test-reorder', authenticateToken, requireAdmin, (req, res) => {
     console.error('テスト並び替えエラー:', error);
     res.status(500).json({ 
       error: 'テスト並び替えエラー',
-      details: error.message
-    });
-  }
-});
-
-// チャンネルの並び替え（管理者のみ）
-router.put('/channels/reorder', authenticateToken, requireAdmin, (req, res) => {
-  try {
-    console.log('=== チャンネル並び替えAPI開始 ===');
-    console.log('リクエストボディ:', req.body);
-    
-    const { channelIds } = req.body;
-    
-    if (!channelIds || !Array.isArray(channelIds) || channelIds.length === 0) {
-      return res.status(400).json({ error: '有効なチャンネルID配列が必要です' });
-    }
-
-    console.log('並び替え対象のチャンネルID:', channelIds);
-
-    // display_orderカラムの存在確認と追加
-    const columns = db.prepare("PRAGMA table_info(channels)").all();
-    const columnNames = columns.map(col => col.name);
-    
-    if (!columnNames.includes('display_order')) {
-      console.log('display_orderカラムを追加します');
-      db.prepare('ALTER TABLE channels ADD COLUMN display_order INTEGER DEFAULT 0').run();
-    }
-
-    // 並び替え処理
-    const updateStmt = db.prepare('UPDATE channels SET display_order = ? WHERE id = ?');
-    
-    channelIds.forEach((channelId, index) => {
-      console.log(`チャンネルID ${channelId} を順序 ${index} に設定`);
-      updateStmt.run(index, channelId);
-    });
-
-    console.log('=== チャンネル並び替えAPI完了 ===');
-    
-    res.json({ 
-      message: 'チャンネルの並び順が更新されました',
-      updatedCount: channelIds.length
-    });
-  } catch (error) {
-    console.error('チャンネル並び替えエラー:', error);
-    res.status(500).json({ 
-      error: 'チャンネルの並び替えに失敗しました',
       details: error.message
     });
   }
