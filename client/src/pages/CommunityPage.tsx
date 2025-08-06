@@ -100,7 +100,7 @@ const CommunityPage: React.FC = () => {
   const getChannelTypeLabel = (channelType: string) => {
     switch (channelType) {
       case 'admin_only_instructors_view':
-        return '管理者専用';
+        return 'スタッフ専用通知';
       case 'admin_only_all_view':
         return 'お知らせ';
       case 'instructors_post_all_view':
@@ -108,7 +108,7 @@ const CommunityPage: React.FC = () => {
       case 'all_post_all_view':
         return '一般投稿';
       case 'class1_post_class1_view':
-        return 'Class1専用';
+        return 'Class1限定';
       default:
         return '不明';
     }

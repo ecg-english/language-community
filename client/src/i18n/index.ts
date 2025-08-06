@@ -79,6 +79,13 @@ const en = {
     addImage: 'Add Image',
     templatePost: 'Template Post',
     
+    // チャンネルタイプ
+    channelTypeStaffOnly: 'Staff Only',
+    channelTypeAnnouncement: 'Announcement',
+    channelTypeInstructorPost: 'Instructor Post',
+    channelTypeGeneralPost: 'General Post',
+    channelTypeClass1Only: 'Class1 Only',
+    
     // プロフィール
     learningGoal: 'Learning Goal',
     oneWordMessage: 'One-word Message',
@@ -251,6 +258,13 @@ const ja = {
     addImage: '画像を追加',
     templatePost: 'テンプレート投稿',
     
+    // チャンネルタイプ
+    channelTypeStaffOnly: 'スタッフ専用',
+    channelTypeAnnouncement: 'お知らせ',
+    channelTypeInstructorPost: '講師投稿',
+    channelTypeGeneralPost: '一般投稿',
+    channelTypeClass1Only: 'Class1専用',
+    
     // プロフィール
     learningGoal: '学習目標',
     oneWordMessage: '一言メッセージ',
@@ -417,8 +431,15 @@ const jaSimple = {
     noComments: 'コメントがありません',
     writeComment: 'コメントをかく...',
     sendComment: 'そうしん',
-    addImage: '画像を追加',
-    templatePost: 'テンプレート投稿',
+    addImage: 'がぞうをついか',
+    templatePost: 'テンプレートとうこう',
+    
+    // チャンネルタイプ
+    channelTypeStaffOnly: 'スタッフ専用',
+    channelTypeAnnouncement: 'お知らせ',
+    channelTypeInstructorPost: '講師投稿',
+    channelTypeGeneralPost: '一般投稿',
+    channelTypeClass1Only: 'Class1専用',
     
     // プロフィール
     learningGoal: 'がくしゅうもくひょう',
