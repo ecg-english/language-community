@@ -83,7 +83,7 @@ const ChannelSidebar: React.FC<ChannelSidebarProps> = ({
       currentUrl: window.location.href,
       timestamp: new Date().toISOString()
     });
-    navigate(`/channels/${channelId}`);
+    navigate(`/channel/${channelId}`);
     onClose();
   };
 

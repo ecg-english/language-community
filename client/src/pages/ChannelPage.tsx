@@ -102,9 +102,11 @@ const ChannelPage: React.FC = () => {
 
   useEffect(() => {
     const numChannelId = parseInt(channelId || '0');
-    console.log('URLパラメータ変更:', { 
+    console.log('ChannelPage useEffect 実行:', { 
       channelId, 
       numChannelId, 
+      user: user?.username,
+      userExists: !!user,
       url: window.location.href,
       timestamp: new Date().toISOString()
     });
@@ -152,6 +154,16 @@ const ChannelPage: React.FC = () => {
 
     if (numChannelId && user) {
       fetchChannelInfo();
+    } else {
+      console.log('データ取得をスキップ:', { 
+        numChannelId, 
+        userExists: !!user,
+        reason: !numChannelId ? 'channelIdが無効' : 'userが存在しない'
+      });
+      if (!user) {
+        setLoading(false);
+        setError('ユーザー情報が取得できません。ログインしてください。');
+      }
     }
   }, [channelId, user?.role, user, t]);
 
@@ -449,6 +461,14 @@ const ChannelPage: React.FC = () => {
       return part;
     });
   };
+
+  console.log('ChannelPage レンダリング状態:', { 
+    loading, 
+    error, 
+    channel: !!channel, 
+    postsCount: posts.length,
+    user: user?.username 
+  });
 
   if (loading) {
     return (
