@@ -207,6 +207,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   }}
                 >
                   <Avatar
+                    src={user.avatar_url && !user.avatar_url.includes('https://language-community-backend.onrender.comhttps') ? user.avatar_url : undefined}
                     sx={{
                       width: { xs: 32, sm: 36 },
                       height: { xs: 32, sm: 36 },

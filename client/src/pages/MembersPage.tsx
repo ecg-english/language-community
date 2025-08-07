@@ -322,7 +322,7 @@ const MembersPage: React.FC = () => {
             >
               <CardContent sx={{ textAlign: 'center', py: 3 }}>
                 <Avatar
-                  src={member.avatar_url ? `https://language-community-backend.onrender.com${member.avatar_url}` : undefined}
+                  src={member.avatar_url && !member.avatar_url.includes('https://language-community-backend.onrender.comhttps') ? member.avatar_url : undefined}
                   sx={{
                     width: 80,
                     height: 80,
