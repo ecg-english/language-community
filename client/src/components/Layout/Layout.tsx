@@ -22,9 +22,12 @@ import {
   Logout as LogoutIcon,
   Language as LanguageIcon,
   History as HistoryIcon,
+  LightMode as LightModeIcon,
+  DarkMode as DarkModeIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useMonthlyNotification } from '../../hooks/useMonthlyNotification';
@@ -37,6 +40,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, logout } = useAuth();
   const { currentLanguage, changeLanguage, getLanguageLabel } = useLanguage();
+  const { isDarkMode, toggleTheme } = useTheme();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -126,8 +130,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         position="static" 
         elevation={0}
         sx={{
-          backgroundColor: '#ffffff',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
         }}
       >
         <Container maxWidth="lg">
@@ -138,7 +142,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 component="div"
                 sx={{
                   fontWeight: 700,
-                  color: '#1e40af',
                   cursor: 'pointer',
                   fontSize: { xs: '1.125rem', sm: '1.25rem' },
                 }}
@@ -150,6 +153,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
             {user && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
+                {/* テーマ切り替えボタン */}
+                <IconButton
+                  onClick={toggleTheme}
+                  sx={{
+                    p: { xs: 1, sm: 1.5 },
+                    '&:hover': {
+                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                    },
+                  }}
+                >
+                  {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
+                </IconButton>
+
                 {/* 言語選択 */}
                 <FormControl size="small" sx={{ minWidth: { xs: 80, sm: 120 } }}>
                   <Select
@@ -194,8 +210,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     sx={{
                       width: { xs: 32, sm: 36 },
                       height: { xs: 32, sm: 36 },
-                      backgroundColor: '#1e40af',
-                      color: 'white',
                       fontWeight: 600,
                       fontSize: { xs: '0.875rem', sm: '1rem' },
                     }}
