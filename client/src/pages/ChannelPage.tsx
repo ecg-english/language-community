@@ -47,6 +47,7 @@ interface Post {
   comment_count: number;
   user_liked: number;
   image_url?: string;
+  avatar_url?: string;
 }
 
 interface Comment {
@@ -56,6 +57,7 @@ interface Comment {
   username: string;
   role: string;
   created_at: string;
+  avatar_url?: string;
 }
 
 interface Channel {
@@ -711,7 +713,10 @@ const ChannelPage: React.FC = () => {
             <Card key={post.id}>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
-                  <Avatar sx={{ bgcolor: 'primary.main' }}>
+                  <Avatar 
+                    sx={{ bgcolor: 'primary.main' }}
+                    src={post.avatar_url}
+                  >
                     {post.username.charAt(0).toUpperCase()}
                   </Avatar>
                   <Box sx={{ flex: 1 }}>
@@ -809,7 +814,10 @@ const ChannelPage: React.FC = () => {
                     {comments[post.id]?.map((comment) => (
                       <Paper key={comment.id} sx={{ p: 2, mb: 1, bgcolor: 'grey.50' }}>
                         <Stack direction="row" spacing={2} alignItems="flex-start">
-                          <Avatar sx={{ width: 32, height: 32 }}>
+                          <Avatar 
+                            sx={{ width: 32, height: 32 }}
+                            src={comment.avatar_url}
+                          >
                             {comment.username.charAt(0).toUpperCase()}
                           </Avatar>
                           <Box sx={{ flexGrow: 1 }}>
