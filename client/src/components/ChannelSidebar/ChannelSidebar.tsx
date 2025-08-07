@@ -78,11 +78,17 @@ const ChannelSidebar: React.FC<ChannelSidebarProps> = ({
   };
 
   const handleChannelClick = (channelId: number) => {
+    console.log('サイドバーからチャンネル遷移:', { 
+      channelId, 
+      currentUrl: window.location.href,
+      timestamp: new Date().toISOString()
+    });
     navigate(`/channels/${channelId}`);
     onClose();
   };
 
   const handleHomeClick = () => {
+    console.log('サイドバーからホーム遷移');
     navigate('/community');
     onClose();
   };

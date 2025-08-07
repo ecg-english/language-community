@@ -77,6 +77,14 @@ const ChannelPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useTranslation();
+  
+  // コンポーネントマウント時のログ
+  console.log('ChannelPage マウント:', { 
+    channelId, 
+    url: window.location.href,
+    timestamp: new Date().toISOString()
+  });
+
   const [channel, setChannel] = useState<Channel | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [comments, setComments] = useState<{ [postId: number]: Comment[] }>({});
@@ -94,7 +102,12 @@ const ChannelPage: React.FC = () => {
 
   useEffect(() => {
     const numChannelId = parseInt(channelId || '0');
-    console.log('URLパラメータ変更:', { channelId, numChannelId });
+    console.log('URLパラメータ変更:', { 
+      channelId, 
+      numChannelId, 
+      url: window.location.href,
+      timestamp: new Date().toISOString()
+    });
 
     const fetchChannelInfo = async () => {
       try {
