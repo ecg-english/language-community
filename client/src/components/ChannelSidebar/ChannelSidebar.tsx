@@ -173,7 +173,7 @@ const ChannelSidebar: React.FC<ChannelSidebarProps> = ({
             borderRadius: 1,
             mb: 1,
             '&:hover': {
-              backgroundColor: 'primary.light',
+              backgroundColor: 'action.hover',
             },
           }}
         >
@@ -201,7 +201,7 @@ const ChannelSidebar: React.FC<ChannelSidebarProps> = ({
                 sx={{
                   borderRadius: 1,
                   '&:hover': {
-                    backgroundColor: 'grey.100',
+                    backgroundColor: 'action.hover',
                   },
                 }}
               >
@@ -236,9 +236,9 @@ const ChannelSidebar: React.FC<ChannelSidebarProps> = ({
                           borderRadius: 1,
                           mx: 1,
                           mb: 0.5,
-                          backgroundColor: currentChannelId === channel.id ? 'primary.light' : 'transparent',
+                          backgroundColor: currentChannelId === channel.id ? 'action.selected' : 'transparent',
                           '&:hover': {
-                            backgroundColor: currentChannelId === channel.id ? 'primary.light' : 'grey.50',
+                            backgroundColor: currentChannelId === channel.id ? 'action.selected' : 'action.hover',
                           },
                         }}
                       >

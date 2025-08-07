@@ -198,7 +198,6 @@ const CommunityPage: React.FC = () => {
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
-                    backgroundColor: '#fafafb',
                   }}
                 >
                   <InputBase
@@ -211,9 +210,7 @@ const CommunityPage: React.FC = () => {
                       py: { xs: 1.5, sm: 2 },
                       fontSize: { xs: '0.875rem', sm: '1rem' },
                       '& .MuiInputBase-input': {
-                        color: '#1f2937',
                         '&::placeholder': {
-                          color: '#9ca3af',
                           opacity: 1,
                         },
                       },
@@ -223,9 +220,8 @@ const CommunityPage: React.FC = () => {
                     type="submit"
                     sx={{
                       p: { xs: 1, sm: 1.5 },
-                      color: '#6b7280',
                       '&:hover': {
-                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                        backgroundColor: 'action.hover',
                       },
                     }}
                   >
@@ -323,11 +319,7 @@ const CommunityPage: React.FC = () => {
                       sx={{
                         '&:before': { display: 'none' },
                         '& .MuiAccordionSummary-root': {
-                          backgroundColor: '#ffffff',
                           minHeight: { xs: 56, sm: 64 },
-                          '&:hover': {
-                            backgroundColor: '#fafafb',
-                          },
                         },
                         '& .MuiAccordionSummary-content': {
                           margin: { xs: '8px 0', sm: '12px 0' },
@@ -341,7 +333,7 @@ const CommunityPage: React.FC = () => {
                         expandIcon={<ExpandMoreIcon />}
                         sx={{
                           '& .MuiAccordionSummary-expandIconWrapper': {
-                            color: '#6b7280',
+                            color: 'text.secondary',
                           },
                         }}
                       >
@@ -351,7 +343,6 @@ const CommunityPage: React.FC = () => {
                             sx={{ 
                               fontWeight: 600,
                               fontSize: { xs: '1rem', sm: '1.125rem' },
-                              color: '#1f2937',
                             }}
                           >
                             {category.name}
@@ -362,8 +353,6 @@ const CommunityPage: React.FC = () => {
                             sx={{
                               ml: 'auto',
                               mr: 2,
-                              backgroundColor: '#f3f4f6',
-                              color: '#6b7280',
                               fontSize: { xs: '0.75rem', sm: '0.8rem' },
                             }}
                           />
@@ -395,7 +384,6 @@ const CommunityPage: React.FC = () => {
                                       sx={{ 
                                         fontWeight: 600,
                                         fontSize: { xs: '0.875rem', sm: '1rem' },
-                                        color: '#1f2937',
                                         flex: 1,
                                       }}
                                     >

@@ -65,6 +65,12 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         secondary: isDarkMode ? '#b0b0b0' : '#666666',
       },
       divider: isDarkMode ? '#333333' : '#e0e0e0',
+      action: {
+        hover: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+        selected: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+        disabled: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)',
+        disabledBackground: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)',
+      },
     },
     typography: {
       fontFamily: [
@@ -199,6 +205,9 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
                 ? '0 4px 6px -1px rgba(255, 255, 255, 0.1), 0 2px 4px -1px rgba(255, 255, 255, 0.06)'
                 : '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
             },
+            '& .MuiCardContent-root': {
+              color: isDarkMode ? '#ffffff' : '#000000',
+            },
           },
         },
       },
@@ -208,6 +217,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
             backgroundColor: isDarkMode ? '#1e1e1e' : '#ffffff',
             backgroundImage: 'none',
             border: isDarkMode ? '1px solid #333' : '1px solid rgba(0, 0, 0, 0.06)',
+            color: isDarkMode ? '#ffffff' : '#000000',
           },
         },
       },
@@ -245,6 +255,18 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
                 '& fieldset': {
                   borderWidth: 2,
                 },
+              },
+              '& input': {
+                color: isDarkMode ? '#ffffff' : '#000000',
+              },
+              '& textarea': {
+                color: isDarkMode ? '#ffffff' : '#000000',
+              },
+            },
+            '& .MuiInputLabel-root': {
+              color: isDarkMode ? '#b0b0b0' : '#666666',
+              '&.Mui-focused': {
+                color: isDarkMode ? '#90caf9' : '#1976d2',
               },
             },
           },
@@ -329,12 +351,67 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
           root: {
             borderRadius: 8,
           },
+          icon: {
+            color: isDarkMode ? '#ffffff' : '#000000',
+          },
         },
       },
       MuiAvatar: {
         styleOverrides: {
           root: {
             borderRadius: 8,
+          },
+        },
+      },
+      MuiListItem: {
+        styleOverrides: {
+          root: {
+            '&.Mui-selected': {
+              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+            },
+            '&:hover': {
+              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.02)',
+            },
+          },
+        },
+      },
+      MuiListItemButton: {
+        styleOverrides: {
+          root: {
+            '&.Mui-selected': {
+              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+            },
+            '&:hover': {
+              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.02)',
+            },
+          },
+        },
+      },
+      MuiAccordion: {
+        styleOverrides: {
+          root: {
+            backgroundColor: isDarkMode ? '#1e1e1e' : '#ffffff',
+            color: isDarkMode ? '#ffffff' : '#000000',
+            '&:before': {
+              backgroundColor: isDarkMode ? '#333' : '#e0e0e0',
+            },
+          },
+        },
+      },
+      MuiAccordionSummary: {
+        styleOverrides: {
+          root: {
+            '&.Mui-expanded': {
+              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.02)',
+            },
+          },
+        },
+      },
+      MuiAccordionDetails: {
+        styleOverrides: {
+          root: {
+            backgroundColor: isDarkMode ? '#1e1e1e' : '#ffffff',
+            color: isDarkMode ? '#ffffff' : '#000000',
           },
         },
       },
