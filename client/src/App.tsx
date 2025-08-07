@@ -32,7 +32,7 @@ const App: React.FC = () => {
                     <CommunityPage />
                   </ProtectedRoute>
                 } />
-                <Route path="/channel/:channelId" element={
+                <Route path="/channels/:channelId" element={
                   <ProtectedRoute>
                     <ChannelPage />
                   </ProtectedRoute>
