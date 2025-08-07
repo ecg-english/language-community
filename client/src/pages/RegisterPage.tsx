@@ -68,7 +68,6 @@ const RegisterPage: React.FC = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        backgroundColor: '#ffffff',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

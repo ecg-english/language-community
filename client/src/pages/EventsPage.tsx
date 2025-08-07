@@ -251,7 +251,7 @@ const EventsPage: React.FC = () => {
     <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* ヘッダー */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography variant="h3" sx={{ fontWeight: 700, color: '#1a1a1a' }}>
+        <Typography variant="h3" sx={{ fontWeight: 700 }}>
           Events
         </Typography>
         {canEdit && (
@@ -285,23 +285,23 @@ const EventsPage: React.FC = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <IconButton 
           onClick={handlePreviousMonth}
-          sx={{ color: '#666' }}
+          sx={{ color: 'text.secondary' }}
         >
           <ChevronLeftIcon />
         </IconButton>
-        <Typography variant="h5" sx={{ fontWeight: 600, color: '#1a1a1a' }}>
+        <Typography variant="h5" sx={{ fontWeight: 600 }}>
           {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
         </Typography>
         <IconButton 
           onClick={handleNextMonth}
-          sx={{ color: '#666' }}
+          sx={{ color: 'text.secondary' }}
         >
           <ChevronRightIcon />
         </IconButton>
       </Box>
 
       {/* カレンダー */}
-      <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e0e0e0', mb: 4 }}>
+      <Card elevation={0} sx={{ borderRadius: 3, mb: 4 }}>
         <CardContent sx={{ p: 3 }}>
           {/* 曜日ヘッダー */}
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1, mb: 1 }}>
@@ -310,7 +310,7 @@ const EventsPage: React.FC = () => {
                 textAlign: 'center', 
                 py: 2, 
                 fontWeight: 600, 
-                color: '#666',
+                color: 'text.secondary',
                 fontSize: '0.9rem'
               }}>
                 {day}
@@ -325,7 +325,8 @@ const EventsPage: React.FC = () => {
                 key={index}
                 sx={{
                   minHeight: 80,
-                  border: '1px solid #f0f0f0',
+                  border: '1px solid',
+                borderColor: 'divider',
                   p: 1,
                   cursor: canEdit ? 'pointer' : 'default',
                   backgroundColor: day && selectedDate && 
@@ -339,7 +340,7 @@ const EventsPage: React.FC = () => {
                     day.getMonth() === selectedDate.getMonth() && 
                     day.getFullYear() === selectedDate.getFullYear() 
                       ? 'white' 
-                      : '#1a1a1a',
+                      : 'text.primary',
                   '&:hover': canEdit ? {
                     backgroundColor: day && selectedDate && 
                       day.getDate() === selectedDate.getDate() && 
@@ -417,7 +418,7 @@ const EventsPage: React.FC = () => {
       {selectedDate && (
         <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e0e0e0', mb: 4 }}>
           <CardContent sx={{ p: 3 }}>
-            <Typography variant="h5" sx={{ fontWeight: 600, color: '#1a1a1a', mb: 2 }}>
+            <Typography variant="h5" sx={{ fontWeight: 600, mb: 2 }}>
               {monthNames[selectedDate.getMonth()]} {selectedDate.getDate()}
             </Typography>
             
@@ -489,9 +490,9 @@ const EventsPage: React.FC = () => {
       )}
 
       {/* 今後のイベント一覧 */}
-      <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e0e0e0' }}>
+              <Card elevation={0} sx={{ borderRadius: 3 }}>
         <CardContent sx={{ p: 3 }}>
-          <Typography variant="h5" sx={{ fontWeight: 600, color: '#1a1a1a', mb: 3 }}>
+          <Typography variant="h5" sx={{ fontWeight: 600, mb: 3 }}>
             Upcoming Events
           </Typography>
           

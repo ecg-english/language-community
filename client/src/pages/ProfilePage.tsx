@@ -730,7 +730,6 @@ const ProfilePage: React.FC = () => {
               }}>
                 <DiscordIcon sx={{ 
                   mr: 1, 
-                  color: '#5865F2',
                   fontSize: { xs: 20, sm: 24 }
                 }} />
                 <Typography 
@@ -784,7 +783,6 @@ const ProfilePage: React.FC = () => {
               }}>
                 <InstagramIcon sx={{ 
                   mr: 1, 
-                  color: '#E4405F',
                   fontSize: { xs: 20, sm: 24 }
                 }} />
                 <Typography 

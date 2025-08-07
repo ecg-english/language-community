@@ -150,7 +150,6 @@ const CommunityPage: React.FC = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        backgroundColor: '#ffffff',
       }}
     >
       <Container maxWidth="lg" sx={{ py: { xs: 3, sm: 4, md: 6 } }}>
@@ -163,7 +162,6 @@ const CommunityPage: React.FC = () => {
                 component="h1" 
                 sx={{
                   fontWeight: 800,
-                  color: '#1e40af',
                   mb: 2,
                 }}
               >
