@@ -1,6 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const path = require('path');
 const router = express.Router();
 const db = require('../database');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
@@ -569,11 +570,15 @@ router.get('/monthly-history/:userId', authenticateToken, async (req, res) => {
 // アバター画像URL修正API（一時的に認証なし）
 router.post('/fix-avatar-urls', (req, res) => {
   try {
+    console.log('=== Avatar URL Fix API Called ===');
+    
     // すべてのユーザーのアバターURLを修正
     const users = db.prepare('SELECT id, username, avatar_url FROM users WHERE avatar_url IS NOT NULL AND avatar_url != ""').all();
+    console.log(`Found ${users.length} users with avatar URLs`);
     
     let fixedCount = 0;
     for (const user of users) {
+      console.log(`Checking user ${user.username}: ${user.avatar_url}`);
       if (user.avatar_url && user.avatar_url.includes('ecg-english.github.io')) {
         // 間違ったURLを正しいURLに修正
         const fileName = user.avatar_url.split('/').pop();
@@ -589,21 +594,31 @@ router.post('/fix-avatar-urls', (req, res) => {
       }
     }
     
+    console.log(`Fixed ${fixedCount} avatar URLs`);
     res.json({
       message: `${fixedCount}個のアバターURLを修正しました`,
       fixedCount
     });
   } catch (error) {
     console.error('アバターURL修正エラー:', error);
-    res.status(500).json({ error: 'アバターURLの修正に失敗しました' });
+    res.status(500).json({ 
+      error: 'アバターURLの修正に失敗しました',
+      details: error.message 
+    });
   }
 });
 
 // アバター画像アップロード
 router.post('/upload/avatar', authenticateToken, (req, res) => {
   try {
+    console.log('=== Avatar Upload API Called ===');
+    console.log('Request body keys:', Object.keys(req.body));
+    
     const { imageData } = req.body;
     const userId = req.user.userId;
+    
+    console.log('User ID:', userId);
+    console.log('Image data length:', imageData ? imageData.length : 0);
     
     if (!imageData) {
       return res.status(400).json({ error: '画像データが提供されていません' });
@@ -612,6 +627,8 @@ router.post('/upload/avatar', authenticateToken, (req, res) => {
     // Base64データをデコードしてバリデーション
     const base64Data = imageData.replace(/^data:image\/[a-z]+;base64,/, '');
     const buffer = Buffer.from(base64Data, 'base64');
+    
+    console.log('Buffer length:', buffer.length);
     
     // ファイルサイズチェック（2MB制限）
     if (buffer.length > 2 * 1024 * 1024) {
@@ -638,13 +655,18 @@ router.post('/upload/avatar', authenticateToken, (req, res) => {
       uploadsDir = path.join(__dirname, '../uploads');
     }
 
+    console.log('Uploads directory:', uploadsDir);
+
     // ディレクトリが存在しない場合は作成
-    if (!require('fs').existsSync(uploadsDir)) {
-      require('fs').mkdirSync(uploadsDir, { recursive: true });
+    const fs = require('fs');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+      console.log('Created uploads directory');
     }
 
     const filePath = path.join(uploadsDir, fileName);
-    require('fs').writeFileSync(filePath, buffer);
+    fs.writeFileSync(filePath, buffer);
+    console.log('File saved to:', filePath);
 
     // 画像URLを生成
     const imageUrl = `${process.env.NODE_ENV === 'production' 
@@ -663,7 +685,10 @@ router.post('/upload/avatar', authenticateToken, (req, res) => {
     });
   } catch (error) {
     console.error('アバターアップロードエラー:', error);
-    res.status(500).json({ error: 'アバター画像のアップロードに失敗しました' });
+    res.status(500).json({ 
+      error: 'アバター画像のアップロードに失敗しました',
+      details: error.message 
+    });
   }
 });
 
