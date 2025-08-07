@@ -566,4 +566,72 @@ router.get('/monthly-history/:userId', authenticateToken, async (req, res) => {
   }
 });
 
+// アバター画像アップロード
+router.post('/upload/avatar', authenticateToken, (req, res) => {
+  try {
+    const { imageData } = req.body;
+    const userId = req.user.userId;
+    
+    if (!imageData) {
+      return res.status(400).json({ error: '画像データが提供されていません' });
+    }
+
+    // Base64データをデコードしてバリデーション
+    const base64Data = imageData.replace(/^data:image\/[a-z]+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+    
+    // ファイルサイズチェック（2MB制限）
+    if (buffer.length > 2 * 1024 * 1024) {
+      return res.status(400).json({ error: '画像サイズは2MB以下にしてください' });
+    }
+
+    // 画像形式チェック
+    const header = buffer.toString('hex', 0, 4);
+    const validFormats = ['89504e47', 'ffd8ffdb', 'ffd8ffe0', 'ffd8ffe1', 'ffd8ffe2', 'ffd8ffe3', 'ffd8ffe8'];
+    
+    if (!validFormats.some(format => header.startsWith(format))) {
+      return res.status(400).json({ error: '対応していない画像形式です。PNG、JPEG形式のみ対応しています' });
+    }
+
+    // 画像を保存（Renderの永続化ディスクを使用）
+    const fileName = `avatar_${userId}_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
+    let uploadsDir;
+    
+    if (process.env.NODE_ENV === 'production') {
+      // Renderの永続化ディスクを使用
+      uploadsDir = '/opt/render/data/uploads';
+    } else {
+      // 開発環境
+      uploadsDir = path.join(__dirname, '../uploads');
+    }
+
+    // ディレクトリが存在しない場合は作成
+    if (!require('fs').existsSync(uploadsDir)) {
+      require('fs').mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const filePath = path.join(uploadsDir, fileName);
+    require('fs').writeFileSync(filePath, buffer);
+
+    // 画像URLを生成
+    const imageUrl = `${process.env.NODE_ENV === 'production' 
+      ? 'https://language-community-backend.onrender.com' 
+      : 'http://localhost:3001'}/uploads/${fileName}`;
+
+    // データベースにアバターURLを保存
+    const updateAvatar = db.prepare('UPDATE users SET avatar_url = ? WHERE id = ?');
+    updateAvatar.run(imageUrl, userId);
+
+    console.log('アバター画像がアップロードされました:', { userId, imageUrl });
+
+    res.json({
+      message: 'アバター画像がアップロードされました',
+      avatar_url: imageUrl
+    });
+  } catch (error) {
+    console.error('アバターアップロードエラー:', error);
+    res.status(500).json({ error: 'アバター画像のアップロードに失敗しました' });
+  }
+});
+
 module.exports = router; 

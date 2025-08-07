@@ -143,16 +143,23 @@ const ProfilePage: React.FC = () => {
 
       // 新しいファイルが選択されている場合はアップロード
       if (selectedFile) {
-        const formData = new FormData();
-        formData.append('avatar', selectedFile);
-
-        const uploadResponse = await axios.post('/api/upload/avatar', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+        // ファイルをBase64に変換
+        const reader = new FileReader();
+        const base64Promise = new Promise<string>((resolve) => {
+          reader.onload = () => {
+            const result = reader.result as string;
+            resolve(result);
+          };
+        });
+        reader.readAsDataURL(selectedFile);
+        
+        const imageData = await base64Promise;
+        
+        const uploadResponse = await axios.post('/api/auth/upload/avatar', {
+          imageData: imageData
         });
 
-        avatarUrl = uploadResponse.data.fileUrl;
+        avatarUrl = uploadResponse.data.avatar_url;
       }
 
       // プロフィール更新
