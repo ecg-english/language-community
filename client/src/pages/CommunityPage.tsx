@@ -8,13 +8,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  ListItemIcon,
   Chip,
-  Badge,
   Paper,
   Fade,
   Stack,
@@ -27,7 +21,6 @@ import {
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
-  Tag as TagIcon,
   People as PeopleIcon,
   Chat as ChatIcon,
   Language,
@@ -62,7 +55,7 @@ const CommunityPage: React.FC = () => {
       loadCategories();
       hasLoaded.current = true;
     }
-  }, []); // 空の依存配列で初回のみ実行
+  }, [loadCategories]); // loadCategoriesを依存配列に追加
 
   const handleCategoryToggle = (categoryId: number) => {
     const category = categories.find(cat => cat.id === categoryId);
@@ -151,7 +144,7 @@ const CommunityPage: React.FC = () => {
     }
   };
 
-  console.log('CommunityPage render - categories length:', categories.length);
+
 
   return (
     <Box
