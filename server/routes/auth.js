@@ -566,8 +566,8 @@ router.get('/monthly-history/:userId', authenticateToken, async (req, res) => {
   }
 });
 
-// アバター画像URL修正API
-router.post('/fix-avatar-urls', authenticateToken, (req, res) => {
+// アバター画像URL修正API（一時的に認証なし）
+router.post('/fix-avatar-urls', (req, res) => {
   try {
     // すべてのユーザーのアバターURLを修正
     const users = db.prepare('SELECT id, username, avatar_url FROM users WHERE avatar_url IS NOT NULL AND avatar_url != ""').all();

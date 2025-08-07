@@ -27,6 +27,7 @@ import {
   PhotoCamera as PhotoCameraIcon,
   Chat as DiscordIcon,
   Instagram as InstagramIcon,
+  Refresh as RefreshIcon,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -135,6 +136,19 @@ const ProfilePage: React.FC = () => {
   };
 
 
+
+  const handleFixAvatarUrls = async () => {
+    try {
+      const response = await axios.post('/api/auth/fix-avatar-urls');
+      console.log('Avatar URLs fixed:', response.data);
+      alert(response.data.message);
+      // プロフィールを再読み込み
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Avatar URL fix error:', error);
+      alert('アバターURLの修正に失敗しました');
+    }
+  };
 
   const handleSave = async () => {
     try {
@@ -393,18 +407,33 @@ const ProfilePage: React.FC = () => {
                     </IconButton>
                   </>
                 ) : (
-                  <IconButton 
-                    onClick={handleEdit} 
-                    color="primary"
-                    sx={{ 
-                      p: { xs: 1, sm: 1.5 },
-                      '&:hover': {
-                        backgroundColor: 'rgba(30, 64, 175, 0.04)',
-                      },
-                    }}
-                  >
-                    <EditIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
-                  </IconButton>
+                  <>
+                    <IconButton 
+                      onClick={handleEdit} 
+                      color="primary"
+                      sx={{ 
+                        p: { xs: 1, sm: 1.5 },
+                        '&:hover': {
+                          backgroundColor: 'rgba(30, 64, 175, 0.04)',
+                        },
+                      }}
+                    >
+                      <EditIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
+                    </IconButton>
+                    <IconButton 
+                      onClick={handleFixAvatarUrls} 
+                      color="secondary"
+                      sx={{ 
+                        p: { xs: 1, sm: 1.5 },
+                        '&:hover': {
+                          backgroundColor: 'rgba(156, 39, 176, 0.04)',
+                        },
+                      }}
+                      title="アバターURL修正"
+                    >
+                      <RefreshIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
+                    </IconButton>
+                  </>
                 )}
               </Box>
             )}
