@@ -96,9 +96,18 @@ app.get('/api/test/users', (req, res) => {
   try {
     console.log('=== Direct Test Endpoint ===');
     const db = require('./database');
-    const users = db.prepare('SELECT id, username, role FROM users').all();
-    console.log(`Found ${users.length} users in direct test`);
-    res.json({ users });
+    const users = db.prepare('SELECT id, username, role, avatar_url, created_at FROM users').all();
+    
+    // アバター画像のURLを自動修正
+    const correctedUsers = users.map(user => {
+      if (user.avatar_url && user.avatar_url.includes('ecg-english.github.io')) {
+        user.avatar_url = user.avatar_url.replace('https://ecg-english.github.io', 'https://language-community-backend.onrender.com');
+      }
+      return user;
+    });
+    
+    console.log(`Found ${correctedUsers.length} users in direct test`);
+    res.json({ users: correctedUsers });
   } catch (error) {
     console.error('Direct test endpoint error:', error);
     res.status(500).json({ error: 'Direct test failed' });
