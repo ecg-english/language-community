@@ -31,7 +31,7 @@ import {
   AutoAwesome as AutoAwesomeIcon,
   Menu as MenuIcon,
 } from '@mui/icons-material';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
@@ -75,12 +75,14 @@ interface Category {
 const ChannelPage: React.FC = () => {
   const { channelId } = useParams<{ channelId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { t } = useTranslation();
   
   // コンポーネントマウント時のログ
   console.log('ChannelPage マウント:', { 
     channelId, 
+    pathname: location.pathname,
     url: window.location.href,
     timestamp: new Date().toISOString()
   });
@@ -105,6 +107,7 @@ const ChannelPage: React.FC = () => {
     console.log('URLパラメータ変更:', { 
       channelId, 
       numChannelId, 
+      pathname: location.pathname,
       url: window.location.href,
       timestamp: new Date().toISOString()
     });
@@ -153,7 +156,7 @@ const ChannelPage: React.FC = () => {
     if (numChannelId && user) {
       fetchChannelInfo();
     }
-  }, [channelId, user?.role, user, t]);
+  }, [channelId, location.pathname, user?.role, user, t]);
 
   // カテゴリとチャンネルのデータを取得
   useEffect(() => {
