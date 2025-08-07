@@ -295,7 +295,7 @@ const ProfilePage: React.FC = () => {
               justifyContent: { xs: 'space-between', sm: 'flex-start' }
             }}>
               <Avatar
-                src={profileData.avatar_url ? `https://language-community-backend.onrender.com${profileData.avatar_url}` : undefined}
+                src={profileData.avatar_url && !profileData.avatar_url.includes('https://language-community-backend.onrender.comhttps') ? profileData.avatar_url : undefined}
                 sx={{
                   width: { xs: 60, sm: 80 },
                   height: { xs: 60, sm: 80 },
@@ -529,6 +529,7 @@ const ProfilePage: React.FC = () => {
                     display: 'flex',
                     alignItems: 'center',
                     fontSize: { xs: '0.875rem', sm: '1rem' },
+                    color: 'text.primary',
                   }}
                 >
                   {profileData.native_language || t('goalNotSet')}
@@ -585,6 +586,7 @@ const ProfilePage: React.FC = () => {
                     display: 'flex',
                     alignItems: 'center',
                     fontSize: { xs: '0.875rem', sm: '1rem' },
+                    color: 'text.primary',
                   }}
                 >
                   {profileData.target_languages || t('goalNotSet')}
@@ -639,6 +641,7 @@ const ProfilePage: React.FC = () => {
                     display: 'flex',
                     alignItems: 'center',
                     fontSize: { xs: '0.875rem', sm: '1rem' },
+                    color: 'text.primary',
                   }}
                 >
                   {profileData.country || t('goalNotSet')}
@@ -695,6 +698,7 @@ const ProfilePage: React.FC = () => {
                     display: 'flex',
                     alignItems: 'center',
                     fontSize: { xs: '0.875rem', sm: '1rem' },
+                    color: 'text.primary',
                   }}
                 >
                   {profileData.message || t('messageNotSet')}
@@ -751,6 +755,7 @@ const ProfilePage: React.FC = () => {
                     display: 'flex',
                     alignItems: 'flex-start',
                     fontSize: { xs: '0.875rem', sm: '1rem' },
+                    color: 'text.primary',
                   }}
                 >
                   {profileData.bio || t('bioNotSet')}
@@ -804,6 +809,7 @@ const ProfilePage: React.FC = () => {
                     display: 'flex',
                     alignItems: 'center',
                     fontSize: { xs: '0.875rem', sm: '1rem' },
+                    color: 'text.primary',
                   }}
                 >
                   {profileData.discord_username || '未設定'}
@@ -865,6 +871,7 @@ const ProfilePage: React.FC = () => {
                           alignItems: 'center',
                           fontSize: { xs: '0.875rem', sm: '1rem' },
                           flex: 1,
+                          color: 'text.primary',
                         }}
                       >
                         {profileData.instagram_id}
