@@ -651,7 +651,7 @@ const ProfilePage: React.FC = () => {
                   variant="body1"
                   sx={{
                     p: { xs: 1.5, sm: 2 },
-                    bgcolor: 'grey.50',
+                    bgcolor: 'background.paper',
                     borderRadius: 1,
                     minHeight: { xs: 50, sm: 60 },
                     display: 'flex',
