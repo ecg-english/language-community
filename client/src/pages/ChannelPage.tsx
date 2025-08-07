@@ -92,9 +92,10 @@ const ChannelPage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
 
-  const numChannelId = parseInt(channelId || '0');
-
   useEffect(() => {
+    const numChannelId = parseInt(channelId || '0');
+    console.log('URLパラメータ変更:', { channelId, numChannelId });
+
     const fetchChannelInfo = async () => {
       try {
         console.log('チャンネル情報取得開始:', { channelId: numChannelId, user: user?.username });
@@ -139,7 +140,7 @@ const ChannelPage: React.FC = () => {
     if (numChannelId && user) {
       fetchChannelInfo();
     }
-  }, [numChannelId, user?.role, user, t]);
+  }, [channelId, user?.role, user, t]);
 
   // カテゴリとチャンネルのデータを取得
   useEffect(() => {
@@ -221,7 +222,7 @@ const ChannelPage: React.FC = () => {
         // 画像を描画
         ctx?.drawImage(img, 0, 0, width, height);
         
-        // 圧縮されたBase64データを取得
+        // JPEG形式で圧縮
         const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
         setSelectedImage(compressedDataUrl);
         setImagePreview(compressedDataUrl);
@@ -236,43 +237,28 @@ const ChannelPage: React.FC = () => {
     setImagePreview(null);
   };
 
-  // テンプレート投稿機能
   const handleTemplatePost = async () => {
     try {
-      // プロフィール情報を取得
       const response = await axios.get('/api/auth/profile/template');
       const { bio, message } = response.data;
-
-      // テンプレートを作成
-      const template = `---
-Hello!
-${bio}
-
-${message}
----`;
-
-      // 投稿フォームに設定
+      
+      const template = `Hello!\n\n${bio || ''}\n\n${message || ''}`;
       setNewPost(template);
     } catch (error) {
-      console.error('テンプレート投稿エラー:', error);
-      // エラーが発生した場合は基本的なテンプレートを使用
-      const basicTemplate = `---
-Hello!
-
----
-`;
-      setNewPost(basicTemplate);
+      console.error('テンプレート取得エラー:', error);
+      setError('テンプレートの取得に失敗しました');
     }
   };
 
   const handleSubmitPost = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newPost.trim() || !canPost || isSubmitting) return;
+    if (!newPost.trim() || isSubmitting) return;
 
     try {
       setIsSubmitting(true);
-      
+      const numChannelId = parseInt(channelId || '0');
       let imageUrl = null;
+
       if (selectedImage) {
         // 画像をアップロード
         const uploadResponse = await axios.post('/api/posts/upload/image', {
@@ -305,6 +291,7 @@ Hello!
     try {
       await axios.post(`/api/posts/posts/${postId}/like`);
       // 投稿を再読み込み
+      const numChannelId = parseInt(channelId || '0');
       const postsResponse = await axios.get(`/api/posts/channels/${numChannelId}/posts`);
       setPosts(postsResponse.data.posts || []);
     } catch (error) {
@@ -317,6 +304,7 @@ Hello!
       try {
         await axios.delete(`/api/posts/posts/${postId}`);
         // 投稿を再読み込み
+        const numChannelId = parseInt(channelId || '0');
         const postsResponse = await axios.get(`/api/posts/channels/${numChannelId}/posts`);
         setPosts(postsResponse.data.posts || []);
       } catch (error) {
@@ -369,6 +357,7 @@ Hello!
       try {
         await axios.delete(`/api/posts/comments/${commentId}`);
         // 投稿を再読み込みしてコメント数を更新
+        const numChannelId = parseInt(channelId || '0');
         const postsResponse = await axios.get(`/api/posts/channels/${numChannelId}/posts`);
         setPosts(postsResponse.data.posts || []);
         // コメントを再読み込み
@@ -839,7 +828,7 @@ Hello!
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         categories={categories}
-        currentChannelId={numChannelId}
+        currentChannelId={parseInt(channelId || '0')}
       />
     </Container>
   );
