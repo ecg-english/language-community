@@ -844,7 +844,7 @@ const ProfilePage: React.FC = () => {
                           fontSize: { xs: '0.75rem', sm: '0.875rem' },
                         }}
                       >
-                        開く
+                        {t('open')}
                       </Button>
                     </Box>
                   ) : (

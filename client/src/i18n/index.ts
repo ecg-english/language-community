@@ -25,6 +25,7 @@ const en = {
     back: 'Back',
     close: 'Close',
     confirm: 'Confirm',
+    open: 'Open',
     
     // Features Page
     featuresTitle: 'What You Can Do in This Community',
@@ -233,6 +234,7 @@ const ja = {
     back: '戻る',
     close: '閉じる',
     confirm: '確認',
+    open: '開く',
     
     // Features Page
     featuresTitle: 'このコミュニティでできること',
@@ -437,6 +439,7 @@ const jaSimple = {
     back: 'もどる',
     close: 'しめる',
     confirm: 'かくにん',
+    open: 'ひらく',
     
     // Features Page
     featuresTitle: 'このコミュニティでできること',
