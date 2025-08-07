@@ -252,6 +252,7 @@ const ChannelSidebar: React.FC<ChannelSidebarProps> = ({
                                 variant="body2"
                                 sx={{
                                   fontWeight: currentChannelId === channel.id ? 600 : 400,
+                                  color: 'text.primary',
                                 }}
                               >
                                 {channel.name}

@@ -209,7 +209,7 @@ const MonthlyHistoryPage: React.FC = () => {
             
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
-                <Paper sx={{ p: 2, bgcolor: 'grey.50' }}>
+                <Paper sx={{ p: 2, bgcolor: 'background.paper' }}>
                   <Typography 
                     variant="h6" 
                     sx={{ 
@@ -233,7 +233,7 @@ const MonthlyHistoryPage: React.FC = () => {
               </Grid>
               
               <Grid item xs={12} md={6}>
-                <Paper sx={{ p: 2, bgcolor: 'grey.50' }}>
+                <Paper sx={{ p: 2, bgcolor: 'background.paper' }}>
                   <Typography 
                     variant="h6" 
                     sx={{ 
@@ -293,7 +293,7 @@ const MonthlyHistoryPage: React.FC = () => {
             
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
-                <Paper sx={{ p: 2, bgcolor: 'grey.50' }}>
+                <Paper sx={{ p: 2, bgcolor: 'background.paper' }}>
                   <Typography 
                     variant="h6" 
                     sx={{ 
@@ -317,7 +317,7 @@ const MonthlyHistoryPage: React.FC = () => {
               </Grid>
               
               <Grid item xs={12} md={6}>
-                <Paper sx={{ p: 2, bgcolor: 'grey.50' }}>
+                <Paper sx={{ p: 2, bgcolor: 'background.paper' }}>
                   <Typography 
                     variant="h6" 
                     sx={{ 

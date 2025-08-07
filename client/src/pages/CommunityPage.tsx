@@ -385,6 +385,7 @@ const CommunityPage: React.FC = () => {
                                         fontWeight: 600,
                                         fontSize: { xs: '0.875rem', sm: '1rem' },
                                         flex: 1,
+                                        color: 'text.primary',
                                       }}
                                     >
                                       {channel.name}
