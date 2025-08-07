@@ -27,6 +27,16 @@ router.get('/channels/:channelId/posts', authenticateToken, checkChannelViewPerm
       LIMIT ? OFFSET ?
     `).all(req.user.userId, channelId, limit, offset);
 
+    // アバターURLを修正
+    posts.forEach(post => {
+      if (post.avatar_url && post.avatar_url.includes('ecg-english.github.io')) {
+        const fileName = post.avatar_url.split('/').pop();
+        post.avatar_url = `${process.env.NODE_ENV === 'production' 
+          ? 'https://language-community-backend.onrender.com' 
+          : 'http://localhost:3001'}/uploads/${fileName}`;
+      }
+    });
+
     res.json({ posts });
   } catch (error) {
     console.error('投稿取得エラー:', error);
@@ -185,6 +195,16 @@ router.get('/posts/:postId/comments', authenticateToken, (req, res) => {
       WHERE c.post_id = ?
       ORDER BY c.created_at ASC
     `).all(postId);
+
+    // アバターURLを修正
+    comments.forEach(comment => {
+      if (comment.avatar_url && comment.avatar_url.includes('ecg-english.github.io')) {
+        const fileName = comment.avatar_url.split('/').pop();
+        comment.avatar_url = `${process.env.NODE_ENV === 'production' 
+          ? 'https://language-community-backend.onrender.com' 
+          : 'http://localhost:3001'}/uploads/${fileName}`;
+      }
+    });
 
     res.json({ comments });
   } catch (error) {

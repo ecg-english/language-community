@@ -566,6 +566,39 @@ router.get('/monthly-history/:userId', authenticateToken, async (req, res) => {
   }
 });
 
+// アバター画像URL修正API
+router.post('/fix-avatar-urls', authenticateToken, (req, res) => {
+  try {
+    // すべてのユーザーのアバターURLを修正
+    const users = db.prepare('SELECT id, username, avatar_url FROM users WHERE avatar_url IS NOT NULL AND avatar_url != ""').all();
+    
+    let fixedCount = 0;
+    for (const user of users) {
+      if (user.avatar_url && user.avatar_url.includes('ecg-english.github.io')) {
+        // 間違ったURLを正しいURLに修正
+        const fileName = user.avatar_url.split('/').pop();
+        const correctUrl = `${process.env.NODE_ENV === 'production' 
+          ? 'https://language-community-backend.onrender.com' 
+          : 'http://localhost:3001'}/uploads/${fileName}`;
+        
+        const updateAvatar = db.prepare('UPDATE users SET avatar_url = ? WHERE id = ?');
+        updateAvatar.run(correctUrl, user.id);
+        fixedCount++;
+        
+        console.log(`Fixed avatar URL for user ${user.username}: ${user.avatar_url} -> ${correctUrl}`);
+      }
+    }
+    
+    res.json({
+      message: `${fixedCount}個のアバターURLを修正しました`,
+      fixedCount
+    });
+  } catch (error) {
+    console.error('アバターURL修正エラー:', error);
+    res.status(500).json({ error: 'アバターURLの修正に失敗しました' });
+  }
+});
+
 // アバター画像アップロード
 router.post('/upload/avatar', authenticateToken, (req, res) => {
   try {
