@@ -80,6 +80,9 @@ router.get('/month/:year/:month', authenticateToken, (req, res) => {
 // イベントを作成（管理者・講師のみ）
 router.post('/', authenticateToken, (req, res) => {
   try {
+    console.log('イベント作成リクエスト:', req.body);
+    console.log('ユーザー情報:', { userId: req.user.userId, role: req.user.role });
+    
     const { title, description, target_audience, event_date, start_time, end_time, participation_method, cover_image, location } = req.body;
     const userId = req.user.userId;
     const userRole = req.user.role;
@@ -87,12 +90,27 @@ router.post('/', authenticateToken, (req, res) => {
     // 管理者・講師のみ作成可能
     const allowedRoles = ['サーバー管理者', 'ECG講師', 'JCG講師'];
     if (!allowedRoles.includes(userRole)) {
+      console.log('権限エラー:', { userRole, allowedRoles });
       return res.status(403).json({ error: 'イベントの作成権限がありません' });
     }
 
     if (!title || !event_date) {
+      console.log('必須フィールドエラー:', { title, event_date });
       return res.status(400).json({ error: 'タイトルと開催日は必須です' });
     }
+
+    console.log('イベント作成SQL実行前:', {
+      title: title.trim(),
+      description: description || '',
+      target_audience: target_audience || '',
+      event_date,
+      start_time: start_time || '',
+      end_time: end_time || '',
+      participation_method: participation_method || '',
+      cover_image: cover_image || '',
+      location: location || '',
+      userId
+    });
 
     const insertEvent = db.prepare(`
       INSERT INTO events (title, description, target_audience, event_date, start_time, end_time, participation_method, cover_image, location, created_by)
@@ -112,6 +130,8 @@ router.post('/', authenticateToken, (req, res) => {
       userId
     );
 
+    console.log('イベント作成結果:', result);
+
     // 作成されたイベントを取得
     const newEvent = db.prepare(`
       SELECT 
@@ -125,17 +145,26 @@ router.post('/', authenticateToken, (req, res) => {
 
     // チャンネル投稿も作成（Eventsチャンネル用）
     if (req.body.channel_id) {
+      console.log('チャンネル投稿作成:', {
+        content: title,
+        userId,
+        channelId: req.body.channel_id,
+        imageUrl: cover_image || null
+      });
+      
       const insertPost = db.prepare(`
         INSERT INTO posts (content, user_id, channel_id, image_url)
         VALUES (?, ?, ?, ?)
       `);
       
-      insertPost.run(
+      const postResult = insertPost.run(
         title, // イベントタイトルを投稿内容として使用
         userId,
         req.body.channel_id,
         cover_image || null
       );
+      
+      console.log('チャンネル投稿作成結果:', postResult);
     }
 
     res.status(201).json({
@@ -144,7 +173,11 @@ router.post('/', authenticateToken, (req, res) => {
     });
   } catch (error) {
     console.error('イベント作成エラー:', error);
-    res.status(500).json({ error: 'イベントの作成に失敗しました' });
+    console.error('エラースタック:', error.stack);
+    res.status(500).json({ 
+      error: 'イベントの作成に失敗しました',
+      details: error.message 
+    });
   }
 });
 

@@ -209,6 +209,39 @@ const initializeDatabase = () => {
       console.log('Adding discord_username column to users table...');
       db.prepare('ALTER TABLE users ADD COLUMN discord_username TEXT').run();
     }
+
+    // eventsテーブルのマイグレーション
+    console.log('Checking events table structure...');
+    try {
+      const eventsColumns = db.prepare("PRAGMA table_info(events)").all();
+      const eventsColumnNames = eventsColumns.map(col => col.name);
+      
+      // eventsテーブルに新しいカラムを追加
+      if (!eventsColumnNames.includes('location')) {
+        console.log('Adding location column to events table...');
+        db.prepare('ALTER TABLE events ADD COLUMN location TEXT').run();
+      }
+      
+      if (!eventsColumnNames.includes('cover_image')) {
+        console.log('Adding cover_image column to events table...');
+        db.prepare('ALTER TABLE events ADD COLUMN cover_image TEXT').run();
+      }
+      
+      if (!eventsColumnNames.includes('updated_at')) {
+        console.log('Adding updated_at column to events table...');
+        db.prepare('ALTER TABLE events ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP').run();
+      }
+      
+      // 古いカラム名を新しいカラム名に変更
+      if (eventsColumnNames.includes('details') && !eventsColumnNames.includes('description')) {
+        console.log('Renaming details column to description in events table...');
+        db.prepare('ALTER TABLE events RENAME COLUMN details TO description').run();
+      }
+      
+      console.log('Events table migration completed');
+    } catch (error) {
+      console.log('Events table migration error:', error);
+    }
     
     // instagram_idカラムを追加
     if (!columnNames.includes('instagram_id')) {
