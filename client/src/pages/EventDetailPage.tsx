@@ -30,6 +30,7 @@ import {
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
+import EventEditForm from '../components/EventEditForm/EventEditForm';
 
 interface Event {
   id: number;
@@ -67,6 +68,7 @@ const EventDetailPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isAttending, setIsAttending] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editFormOpen, setEditFormOpen] = useState(false);
 
   useEffect(() => {
     if (eventId) {
@@ -75,9 +77,11 @@ const EventDetailPage: React.FC = () => {
   }, [eventId]);
 
   const handleEdit = () => {
-    // イベント編集フォームを表示（現在はアラートで代替）
-    alert('イベント編集機能は現在開発中です。\nイベントID: ' + eventId);
-    console.log('イベント編集:', eventId);
+    setEditFormOpen(true);
+  };
+
+  const handleEditSuccess = () => {
+    loadEventDetails(); // イベント詳細を再読み込み
   };
 
   const handleDelete = async () => {
@@ -210,6 +214,15 @@ const EventDetailPage: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
+      {/* イベント編集フォーム */}
+      {event && (
+        <EventEditForm
+          open={editFormOpen}
+          onClose={() => setEditFormOpen(false)}
+          event={event}
+          onSuccess={handleEditSuccess}
+        />
+      )}
       {/* ヘッダー */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
         <IconButton onClick={() => navigate(-1)}>

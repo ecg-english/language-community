@@ -198,33 +198,38 @@ router.post('/', authenticateToken, (req, res) => {
 router.put('/:eventId', authenticateToken, (req, res) => {
   try {
     const { eventId } = req.params;
-    const { title, description, target_audience, event_date, start_time, end_time, participation_method } = req.body;
+    const { title, description, target_audience, event_date, start_time, end_time, participation_method, cover_image, location } = req.body;
     const userId = req.user.userId;
     const userRole = req.user.role;
+
+    console.log('イベント更新リクエスト:', { eventId, userRole, body: req.body });
 
     // 管理者・講師のみ更新可能
     const allowedRoles = ['サーバー管理者', 'ECG講師', 'JCG講師'];
     if (!allowedRoles.includes(userRole)) {
+      console.log('更新権限エラー:', { userRole, allowedRoles });
       return res.status(403).json({ error: 'イベントの更新権限がありません' });
     }
 
     if (!title || !event_date) {
+      console.log('必須フィールドエラー:', { title, event_date });
       return res.status(400).json({ error: 'タイトルと開催日は必須です' });
     }
 
     // イベントの存在確認
     const existingEvent = db.prepare('SELECT id FROM events WHERE id = ?').get(eventId);
     if (!existingEvent) {
+      console.log('イベントが見つかりません:', eventId);
       return res.status(404).json({ error: 'イベントが見つかりません' });
     }
 
     const updateEvent = db.prepare(`
       UPDATE events 
-      SET title = ?, description = ?, target_audience = ?, event_date = ?, start_time = ?, end_time = ?, participation_method = ?, updated_at = CURRENT_TIMESTAMP
+      SET title = ?, description = ?, target_audience = ?, event_date = ?, start_time = ?, end_time = ?, participation_method = ?, cover_image = ?, location = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `);
 
-    updateEvent.run(
+    const result = updateEvent.run(
       title.trim(),
       description || '',
       target_audience || '',
@@ -232,8 +237,12 @@ router.put('/:eventId', authenticateToken, (req, res) => {
       start_time || '',
       end_time || '',
       participation_method || '',
+      cover_image || '',
+      location || '',
       eventId
     );
+
+    console.log('イベント更新結果:', result);
 
     // 更新されたイベントを取得
     const updatedEvent = db.prepare(`
@@ -246,12 +255,15 @@ router.put('/:eventId', authenticateToken, (req, res) => {
       WHERE e.id = ?
     `).get(eventId);
 
+    console.log('更新されたイベント:', updatedEvent);
+
     res.json({
       message: 'イベントが更新されました',
       event: updatedEvent
     });
   } catch (error) {
     console.error('イベント更新エラー:', error);
+    console.error('エラースタック:', error.stack);
     res.status(500).json({ error: 'イベントの更新に失敗しました' });
   }
 });
