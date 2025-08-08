@@ -7,6 +7,14 @@ const { authenticateToken, requireAdmin, requireInstructor } = require('../middl
 
 // Multer設定
 const uploadsDir = path.join(__dirname, '../uploads');
+
+// uploadsディレクトリが存在しない場合は作成
+const fs = require('fs');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('uploadsディレクトリを作成しました:', uploadsDir);
+}
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, uploadsDir);
@@ -394,17 +402,27 @@ router.delete('/:eventId/attend', authenticateToken, (req, res) => {
 // カバー画像アップロード
 router.post('/upload/cover', authenticateToken, upload.single('cover_image'), (req, res) => {
   try {
+    console.log('カバー画像アップロードリクエスト:', {
+      file: req.file,
+      body: req.body,
+      userId: req.user.userId
+    });
+
     if (!req.file) {
+      console.log('ファイルがアップロードされていません');
       return res.status(400).json({ error: 'ファイルがアップロードされていません' });
     }
     
     const imageUrl = `/uploads/${req.file.filename}`;
+    console.log('アップロード成功:', { filename: req.file.filename, imageUrl });
+    
     res.json({ 
       message: 'カバー画像がアップロードされました',
       imageUrl: imageUrl
     });
   } catch (error) {
     console.error('カバー画像アップロードエラー:', error);
+    console.error('エラースタック:', error.stack);
     res.status(500).json({ error: 'カバー画像のアップロードに失敗しました' });
   }
 });

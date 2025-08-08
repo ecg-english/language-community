@@ -74,6 +74,28 @@ const EventDetailPage: React.FC = () => {
     }
   }, [eventId]);
 
+  const handleEdit = () => {
+    // TODO: イベント編集ページに遷移
+    console.log('イベント編集:', eventId);
+  };
+
+  const handleDelete = async () => {
+    if (!event || !window.confirm('このイベントを削除しますか？')) {
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await axios.delete(`/api/events/${eventId}`);
+      navigate('/events');
+    } catch (error: any) {
+      console.error('イベント削除エラー:', error);
+      alert('イベントの削除に失敗しました');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const loadEventDetails = async () => {
     try {
       setLoading(true);
@@ -197,10 +219,10 @@ const EventDetailPage: React.FC = () => {
         </Typography>
         {canEdit && (
           <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
-            <IconButton>
+            <IconButton onClick={handleEdit} disabled={isSubmitting}>
               <EditIcon />
             </IconButton>
-            <IconButton color="error">
+            <IconButton onClick={handleDelete} color="error" disabled={isSubmitting}>
               <DeleteIcon />
             </IconButton>
           </Box>
