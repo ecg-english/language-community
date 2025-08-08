@@ -113,16 +113,31 @@ const initializeDatabase = () => {
       CREATE TABLE IF NOT EXISTS events (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
-        details TEXT,
+        description TEXT,
+        event_date DATE NOT NULL,
+        start_time TIME,
+        end_time TIME,
+        location TEXT,
+        cover_image TEXT,
         target_audience TEXT,
-        start_time DATETIME NOT NULL,
-        end_time DATETIME NOT NULL,
         participation_method TEXT,
         created_by INTEGER,
-        created_by_name TEXT,
-        created_by_role TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (created_by) REFERENCES users (id)
+      )
+    `).run();
+
+    // イベント参加者テーブルの作成
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS event_attendees (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        event_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (event_id) REFERENCES events (id),
+        FOREIGN KEY (user_id) REFERENCES users (id),
+        UNIQUE(event_id, user_id)
       )
     `).run();
 

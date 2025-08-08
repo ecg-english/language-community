@@ -14,6 +14,7 @@ import ProfilePage from './pages/ProfilePage';
 import MembersPage from './pages/MembersPage';
 import FeaturesPage from './pages/FeaturesPage';
 import EventsPage from './pages/EventsPage';
+import EventDetailPage from './pages/EventDetailPage';
 import MonthlyHistoryPage from './pages/MonthlyHistoryPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
@@ -62,6 +63,11 @@ const App: React.FC = () => {
                   <Route path="/events" element={
                     <ProtectedRoute>
                       <EventsPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/event/:eventId" element={
+                    <ProtectedRoute>
+                      <EventDetailPage />
                     </ProtectedRoute>
                   } />
                   <Route path="/monthly-history" element={

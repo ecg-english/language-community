@@ -37,6 +37,8 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '../contexts/ThemeContext';
 import axios from 'axios';
 import ChannelSidebar from '../components/ChannelSidebar/ChannelSidebar';
+import EventPost from '../components/EventPost/EventPost';
+import EventPostForm from '../components/EventPostForm/EventPostForm';
 
 interface Post {
   id: number;
@@ -103,6 +105,7 @@ const ChannelPage: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [eventFormOpen, setEventFormOpen] = useState(false);
 
   useEffect(() => {
     const numChannelId = parseInt(channelId || '0');
@@ -466,6 +469,25 @@ const ChannelPage: React.FC = () => {
     });
   };
 
+  const isEventsChannel = channel?.name === '🗓️ Events';
+
+  const loadPosts = async (channelId: number) => {
+    try {
+      const response = await axios.get(`/api/posts/channels/${channelId}/posts`);
+      setPosts(response.data.posts || []);
+    } catch (error) {
+      console.error('投稿取得エラー:', error);
+    }
+  };
+
+  const handleEventFormSuccess = () => {
+    // 投稿を再読み込み
+    if (channelId) {
+      const numChannelId = parseInt(channelId);
+      loadPosts(numChannelId);
+    }
+  };
+
   console.log('ChannelPage レンダリング状態:', { 
     loading, 
     error, 
@@ -572,17 +594,38 @@ const ChannelPage: React.FC = () => {
       {canPost && (
         <Card sx={{ mb: 4 }}>
           <CardContent>
-            <form onSubmit={handleSubmitPost}>
-              <TextField
-                fullWidth
-                multiline
-                rows={3}
-                value={newPost}
-                onChange={(e) => setNewPost(e.target.value)}
-                placeholder={t('postContent')}
-                variant="outlined"
-                sx={{ mb: 2 }}
-              />
+            {isEventsChannel ? (
+              // Eventsチャンネルの場合、イベント投稿フォームを表示
+              <Box>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                  イベントを投稿
+                </Typography>
+                <Button
+                  variant="contained"
+                  onClick={() => setEventFormOpen(true)}
+                  sx={{
+                    py: 1.5,
+                    px: 3,
+                    borderRadius: 2,
+                    fontWeight: 600,
+                  }}
+                >
+                  イベントを作成
+                </Button>
+              </Box>
+            ) : (
+              // 通常の投稿フォーム
+              <form onSubmit={handleSubmitPost}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={3}
+                  value={newPost}
+                  onChange={(e) => setNewPost(e.target.value)}
+                  placeholder={t('postContent')}
+                  variant="outlined"
+                  sx={{ mb: 2 }}
+                />
               
               {/* 画像プレビュー */}
               {imagePreview && (
@@ -696,6 +739,7 @@ const ChannelPage: React.FC = () => {
                 </Button>
               </Box>
             </form>
+            )}
           </CardContent>
         </Card>
       )}
@@ -712,7 +756,28 @@ const ChannelPage: React.FC = () => {
           </Card>
         ) : (
           posts.map((post) => (
-            <Card key={post.id}>
+            isEventsChannel ? (
+              // Eventsチャンネルの場合、イベント投稿コンポーネントを使用
+              <EventPost
+                key={post.id}
+                event={{
+                  id: post.id,
+                  title: post.content,
+                  description: post.content,
+                  event_date: post.created_at,
+                  start_time: '',
+                  end_time: '',
+                  location: '',
+                  cover_image: post.image_url,
+                  created_by_name: post.username,
+                  created_by_role: '',
+                  created_at: post.created_at,
+                }}
+                canEdit={user?.id === post.user_id || user?.role === 'サーバー管理者'}
+              />
+            ) : (
+              // 通常の投稿
+              <Card key={post.id}>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
                   <Avatar 
@@ -875,6 +940,7 @@ const ChannelPage: React.FC = () => {
                 </Collapse>
               </CardContent>
             </Card>
+            )
           ))
         )}
       </Box>
@@ -886,6 +952,16 @@ const ChannelPage: React.FC = () => {
         categories={categories}
         currentChannelId={parseInt(channelId || '0')}
       />
+
+      {/* イベント投稿フォーム */}
+      {isEventsChannel && (
+        <EventPostForm
+          open={eventFormOpen}
+          onClose={() => setEventFormOpen(false)}
+          onSuccess={handleEventFormSuccess}
+          channelId={parseInt(channelId || '0')}
+        />
+      )}
     </Container>
   );
 };

@@ -1,7 +1,36 @@
 const express = require('express');
+const multer = require('multer');
+const path = require('path');
 const router = express.Router();
 const db = require('../database');
 const { authenticateToken, requireAdmin, requireInstructor } = require('../middleware/auth');
+
+// Multer設定
+const uploadsDir = path.join(__dirname, '../uploads');
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadsDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'cover-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB制限
+  },
+  fileFilter: function (req, file, cb) {
+    // 画像ファイルのみ許可
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
+});
 
 // イベント一覧を取得
 router.get('/', authenticateToken, (req, res) => {
@@ -189,6 +218,130 @@ router.delete('/:eventId', authenticateToken, (req, res) => {
   } catch (error) {
     console.error('イベント削除エラー:', error);
     res.status(500).json({ error: 'イベントの削除に失敗しました' });
+  }
+});
+
+// 特定のイベント詳細を取得
+router.get('/:eventId', authenticateToken, (req, res) => {
+  try {
+    const { eventId } = req.params;
+
+    const event = db.prepare(`
+      SELECT 
+        e.*,
+        u.username as created_by_name,
+        u.role as created_by_role
+      FROM events e
+      JOIN users u ON e.created_by = u.id
+      WHERE e.id = ?
+    `).get(eventId);
+
+    if (!event) {
+      return res.status(404).json({ error: 'イベントが見つかりません' });
+    }
+
+    res.json({ event });
+  } catch (error) {
+    console.error('イベント詳細取得エラー:', error);
+    res.status(500).json({ error: 'イベントの取得に失敗しました' });
+  }
+});
+
+// イベントの参加者一覧を取得
+router.get('/:eventId/attendees', authenticateToken, (req, res) => {
+  try {
+    const { eventId } = req.params;
+
+    const attendees = db.prepare(`
+      SELECT 
+        a.*,
+        u.username,
+        u.role,
+        u.avatar_url
+      FROM event_attendees a
+      JOIN users u ON a.user_id = u.id
+      WHERE a.event_id = ?
+      ORDER BY a.created_at ASC
+    `).all(eventId);
+
+    res.json({ attendees });
+  } catch (error) {
+    console.error('参加者取得エラー:', error);
+    res.status(500).json({ error: '参加者の取得に失敗しました' });
+  }
+});
+
+// イベントに参加する
+router.post('/:eventId/attend', authenticateToken, (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const userId = req.user.userId;
+
+    // 既に参加しているかチェック
+    const existingAttendance = db.prepare(`
+      SELECT id FROM event_attendees 
+      WHERE event_id = ? AND user_id = ?
+    `).get(eventId, userId);
+
+    if (existingAttendance) {
+      return res.status(400).json({ error: '既に参加しています' });
+    }
+
+    // 参加を追加
+    const insertAttendance = db.prepare(`
+      INSERT INTO event_attendees (event_id, user_id) 
+      VALUES (?, ?)
+    `);
+    
+    insertAttendance.run(eventId, userId);
+
+    res.json({ message: 'イベントに参加しました' });
+  } catch (error) {
+    console.error('参加処理エラー:', error);
+    res.status(500).json({ error: '参加処理に失敗しました' });
+  }
+});
+
+// イベントの参加をキャンセル
+router.delete('/:eventId/attend', authenticateToken, (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const userId = req.user.userId;
+
+    // 参加を削除
+    const deleteAttendance = db.prepare(`
+      DELETE FROM event_attendees 
+      WHERE event_id = ? AND user_id = ?
+    `);
+    
+    const result = deleteAttendance.run(eventId, userId);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: '参加記録が見つかりません' });
+    }
+
+    res.json({ message: '参加をキャンセルしました' });
+  } catch (error) {
+    console.error('参加キャンセルエラー:', error);
+    res.status(500).json({ error: '参加キャンセルに失敗しました' });
+  }
+});
+
+// カバー画像アップロード
+router.post('/upload/cover', authenticateToken, upload.single('cover_image'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'ファイルがアップロードされていません' });
+    }
+    
+    const imageUrl = `/uploads/${req.file.filename}`;
+    res.json({ 
+      message: 'カバー画像がアップロードされました',
+      imageUrl: imageUrl
+    });
+  } catch (error) {
+    console.error('カバー画像アップロードエラー:', error);
+    res.status(500).json({ error: 'カバー画像のアップロードに失敗しました' });
   }
 });
 
