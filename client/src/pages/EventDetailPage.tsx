@@ -84,11 +84,10 @@ const EventDetailPage: React.FC = () => {
   const handleEditSuccess = () => {
     loadEventDetails(); // イベント詳細を再読み込み
     
-    // コールバックがあれば呼び出し
-    const onEditSuccess = location.state?.onEditSuccess;
-    if (onEditSuccess) {
-      onEditSuccess();
-    }
+    // カスタムイベントを発火して、チャンネルページに編集完了を通知
+    window.dispatchEvent(new CustomEvent('eventEditSuccess', {
+      detail: { eventId: eventId }
+    }));
   };
 
   const handleDelete = async () => {

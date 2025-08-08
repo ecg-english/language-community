@@ -200,6 +200,22 @@ const ChannelPage: React.FC = () => {
     }
   }, [user]);
 
+  // イベント編集成功時のリスナー
+  useEffect(() => {
+    const handleEventEditSuccess = () => {
+      if (channelId) {
+        const numChannelId = parseInt(channelId);
+        loadPosts(numChannelId);
+      }
+    };
+
+    window.addEventListener('eventEditSuccess', handleEventEditSuccess);
+
+    return () => {
+      window.removeEventListener('eventEditSuccess', handleEventEditSuccess);
+    };
+  }, [channelId]);
+
   // 投稿権限をチェックする関数
   const checkPostPermission = (channelType: string, userRole: string): boolean => {
     if (userRole === 'Trial参加者') return false;
@@ -489,14 +505,7 @@ const ChannelPage: React.FC = () => {
     }
   };
 
-  // イベント編集成功時のコールバック
-  const handleEventEditSuccess = () => {
-    // 投稿を再読み込み
-    if (channelId) {
-      const numChannelId = parseInt(channelId);
-      loadPosts(numChannelId);
-    }
-  };
+
 
   console.log('ChannelPage レンダリング状態:', { 
     loading, 
@@ -786,7 +795,6 @@ const ChannelPage: React.FC = () => {
                   created_at: post.created_at,
                 }}
                 canEdit={user?.id === post.user_id || user?.role === 'サーバー管理者'}
-                onEditSuccess={handleEventEditSuccess}
               />
               ) : (
                 // event_idがない場合は、通常の投稿として表示
