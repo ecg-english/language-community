@@ -261,8 +261,18 @@ const EventsPage: React.FC = () => {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* ヘッダー */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography variant="h3" sx={{ fontWeight: 700 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: { xs: 'column', sm: 'row' },
+        justifyContent: 'space-between', 
+        alignItems: { xs: 'stretch', sm: 'center' }, 
+        mb: 4,
+        gap: { xs: 2, sm: 0 }
+      }}>
+        <Typography variant="h3" sx={{ 
+          fontWeight: 700,
+          fontSize: { xs: '1.75rem', sm: '2.125rem', md: '3rem' }
+        }}>
           Events
         </Typography>
         {canEdit && (
@@ -274,8 +284,9 @@ const EventsPage: React.FC = () => {
               background: '#1976d2',
               color: 'white',
               borderRadius: 2,
-              px: 3,
-              py: 1,
+              px: { xs: 2, sm: 3 },
+              py: { xs: 1, sm: 1 },
+              fontSize: { xs: '0.875rem', sm: '1rem' },
               '&:hover': {
                 background: '#1565c0',
               },
@@ -293,19 +304,36 @@ const EventsPage: React.FC = () => {
       )}
 
       {/* カレンダーナビゲーション */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mb: 3,
+        px: { xs: 1, sm: 0 }
+      }}>
         <IconButton 
           onClick={handlePreviousMonth}
-          sx={{ color: 'text.secondary' }}
+          sx={{ 
+            color: 'text.secondary',
+            p: { xs: 1, sm: 1.5 }
+          }}
         >
           <ChevronLeftIcon />
         </IconButton>
-        <Typography variant="h5" sx={{ fontWeight: 600 }}>
+        <Typography variant="h5" sx={{ 
+          fontWeight: 600,
+          fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.75rem' },
+          textAlign: 'center',
+          flex: 1
+        }}>
           {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
         </Typography>
         <IconButton 
           onClick={handleNextMonth}
-          sx={{ color: 'text.secondary' }}
+          sx={{ 
+            color: 'text.secondary',
+            p: { xs: 1, sm: 1.5 }
+          }}
         >
           <ChevronRightIcon />
         </IconButton>
@@ -313,16 +341,21 @@ const EventsPage: React.FC = () => {
 
       {/* カレンダー */}
       <Card elevation={0} sx={{ borderRadius: 3, mb: 4 }}>
-        <CardContent sx={{ p: 3 }}>
+        <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
           {/* 曜日ヘッダー */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1, mb: 1 }}>
+          <Box sx={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(7, 1fr)', 
+            gap: { xs: 0.5, sm: 1 }, 
+            mb: 1 
+          }}>
             {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day) => (
               <Box key={day} sx={{ 
                 textAlign: 'center', 
-                py: 2, 
+                py: { xs: 1, sm: 2 }, 
                 fontWeight: 600, 
                 color: 'text.secondary',
-                fontSize: '0.9rem'
+                fontSize: { xs: '0.75rem', sm: '0.9rem' }
               }}>
                 {day}
               </Box>
@@ -330,97 +363,132 @@ const EventsPage: React.FC = () => {
           </Box>
 
           {/* カレンダーグリッド */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1 }}>
-            {days.map((day, index) => (
-              <Box
-                key={index}
-                sx={{
-                  minHeight: 80,
-                  border: '1px solid',
-                borderColor: 'divider',
-                  p: 1,
-                  cursor: canEdit ? 'pointer' : 'default',
-                  backgroundColor: day && selectedDate && 
-                    day.getDate() === selectedDate.getDate() && 
-                    day.getMonth() === selectedDate.getMonth() && 
-                    day.getFullYear() === selectedDate.getFullYear() 
-                      ? '#1976d2' 
-                      : 'transparent',
-                  color: day && selectedDate && 
-                    day.getDate() === selectedDate.getDate() && 
-                    day.getMonth() === selectedDate.getMonth() && 
-                    day.getFullYear() === selectedDate.getFullYear() 
-                      ? 'white' 
-                      : 'text.primary',
-                  '&:hover': canEdit ? {
-                    backgroundColor: day && selectedDate && 
-                      day.getDate() === selectedDate.getDate() && 
-                      day.getMonth() === selectedDate.getMonth() && 
-                      day.getFullYear() === selectedDate.getFullYear() 
-                        ? '#1976d2' 
-                        : '#f5f5f5',
-                  } : {},
-                  borderRadius: 1,
-                }}
-                onClick={() => {
-                  if (day) {
-                    handleDateClick(day);
-                  }
-                }}
-              >
-                {day && (
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontWeight: 500, 
-                      mb: 1,
-                      color: 'inherit'
-                    }}
-                  >
-                    {day.getDate()}
-                  </Typography>
-                )}
-                {day && getEventsForDate(day).map((event) => (
-                  <Box key={event.id} sx={{ mb: 0.5 }}>
+          <Box sx={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(7, 1fr)', 
+            gap: { xs: 0.5, sm: 1 },
+            minHeight: { xs: 'auto', sm: 400 }
+          }}>
+            {days.map((day, index) => {
+              const dayEvents = day ? getEventsForDate(day) : [];
+              const isSelected = day && selectedDate && 
+                day.getDate() === selectedDate.getDate() && 
+                day.getMonth() === selectedDate.getMonth() && 
+                day.getFullYear() === selectedDate.getFullYear();
+              
+              return (
+                <Box
+                  key={index}
+                  sx={{
+                    minHeight: { xs: 60, sm: 80, md: 100 },
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    p: { xs: 0.5, sm: 1 },
+                    cursor: canEdit ? 'pointer' : 'default',
+                    backgroundColor: isSelected ? '#1976d2' : 'transparent',
+                    color: isSelected ? 'white' : 'text.primary',
+                    '&:hover': canEdit ? {
+                      backgroundColor: isSelected ? '#1976d2' : '#f5f5f5',
+                    } : {},
+                    borderRadius: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    position: 'relative',
+                  }}
+                  onClick={() => {
+                    if (day) {
+                      handleDateClick(day);
+                    }
+                  }}
+                >
+                  {day && (
                     <Typography 
-                      variant="caption" 
+                      variant="body2" 
                       sx={{ 
-                        fontSize: '0.7rem',
+                        fontWeight: 500, 
+                        mb: { xs: 0.5, sm: 1 },
                         color: 'inherit',
-                        display: 'block',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                      }}
+                    >
+                      {day.getDate()}
+                    </Typography>
+                  )}
+                  
+                  {/* イベント表示エリア */}
+                  <Box sx={{ 
+                    flex: 1, 
+                    display: 'flex', 
+                    flexDirection: 'column',
+                    gap: { xs: 0.25, sm: 0.5 },
+                    overflow: 'hidden'
+                  }}>
+                    {dayEvents.slice(0, 3).map((event, eventIndex) => (
+                      <Box key={event.id} sx={{ 
+                        mb: { xs: 0.25, sm: 0.5 },
+                        backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.05)',
+                        borderRadius: 0.5,
+                        p: { xs: 0.25, sm: 0.5 },
                         cursor: 'pointer',
                         '&:hover': {
-                          textDecoration: 'underline',
+                          backgroundColor: isSelected ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)',
                         }
-                      }}
-                      onClick={(e) => handleEventClick(event, e)}
-                    >
-                      {event.title}
-                    </Typography>
-                    {event.start_time && (
+                      }}>
+                        <Typography 
+                          variant="caption" 
+                          sx={{ 
+                            fontSize: { xs: '0.6rem', sm: '0.7rem' },
+                            color: 'inherit',
+                            display: 'block',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            fontWeight: 500,
+                            lineHeight: 1.2,
+                          }}
+                          onClick={(e) => handleEventClick(event, e)}
+                        >
+                          {event.title}
+                        </Typography>
+                        {event.start_time && (
+                          <Typography 
+                            variant="caption" 
+                            sx={{ 
+                              fontSize: { xs: '0.5rem', sm: '0.6rem' },
+                              color: 'inherit',
+                              opacity: 0.8,
+                              cursor: 'pointer',
+                              display: 'block',
+                              lineHeight: 1.1,
+                            }}
+                            onClick={(e) => handleEventClick(event, e)}
+                          >
+                            {formatTime(event.start_time)}
+                          </Typography>
+                        )}
+                      </Box>
+                    ))}
+                    
+                    {/* 追加イベントがある場合の表示 */}
+                    {dayEvents.length > 3 && (
                       <Typography 
                         variant="caption" 
                         sx={{ 
-                          fontSize: '0.6rem',
+                          fontSize: { xs: '0.5rem', sm: '0.6rem' },
                           color: 'inherit',
-                          opacity: 0.8,
-                          cursor: 'pointer',
-                          '&:hover': {
-                            textDecoration: 'underline',
-                          }
+                          opacity: 0.7,
+                          fontStyle: 'italic',
+                          textAlign: 'center',
+                          mt: 'auto'
                         }}
-                        onClick={(e) => handleEventClick(event, e)}
                       >
-                        {formatTime(event.start_time)}
+                        +{dayEvents.length - 3} more
                       </Typography>
                     )}
                   </Box>
-                ))}
-              </Box>
-            ))}
+                </Box>
+              );
+            })}
           </Box>
         </CardContent>
       </Card>
@@ -428,8 +496,12 @@ const EventsPage: React.FC = () => {
       {/* 選択された日付のイベント */}
       {selectedDate && (
         <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e0e0e0', mb: 4 }}>
-          <CardContent sx={{ p: 3 }}>
-            <Typography variant="h5" sx={{ fontWeight: 600, mb: 2 }}>
+          <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+            <Typography variant="h5" sx={{ 
+              fontWeight: 600, 
+              mb: 2,
+              fontSize: { xs: '1.25rem', sm: '1.5rem' }
+            }}>
               {monthNames[selectedDate.getMonth()]} {selectedDate.getDate()}
             </Typography>
             
@@ -502,8 +574,12 @@ const EventsPage: React.FC = () => {
 
       {/* 今後のイベント一覧 */}
               <Card elevation={0} sx={{ borderRadius: 3 }}>
-        <CardContent sx={{ p: 3 }}>
-          <Typography variant="h5" sx={{ fontWeight: 600, mb: 3 }}>
+        <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+          <Typography variant="h5" sx={{ 
+            fontWeight: 600, 
+            mb: 3,
+            fontSize: { xs: '1.25rem', sm: '1.5rem' }
+          }}>
             Upcoming Events
           </Typography>
           
