@@ -34,6 +34,7 @@ import {
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from '../contexts/ThemeContext';
 import axios from 'axios';
 import ChannelSidebar from '../components/ChannelSidebar/ChannelSidebar';
 
@@ -79,6 +80,7 @@ const ChannelPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { isDarkMode } = useTheme();
   
   // コンポーネントマウント時のログ
   console.log('ChannelPage マウント:', { 
@@ -799,6 +801,19 @@ const ChannelPage: React.FC = () => {
                         value={newComment[post.id] || ''}
                         onChange={(e) => setNewComment(prev => ({ ...prev, [post.id]: e.target.value }))}
                         variant="outlined"
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.23)' : 'rgba(0, 0, 0, 0.12)',
+                            },
+                            '&:hover fieldset': {
+                              borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.23)',
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: isDarkMode ? 'primary.main' : 'primary.main',
+                            },
+                          },
+                        }}
                       />
                       <Button
                         variant="contained"
@@ -812,7 +827,7 @@ const ChannelPage: React.FC = () => {
 
                     {/* コメント一覧 */}
                     {comments[post.id]?.map((comment) => (
-                      <Paper key={comment.id} sx={{ p: 2, mb: 1, bgcolor: 'grey.50' }}>
+                      <Paper key={comment.id} sx={{ p: 2, mb: 1, bgcolor: 'background.paper' }}>
                         <Stack direction="row" spacing={2} alignItems="flex-start">
                           <Avatar 
                             sx={{ width: 32, height: 32 }}
