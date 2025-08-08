@@ -244,6 +244,21 @@ router.put('/:eventId', authenticateToken, (req, res) => {
 
     console.log('イベント更新結果:', result);
 
+    // 関連する投稿も更新
+    const updatePost = db.prepare(`
+      UPDATE posts 
+      SET content = ?, image_url = ?
+      WHERE event_id = ?
+    `);
+    
+    const postResult = updatePost.run(
+      title.trim(), // イベントタイトルを投稿内容として更新
+      cover_image || null, // カバー画像を投稿画像として更新
+      eventId
+    );
+    
+    console.log('関連投稿更新結果:', postResult);
+
     // 更新されたイベントを取得
     const updatedEvent = db.prepare(`
       SELECT 

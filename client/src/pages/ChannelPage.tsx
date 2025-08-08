@@ -203,8 +203,10 @@ const ChannelPage: React.FC = () => {
   // イベント編集成功時のリスナー
   useEffect(() => {
     const handleEventEditSuccess = () => {
+      console.log('イベント編集成功イベントを受信:', { channelId });
       if (channelId) {
         const numChannelId = parseInt(channelId);
+        console.log('投稿を再読み込み:', { numChannelId });
         loadPosts(numChannelId);
       }
     };
@@ -490,8 +492,11 @@ const ChannelPage: React.FC = () => {
 
   const loadPosts = async (channelId: number) => {
     try {
+      console.log('投稿取得開始:', { channelId });
       const response = await axios.get(`/api/posts/channels/${channelId}/posts`);
-      setPosts(response.data.posts || []);
+      const postsData = response.data.posts || [];
+      console.log('投稿取得成功: ►', { count: postsData.length, posts: postsData });
+      setPosts(postsData);
     } catch (error) {
       console.error('投稿取得エラー:', error);
     }
