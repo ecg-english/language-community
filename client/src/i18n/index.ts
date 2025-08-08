@@ -148,6 +148,15 @@ const en = {
     eventUpdated: 'Event updated successfully',
     eventDeleted: 'Event deleted successfully',
     eventFailed: 'Failed to manage event',
+    eventDetails: 'Event Details',
+    attend: 'Attend',
+    cancelAttendance: 'Cancel Attendance',
+    attendees: 'Attendees',
+    postEvent: 'Post Event',
+    createEvent: 'Create Event',
+    coverImage: 'Cover Image',
+    selectCoverImage: 'Please select a cover image',
+    coverImagePreview: 'Cover image preview',
     
 
     
@@ -356,6 +365,15 @@ const ja = {
     eventUpdated: 'イベントが更新されました',
     eventDeleted: 'イベントが削除されました',
     eventFailed: 'イベントの操作に失敗しました',
+    eventDetails: 'イベント詳細',
+    attend: '参加する',
+    cancelAttendance: '参加をキャンセル',
+    attendees: '参加者',
+    postEvent: 'イベントを投稿',
+    createEvent: 'イベントを作成',
+    coverImage: 'カバー画像',
+    selectCoverImage: 'カバー画像を選択してください',
+    coverImagePreview: 'カバー画像プレビュー',
 
     // 月次履歴
     monthlyHistoryTitle: '月次振り返り・目標履歴',
@@ -561,6 +579,15 @@ const jaSimple = {
     eventUpdated: 'イベントがこうしんされました',
     eventDeleted: 'イベントがさくじょされました',
     eventFailed: 'イベントのそうさにしっぱいしました',
+    eventDetails: 'イベントしょうさい',
+    attend: 'さんかする',
+    cancelAttendance: 'さんかをキャンセル',
+    attendees: 'さんかしゃ',
+    postEvent: 'イベントをとうこう',
+    createEvent: 'イベントをさくせい',
+    coverImage: 'カバーがぞう',
+    selectCoverImage: 'カバーがぞうをせんたくしてください',
+    coverImagePreview: 'カバーがぞうプレビュー',
     
     // 月次履歴
     monthlyHistoryTitle: 'げつじふりかえり・もくひょうれきし',

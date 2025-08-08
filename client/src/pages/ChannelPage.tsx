@@ -638,7 +638,7 @@ const ChannelPage: React.FC = () => {
                     fontWeight: 600,
                   }}
                 >
-                  イベントを作成
+                  {t('createEvent')}
                 </Button>
               </Box>
             ) : (

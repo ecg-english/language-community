@@ -19,6 +19,7 @@ import {
   Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 
 interface EventPostFormProps {
@@ -35,6 +36,7 @@ const EventPostForm: React.FC<EventPostFormProps> = ({
   channelId
 }) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -154,7 +156,7 @@ const EventPostForm: React.FC<EventPostFormProps> = ({
       <DialogTitle sx={{ pb: 1 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            イベントを投稿
+            {t('postEvent')}
           </Typography>
           <IconButton onClick={handleClose} disabled={loading}>
             <CloseIcon />
@@ -174,7 +176,7 @@ const EventPostForm: React.FC<EventPostFormProps> = ({
           <Grid item xs={12}>
             <Box sx={{ mb: 2 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-                カバー画像
+                {t('coverImage')}
               </Typography>
               <Box
                 sx={{
@@ -194,7 +196,7 @@ const EventPostForm: React.FC<EventPostFormProps> = ({
                   <Box sx={{ position: 'relative' }}>
                     <img
                       src={coverImagePreview}
-                      alt="カバー画像プレビュー"
+                      alt={t('coverImagePreview')}
                       style={{
                         maxWidth: '100%',
                         maxHeight: '200px',
@@ -222,7 +224,7 @@ const EventPostForm: React.FC<EventPostFormProps> = ({
                   <Box>
                     <PhotoCameraIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
                     <Typography variant="body2" color="text.secondary">
-                      カバー画像を選択してください
+                      {t('selectCoverImage')}
                     </Typography>
                   </Box>
                 )}
@@ -241,7 +243,7 @@ const EventPostForm: React.FC<EventPostFormProps> = ({
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="イベントタイトル *"
+              label={`${t('eventTitle')} *`}
               value={formData.title}
               onChange={(e) => handleInputChange('title', e.target.value)}
               required

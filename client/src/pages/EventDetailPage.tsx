@@ -29,6 +29,7 @@ import {
 } from '@mui/icons-material';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import EventEditForm from '../components/EventEditForm/EventEditForm';
 
@@ -63,6 +64,7 @@ const EventDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [event, setEvent] = useState<Event | null>(null);
   const [attendees, setAttendees] = useState<Attendee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -302,7 +304,7 @@ const EventDetailPage: React.FC = () => {
           <Card elevation={0} sx={{ mb: 3, borderRadius: 3 }}>
             <CardContent sx={{ p: 3 }}>
               <Typography variant="h5" sx={{ fontWeight: 600, mb: 3 }}>
-                イベント詳細
+                {t('eventDetails')}
               </Typography>
               
               <Typography variant="body1" sx={{ mb: 3, lineHeight: 1.6 }}>
@@ -378,7 +380,7 @@ const EventDetailPage: React.FC = () => {
                 },
               }}
             >
-              {isSubmitting ? '処理中...' : isAttending ? '参加をキャンセル' : '参加する'}
+              {isSubmitting ? t('loading') : isAttending ? t('cancelAttendance') : t('attend')}
             </Button>
 
             {/* 参加者リスト */}
@@ -387,7 +389,7 @@ const EventDetailPage: React.FC = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                   <GroupIcon color="primary" />
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                    {attendees.length} 参加者
+                    {attendees.length} {t('attendees')}
                   </Typography>
                 </Box>
                 
