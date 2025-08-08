@@ -152,19 +152,21 @@ router.post('/', authenticateToken, (req, res) => {
         content: title,
         userId,
         channelId: req.body.channel_id,
-        imageUrl: cover_image || null
+        imageUrl: cover_image || null,
+        eventId: result.lastInsertRowid
       });
       
       const insertPost = db.prepare(`
-        INSERT INTO posts (content, user_id, channel_id, image_url)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO posts (content, user_id, channel_id, image_url, event_id)
+        VALUES (?, ?, ?, ?, ?)
       `);
       
       const postResult = insertPost.run(
         title, // イベントタイトルを投稿内容として使用
         userId,
         req.body.channel_id,
-        cover_image || null
+        cover_image || null,
+        result.lastInsertRowid // イベントIDを保存
       );
       
       console.log('チャンネル投稿作成結果:', postResult);

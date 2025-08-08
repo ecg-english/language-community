@@ -242,6 +242,28 @@ const initializeDatabase = () => {
     } catch (error) {
       console.log('Events table migration error:', error);
     }
+
+    // postsテーブルのマイグレーション
+    console.log('Checking posts table structure...');
+    try {
+      const postsColumns = db.prepare("PRAGMA table_info(posts)").all();
+      const postsColumnNames = postsColumns.map(col => col.name);
+      
+      // postsテーブルに新しいカラムを追加
+      if (!postsColumnNames.includes('image_url')) {
+        console.log('Adding image_url column to posts table...');
+        db.prepare('ALTER TABLE posts ADD COLUMN image_url TEXT').run();
+      }
+      
+      if (!postsColumnNames.includes('event_id')) {
+        console.log('Adding event_id column to posts table...');
+        db.prepare('ALTER TABLE posts ADD COLUMN event_id INTEGER').run();
+      }
+      
+      console.log('Posts table migration completed');
+    } catch (error) {
+      console.log('Posts table migration error:', error);
+    }
     
     // instagram_idカラムを追加
     if (!columnNames.includes('instagram_id')) {

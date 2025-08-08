@@ -51,6 +51,7 @@ interface Post {
   user_liked: number;
   image_url?: string;
   avatar_url?: string;
+  event_id?: number;
 }
 
 interface Comment {
@@ -758,23 +759,51 @@ const ChannelPage: React.FC = () => {
           posts.map((post) => (
             isEventsChannel ? (
               // Eventsチャンネルの場合、イベント投稿コンポーネントを使用
-              <EventPost
-                key={post.id}
-                event={{
-                  id: post.id,
-                  title: post.content,
-                  description: post.content,
-                  event_date: post.created_at,
-                  start_time: '',
-                  end_time: '',
-                  location: '',
-                  cover_image: post.image_url,
-                  created_by_name: post.username,
-                  created_by_role: '',
-                  created_at: post.created_at,
-                }}
-                canEdit={user?.id === post.user_id || user?.role === 'サーバー管理者'}
-              />
+              post.event_id ? (
+                // event_idがある場合は、実際のイベントデータを取得して表示
+                <EventPost
+                  key={post.id}
+                  event={{
+                    id: post.event_id,
+                    title: post.content,
+                    description: post.content,
+                    event_date: post.created_at,
+                    start_time: '',
+                    end_time: '',
+                    location: '',
+                    cover_image: post.image_url,
+                    created_by_name: post.username,
+                    created_by_role: '',
+                    created_at: post.created_at,
+                  }}
+                  canEdit={user?.id === post.user_id || user?.role === 'サーバー管理者'}
+                />
+              ) : (
+                // event_idがない場合は、通常の投稿として表示
+                <Card key={post.id}>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                      <Avatar 
+                        sx={{ bgcolor: 'primary.main' }}
+                        src={post.avatar_url}
+                      >
+                        {post.username.charAt(0).toUpperCase()}
+                      </Avatar>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                          {post.username}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {formatDate(post.created_at)}
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Typography variant="body1">
+                      {post.content}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              )
             ) : (
               // 通常の投稿
               <Card key={post.id}>
