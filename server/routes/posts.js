@@ -284,6 +284,36 @@ router.delete('/comments/:commentId', authenticateToken, (req, res) => {
   }
 });
 
+// テスト投稿を削除（管理者のみ）
+router.delete('/cleanup-test-posts', authenticateToken, (req, res) => {
+  try {
+    const userRole = req.user.role;
+
+    // 管理者のみ実行可能
+    if (userRole !== 'サーバー管理者') {
+      return res.status(403).json({ error: 'テスト投稿削除の権限がありません' });
+    }
+
+    // テスト投稿を削除
+    const deleteTestPosts = db.prepare(`
+      DELETE FROM posts 
+      WHERE content IN ('テストイベント2', 'TESTTESTAAA')
+    `);
+    
+    const result = deleteTestPosts.run();
+    
+    console.log('テスト投稿削除結果:', result);
+    
+    res.json({ 
+      message: 'テスト投稿が削除されました',
+      deletedCount: result.changes
+    });
+  } catch (error) {
+    console.error('テスト投稿削除エラー:', error);
+    res.status(500).json({ error: 'テスト投稿の削除に失敗しました' });
+  }
+});
+
 // 画像アップロード
 router.post('/upload/image', authenticateToken, (req, res) => {
   try {
