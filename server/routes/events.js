@@ -131,6 +131,7 @@ router.post('/', authenticateToken, (req, res) => {
     );
 
     console.log('イベント作成結果:', result);
+    console.log('作成されたイベントID:', result.lastInsertRowid);
 
     // 作成されたイベントを取得
     const newEvent = db.prepare(`
@@ -142,6 +143,8 @@ router.post('/', authenticateToken, (req, res) => {
       JOIN users u ON e.created_by = u.id
       WHERE e.id = ?
     `).get(result.lastInsertRowid);
+
+    console.log('取得されたイベント詳細:', newEvent);
 
     // チャンネル投稿も作成（Eventsチャンネル用）
     if (req.body.channel_id) {
@@ -275,6 +278,7 @@ router.delete('/:eventId', authenticateToken, (req, res) => {
 router.get('/:eventId', authenticateToken, (req, res) => {
   try {
     const { eventId } = req.params;
+    console.log('イベント詳細取得リクエスト:', { eventId, userId: req.user.userId });
 
     const event = db.prepare(`
       SELECT 
@@ -286,13 +290,17 @@ router.get('/:eventId', authenticateToken, (req, res) => {
       WHERE e.id = ?
     `).get(eventId);
 
+    console.log('イベント詳細取得結果:', event);
+
     if (!event) {
+      console.log('イベントが見つかりません:', eventId);
       return res.status(404).json({ error: 'イベントが見つかりません' });
     }
 
     res.json({ event });
   } catch (error) {
     console.error('イベント詳細取得エラー:', error);
+    console.error('エラースタック:', error.stack);
     res.status(500).json({ error: 'イベントの取得に失敗しました' });
   }
 });
@@ -301,6 +309,7 @@ router.get('/:eventId', authenticateToken, (req, res) => {
 router.get('/:eventId/attendees', authenticateToken, (req, res) => {
   try {
     const { eventId } = req.params;
+    console.log('参加者取得リクエスト:', { eventId, userId: req.user.userId });
 
     const attendees = db.prepare(`
       SELECT 
@@ -314,9 +323,12 @@ router.get('/:eventId/attendees', authenticateToken, (req, res) => {
       ORDER BY a.created_at ASC
     `).all(eventId);
 
+    console.log('参加者取得結果:', attendees);
+
     res.json({ attendees });
   } catch (error) {
     console.error('参加者取得エラー:', error);
+    console.error('エラースタック:', error.stack);
     res.status(500).json({ error: '参加者の取得に失敗しました' });
   }
 });
