@@ -52,6 +52,10 @@ interface Post {
   image_url?: string;
   avatar_url?: string;
   event_id?: number;
+  event_date?: string;
+  start_time?: string;
+  end_time?: string;
+  location?: string;
 }
 
 interface Comment {
@@ -790,10 +794,10 @@ const ChannelPage: React.FC = () => {
                   id: post.event_id,
                   title: post.content,
                   description: post.content,
-                  event_date: post.created_at,
-                  start_time: '',
-                  end_time: '',
-                  location: '',
+                  event_date: post.event_date || post.created_at, // イベント日付を優先
+                  start_time: post.start_time || '',
+                  end_time: post.end_time || '',
+                  location: post.location || '',
                   cover_image: post.image_url,
                   created_by_name: post.username,
                   created_by_role: '',

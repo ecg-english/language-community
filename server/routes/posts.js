@@ -17,11 +17,16 @@ router.get('/channels/:channelId/posts', authenticateToken, checkChannelViewPerm
         u.username,
         u.role,
         u.avatar_url,
+        e.event_date,
+        e.start_time,
+        e.end_time,
+        e.location,
         (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) as like_count,
         (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) as comment_count,
         (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id AND l.user_id = ?) as user_liked
       FROM posts p
       JOIN users u ON p.user_id = u.id
+      LEFT JOIN events e ON p.event_id = e.id
       WHERE p.channel_id = ?
       ORDER BY p.created_at DESC
       LIMIT ? OFFSET ?
