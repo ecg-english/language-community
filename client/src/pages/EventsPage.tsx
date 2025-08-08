@@ -385,10 +385,12 @@ const EventsPage: React.FC = () => {
                     borderColor: 'divider',
                     p: { xs: 0.5, sm: 1 },
                     cursor: canEdit ? 'pointer' : 'default',
-                    backgroundColor: isSelected ? '#1976d2' : 'transparent',
+                    backgroundColor: isSelected ? '#1976d2' : 
+                      (dayEvents.length > 0 ? 'rgba(25, 118, 210, 0.05)' : 'transparent'),
                     color: isSelected ? 'white' : 'text.primary',
                     '&:hover': canEdit ? {
-                      backgroundColor: isSelected ? '#1976d2' : '#f5f5f5',
+                      backgroundColor: isSelected ? '#1976d2' : 
+                        (dayEvents.length > 0 ? 'rgba(25, 118, 210, 0.1)' : '#f5f5f5'),
                     } : {},
                     borderRadius: 1,
                     display: 'flex',
@@ -420,71 +422,112 @@ const EventsPage: React.FC = () => {
                     flex: 1, 
                     display: 'flex', 
                     flexDirection: 'column',
-                    gap: { xs: 0.25, sm: 0.5 },
-                    overflow: 'hidden'
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    position: 'relative'
                   }}>
-                    {dayEvents.slice(0, 3).map((event, eventIndex) => (
-                      <Box key={event.id} sx={{ 
-                        mb: { xs: 0.25, sm: 0.5 },
-                        backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.05)',
-                        borderRadius: 0.5,
-                        p: { xs: 0.25, sm: 0.5 },
-                        cursor: 'pointer',
-                        '&:hover': {
-                          backgroundColor: isSelected ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)',
-                        }
+                    {/* スマホ・タブレット版: イベントがある場合のみドットを表示 */}
+                    {dayEvents.length > 0 && (
+                      <Box sx={{
+                        display: { xs: 'flex', lg: 'none' },
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 0.5
                       }}>
-                        <Typography 
-                          variant="caption" 
-                          sx={{ 
-                            fontSize: { xs: '0.6rem', sm: '0.7rem' },
-                            color: 'inherit',
-                            display: 'block',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            fontWeight: 500,
-                            lineHeight: 1.2,
-                          }}
-                          onClick={(e) => handleEventClick(event, e)}
-                        >
-                          {event.title}
-                        </Typography>
-                        {event.start_time && (
+                        <Box sx={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: '50%',
+                          backgroundColor: isSelected ? 'white' : '#1976d2',
+                          opacity: 0.8
+                        }} />
+                        {dayEvents.length > 1 && (
                           <Typography 
                             variant="caption" 
                             sx={{ 
-                              fontSize: { xs: '0.5rem', sm: '0.6rem' },
+                              fontSize: '0.5rem',
                               color: 'inherit',
-                              opacity: 0.8,
-                              cursor: 'pointer',
-                              display: 'block',
-                              lineHeight: 1.1,
+                              opacity: 0.7,
+                              fontWeight: 500
                             }}
-                            onClick={(e) => handleEventClick(event, e)}
                           >
-                            {formatTime(event.start_time)}
+                            {dayEvents.length}
                           </Typography>
                         )}
                       </Box>
-                    ))}
-                    
-                    {/* 追加イベントがある場合の表示 */}
-                    {dayEvents.length > 3 && (
-                      <Typography 
-                        variant="caption" 
-                        sx={{ 
-                          fontSize: { xs: '0.5rem', sm: '0.6rem' },
-                          color: 'inherit',
-                          opacity: 0.7,
-                          fontStyle: 'italic',
-                          textAlign: 'center',
-                          mt: 'auto'
-                        }}
-                      >
-                        +{dayEvents.length - 3} more
-                      </Typography>
                     )}
+                    
+                    {/* デスクトップ版: 従来の表示 */}
+                    <Box sx={{ 
+                      display: { xs: 'none', lg: 'flex' },
+                      flexDirection: 'column',
+                      gap: { xs: 0.25, sm: 0.5 },
+                      overflow: 'hidden',
+                      width: '100%'
+                    }}>
+                      {dayEvents.slice(0, 3).map((event, eventIndex) => (
+                        <Box key={event.id} sx={{ 
+                          mb: { xs: 0.25, sm: 0.5 },
+                          backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.05)',
+                          borderRadius: 0.5,
+                          p: { xs: 0.25, sm: 0.5 },
+                          cursor: 'pointer',
+                          '&:hover': {
+                            backgroundColor: isSelected ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)',
+                          }
+                        }}>
+                          <Typography 
+                            variant="caption" 
+                            sx={{ 
+                              fontSize: { xs: '0.6rem', sm: '0.7rem' },
+                              color: 'inherit',
+                              display: 'block',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              fontWeight: 500,
+                              lineHeight: 1.2,
+                            }}
+                            onClick={(e) => handleEventClick(event, e)}
+                          >
+                            {event.title}
+                          </Typography>
+                          {event.start_time && (
+                            <Typography 
+                              variant="caption" 
+                              sx={{ 
+                                fontSize: { xs: '0.5rem', sm: '0.6rem' },
+                                color: 'inherit',
+                                opacity: 0.8,
+                                cursor: 'pointer',
+                                display: 'block',
+                                lineHeight: 1.1,
+                              }}
+                              onClick={(e) => handleEventClick(event, e)}
+                            >
+                              {formatTime(event.start_time)}
+                            </Typography>
+                          )}
+                        </Box>
+                      ))}
+                      
+                      {/* 追加イベントがある場合の表示 */}
+                      {dayEvents.length > 3 && (
+                        <Typography 
+                          variant="caption" 
+                          sx={{ 
+                            fontSize: { xs: '0.5rem', sm: '0.6rem' },
+                            color: 'inherit',
+                            opacity: 0.7,
+                            fontStyle: 'italic',
+                            textAlign: 'center',
+                            mt: 'auto'
+                          }}
+                        >
+                          +{dayEvents.length - 3} more
+                        </Typography>
+                      )}
+                    </Box>
                   </Box>
                 </Box>
               );
