@@ -21,6 +21,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 const RegisterPage: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -33,6 +34,7 @@ const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { currentLanguage, changeLanguage } = useLanguage();
+  const { isDarkMode } = useTheme();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,10 +112,12 @@ const RegisterPage: React.FC = () => {
           <Card 
             elevation={0}
             sx={{ 
-              backgroundColor: '#ffffff',
-              border: '1px solid rgba(0, 0, 0, 0.08)',
+              backgroundColor: isDarkMode ? 'background.paper' : '#ffffff',
+              border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(0, 0, 0, 0.08)',
               borderRadius: 3,
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+              boxShadow: isDarkMode 
+                ? '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)' 
+                : '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
             }}
           >
             <CardContent sx={{ p: { xs: 3, sm: 5 } }}>
@@ -142,7 +146,7 @@ const RegisterPage: React.FC = () => {
                   variant="h4" 
                   sx={{
                     fontWeight: 700,
-                    color: '#1e40af',
+                    color: isDarkMode ? 'primary.main' : '#1e40af',
                     mb: 1,
                     textAlign: 'center',
                     fontSize: { xs: '1.5rem', sm: '2.125rem' },
@@ -153,7 +157,7 @@ const RegisterPage: React.FC = () => {
                 
                 <Typography 
                   variant="body1" 
-                  color="text.secondary" 
+                  color="text.primary" 
                   textAlign="center"
                   sx={{ 
                     maxWidth: 400,
@@ -166,7 +170,7 @@ const RegisterPage: React.FC = () => {
                 </Typography>
               </Box>
 
-              <Divider sx={{ mb: { xs: 3, sm: 4 }, borderColor: 'rgba(0, 0, 0, 0.08)' }} />
+              <Divider sx={{ mb: { xs: 3, sm: 4 }, borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)' }} />
 
               {error && (
                 <Fade in>
@@ -206,7 +210,13 @@ const RegisterPage: React.FC = () => {
                     mb: 2,
                     '& .MuiOutlinedInput-root': {
                       '& fieldset': {
-                        borderColor: 'rgba(0, 0, 0, 0.12)',
+                        borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.23)' : 'rgba(0, 0, 0, 0.12)',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.23)',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: isDarkMode ? 'primary.main' : 'primary.main',
                       },
                     },
                   }}
@@ -232,7 +242,13 @@ const RegisterPage: React.FC = () => {
                     mb: 2,
                     '& .MuiOutlinedInput-root': {
                       '& fieldset': {
-                        borderColor: 'rgba(0, 0, 0, 0.12)',
+                        borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.23)' : 'rgba(0, 0, 0, 0.12)',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.23)',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: isDarkMode ? 'primary.main' : 'primary.main',
                       },
                     },
                   }}
@@ -259,7 +275,13 @@ const RegisterPage: React.FC = () => {
                     mb: 2,
                     '& .MuiOutlinedInput-root': {
                       '& fieldset': {
-                        borderColor: 'rgba(0, 0, 0, 0.12)',
+                        borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.23)' : 'rgba(0, 0, 0, 0.12)',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.23)',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: isDarkMode ? 'primary.main' : 'primary.main',
                       },
                     },
                   }}
@@ -285,7 +307,13 @@ const RegisterPage: React.FC = () => {
                     mb: 3,
                     '& .MuiOutlinedInput-root': {
                       '& fieldset': {
-                        borderColor: 'rgba(0, 0, 0, 0.12)',
+                        borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.23)' : 'rgba(0, 0, 0, 0.12)',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.23)',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: isDarkMode ? 'primary.main' : 'primary.main',
                       },
                     },
                   }}
