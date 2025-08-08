@@ -208,14 +208,25 @@ const EventsPage: React.FC = () => {
   };
 
   const getEventsForDate = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
+    // ローカルタイムゾーンで日付文字列を作成
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
+    
     return events.filter(event => event.event_date === dateStr);
   };
 
   const getUpcomingEvents = () => {
-    const today = new Date().toISOString().split('T')[0];
+    // ローカルタイムゾーンで今日の日付文字列を作成
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
+    
     return events
-      .filter(event => event.event_date >= today)
+      .filter(event => event.event_date >= todayStr)
       .sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime())
       .slice(0, 10); // 最大10件表示
   };
