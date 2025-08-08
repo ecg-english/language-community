@@ -33,13 +33,15 @@ interface EventPostProps {
   onEdit?: (event: any) => void;
   onDelete?: (eventId: number) => void;
   canEdit?: boolean;
+  onEditSuccess?: () => void;
 }
 
 const EventPost: React.FC<EventPostProps> = ({ 
   event, 
   onEdit, 
   onDelete, 
-  canEdit = false 
+  canEdit = false,
+  onEditSuccess
 }) => {
   const navigate = useNavigate();
 
@@ -67,7 +69,9 @@ const EventPost: React.FC<EventPostProps> = ({
   };
 
   const handleEventClick = () => {
-    navigate(`/event/${event.id}`);
+    navigate(`/event/${event.id}`, { 
+      state: { onEditSuccess } 
+    });
   };
 
   return (

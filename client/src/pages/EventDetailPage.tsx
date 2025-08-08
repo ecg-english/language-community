@@ -27,7 +27,7 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
 } from '@mui/icons-material';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import EventEditForm from '../components/EventEditForm/EventEditForm';
@@ -61,6 +61,7 @@ interface Attendee {
 const EventDetailPage: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
   const [attendees, setAttendees] = useState<Attendee[]>([]);
@@ -82,6 +83,12 @@ const EventDetailPage: React.FC = () => {
 
   const handleEditSuccess = () => {
     loadEventDetails(); // イベント詳細を再読み込み
+    
+    // コールバックがあれば呼び出し
+    const onEditSuccess = location.state?.onEditSuccess;
+    if (onEditSuccess) {
+      onEditSuccess();
+    }
   };
 
   const handleDelete = async () => {
@@ -386,7 +393,10 @@ const EventDetailPage: React.FC = () => {
                 <Stack spacing={1}>
                   {attendees.slice(0, 5).map((attendee) => (
                     <Box key={attendee.id} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Avatar sx={{ width: 32, height: 32 }}>
+                      <Avatar 
+                        sx={{ width: 32, height: 32 }}
+                        src={attendee.avatar_url && !attendee.avatar_url.includes('https://language-community-backend.onrender.comhttps') ? attendee.avatar_url : undefined}
+                      >
                         {attendee.username.charAt(0)}
                       </Avatar>
                       <Box sx={{ flex: 1 }}>

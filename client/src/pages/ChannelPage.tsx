@@ -489,6 +489,15 @@ const ChannelPage: React.FC = () => {
     }
   };
 
+  // イベント編集成功時のコールバック
+  const handleEventEditSuccess = () => {
+    // 投稿を再読み込み
+    if (channelId) {
+      const numChannelId = parseInt(channelId);
+      loadPosts(numChannelId);
+    }
+  };
+
   console.log('ChannelPage レンダリング状態:', { 
     loading, 
     error, 
@@ -761,23 +770,24 @@ const ChannelPage: React.FC = () => {
               // Eventsチャンネルの場合、イベント投稿コンポーネントを使用
               post.event_id ? (
                 // event_idがある場合は、実際のイベントデータを取得して表示
-                <EventPost
-                  key={post.id}
-                  event={{
-                    id: post.event_id,
-                    title: post.content,
-                    description: post.content,
-                    event_date: post.created_at,
-                    start_time: '',
-                    end_time: '',
-                    location: '',
-                    cover_image: post.image_url,
-                    created_by_name: post.username,
-                    created_by_role: '',
-                    created_at: post.created_at,
-                  }}
-                  canEdit={user?.id === post.user_id || user?.role === 'サーバー管理者'}
-                />
+                              <EventPost
+                key={post.id}
+                event={{
+                  id: post.event_id,
+                  title: post.content,
+                  description: post.content,
+                  event_date: post.created_at,
+                  start_time: '',
+                  end_time: '',
+                  location: '',
+                  cover_image: post.image_url,
+                  created_by_name: post.username,
+                  created_by_role: '',
+                  created_at: post.created_at,
+                }}
+                canEdit={user?.id === post.user_id || user?.role === 'サーバー管理者'}
+                onEditSuccess={handleEventEditSuccess}
+              />
               ) : (
                 // event_idがない場合は、通常の投稿として表示
                 <Card key={post.id}>
