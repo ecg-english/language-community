@@ -152,6 +152,40 @@ app.use('*', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3001;
+
+// 本番環境でのテスト投稿削除（一度だけ実行）
+if (process.env.NODE_ENV === 'production') {
+  const db = require('./database');
+  
+  try {
+    console.log('本番環境のテスト投稿削除を実行中...');
+    
+    // 削除対象の投稿を確認
+    const targetPosts = db.prepare(`
+      SELECT id, content, created_at 
+      FROM posts 
+      WHERE content IN ('テストイベント2', 'TESTTESTAAA')
+    `).all();
+    
+    console.log('削除対象の投稿:', targetPosts.length);
+    
+    if (targetPosts.length > 0) {
+      // テスト投稿を削除
+      const deleteTestPosts = db.prepare(`
+        DELETE FROM posts 
+        WHERE content IN ('テストイベント2', 'TESTTESTAAA')
+      `);
+      
+      const result = deleteTestPosts.run();
+      console.log('テスト投稿削除完了:', result.changes, '件削除');
+    } else {
+      console.log('削除対象の投稿が見つかりませんでした。');
+    }
+  } catch (error) {
+    console.error('テスト投稿削除エラー:', error);
+  }
+}
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 }); 
