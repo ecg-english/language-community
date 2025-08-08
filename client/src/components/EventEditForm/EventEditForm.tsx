@@ -166,21 +166,23 @@ const EventEditForm: React.FC<EventEditFormProps> = ({
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               {(coverImageUrl || coverImage) && (
-                <Box
-                  sx={{
-                    width: 100,
-                    height: 60,
-                    backgroundImage: coverImageUrl 
-                      ? `url(https://language-community-backend.onrender.com${coverImageUrl})` 
-                      : coverImage 
-                        ? `url(${URL.createObjectURL(coverImage)})` 
-                        : 'none',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    borderRadius: 1,
-                    border: '1px solid #ddd',
-                  }}
-                />
+                                 <Box
+                   sx={{
+                     width: 100,
+                     height: 60,
+                     backgroundImage: coverImageUrl 
+                       ? (coverImageUrl.startsWith('data:') 
+                           ? `url(${coverImageUrl})` 
+                           : `url(https://language-community-backend.onrender.com${coverImageUrl})`)
+                       : coverImage 
+                         ? `url(${URL.createObjectURL(coverImage)})` 
+                         : 'none',
+                     backgroundSize: 'cover',
+                     backgroundPosition: 'center',
+                     borderRadius: 1,
+                     border: '1px solid #ddd',
+                   }}
+                 />
               )}
               <Button
                 variant="outlined"

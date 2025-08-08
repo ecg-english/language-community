@@ -91,7 +91,9 @@ const EventPost: React.FC<EventPostProps> = ({
           sx={{
             height: 200,
             backgroundImage: event.cover_image 
-              ? `url(https://language-community-backend.onrender.com${event.cover_image})` 
+              ? (event.cover_image.startsWith('data:') 
+                  ? `url(${event.cover_image})` 
+                  : `url(https://language-community-backend.onrender.com${event.cover_image})`)
               : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',

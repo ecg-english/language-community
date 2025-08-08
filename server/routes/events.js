@@ -450,12 +450,22 @@ router.post('/upload/cover', authenticateToken, upload.single('cover_image'), (r
       return res.status(400).json({ error: 'ファイルがアップロードされていません' });
     }
     
-    const imageUrl = `/uploads/${req.file.filename}`;
-    console.log('アップロード成功:', { filename: req.file.filename, imageUrl });
+    // ファイルをBase64エンコード
+    const fs = require('fs');
+    const imageBuffer = fs.readFileSync(req.file.path);
+    const base64Image = `data:${req.file.mimetype};base64,${imageBuffer.toString('base64')}`;
+    
+    // 一時ファイルを削除
+    fs.unlinkSync(req.file.path);
+    
+    console.log('Base64エンコード成功:', { 
+      filename: req.file.filename, 
+      size: base64Image.length 
+    });
     
     res.json({ 
       message: 'カバー画像がアップロードされました',
-      imageUrl: imageUrl
+      imageUrl: base64Image
     });
   } catch (error) {
     console.error('カバー画像アップロードエラー:', error);
