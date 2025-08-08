@@ -262,24 +262,49 @@ router.delete('/:eventId', authenticateToken, (req, res) => {
     const { eventId } = req.params;
     const userRole = req.user.role;
 
+    console.log('イベント削除リクエスト:', { eventId, userRole });
+
     // 管理者・講師のみ削除可能
     const allowedRoles = ['サーバー管理者', 'ECG講師', 'JCG講師'];
     if (!allowedRoles.includes(userRole)) {
+      console.log('削除権限エラー:', { userRole, allowedRoles });
       return res.status(403).json({ error: 'イベントの削除権限がありません' });
     }
 
     // イベントの存在確認
     const existingEvent = db.prepare('SELECT id FROM events WHERE id = ?').get(eventId);
     if (!existingEvent) {
+      console.log('イベントが見つかりません:', eventId);
       return res.status(404).json({ error: 'イベントが見つかりません' });
     }
 
-    const deleteEvent = db.prepare('DELETE FROM events WHERE id = ?');
-    deleteEvent.run(eventId);
+    // トランザクション開始
+    const transaction = db.transaction(() => {
+      // 関連する投稿を削除
+      const deletePosts = db.prepare('DELETE FROM posts WHERE event_id = ?');
+      const postsResult = deletePosts.run(eventId);
+      console.log('関連投稿削除結果:', postsResult);
+
+      // 参加者を削除
+      const deleteAttendees = db.prepare('DELETE FROM event_attendees WHERE event_id = ?');
+      const attendeesResult = deleteAttendees.run(eventId);
+      console.log('参加者削除結果:', attendeesResult);
+
+      // イベントを削除
+      const deleteEvent = db.prepare('DELETE FROM events WHERE id = ?');
+      const eventResult = deleteEvent.run(eventId);
+      console.log('イベント削除結果:', eventResult);
+
+      return { postsResult, attendeesResult, eventResult };
+    });
+
+    const result = transaction();
+    console.log('削除処理完了:', result);
 
     res.json({ message: 'イベントが削除されました' });
   } catch (error) {
     console.error('イベント削除エラー:', error);
+    console.error('エラースタック:', error.stack);
     res.status(500).json({ error: 'イベントの削除に失敗しました' });
   }
 });

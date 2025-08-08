@@ -75,7 +75,8 @@ const EventDetailPage: React.FC = () => {
   }, [eventId]);
 
   const handleEdit = () => {
-    // TODO: イベント編集ページに遷移
+    // イベント編集フォームを表示（現在はアラートで代替）
+    alert('イベント編集機能は現在開発中です。\nイベントID: ' + eventId);
     console.log('イベント編集:', eventId);
   };
 
@@ -238,7 +239,7 @@ const EventDetailPage: React.FC = () => {
               sx={{
                 height: 300,
                 backgroundImage: event.cover_image 
-                  ? `url(${event.cover_image})` 
+                  ? `url(https://language-community-backend.onrender.com${event.cover_image})` 
                   : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
