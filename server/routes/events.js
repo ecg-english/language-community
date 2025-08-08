@@ -80,7 +80,7 @@ router.get('/month/:year/:month', authenticateToken, (req, res) => {
 // イベントを作成（管理者・講師のみ）
 router.post('/', authenticateToken, (req, res) => {
   try {
-    const { title, description, target_audience, event_date, start_time, end_time, participation_method } = req.body;
+    const { title, description, target_audience, event_date, start_time, end_time, participation_method, cover_image, location } = req.body;
     const userId = req.user.userId;
     const userRole = req.user.role;
 
@@ -95,8 +95,8 @@ router.post('/', authenticateToken, (req, res) => {
     }
 
     const insertEvent = db.prepare(`
-      INSERT INTO events (title, description, target_audience, event_date, start_time, end_time, participation_method, created_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO events (title, description, target_audience, event_date, start_time, end_time, participation_method, cover_image, location, created_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const result = insertEvent.run(
@@ -107,6 +107,8 @@ router.post('/', authenticateToken, (req, res) => {
       start_time || '',
       end_time || '',
       participation_method || '',
+      cover_image || '',
+      location || '',
       userId
     );
 
@@ -120,6 +122,21 @@ router.post('/', authenticateToken, (req, res) => {
       JOIN users u ON e.created_by = u.id
       WHERE e.id = ?
     `).get(result.lastInsertRowid);
+
+    // チャンネル投稿も作成（Eventsチャンネル用）
+    if (req.body.channel_id) {
+      const insertPost = db.prepare(`
+        INSERT INTO posts (content, user_id, channel_id, image_url)
+        VALUES (?, ?, ?, ?)
+      `);
+      
+      insertPost.run(
+        title, // イベントタイトルを投稿内容として使用
+        userId,
+        req.body.channel_id,
+        cover_image || null
+      );
+    }
 
     res.status(201).json({
       message: 'イベントが作成されました',

@@ -107,7 +107,9 @@ const EventPostForm: React.FC<EventPostFormProps> = ({
         channel_id: channelId
       };
 
-      await axios.post('/api/events', eventData);
+      console.log('イベント投稿データ:', eventData);
+      const response = await axios.post('/api/events', eventData);
+      console.log('イベント投稿レスポンス:', response.data);
 
       // フォームをリセット
       setFormData({
