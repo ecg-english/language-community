@@ -502,9 +502,12 @@ const ChannelPage: React.FC = () => {
       console.log('投稿取得成功: ►', { count: postsData.length, posts: postsData });
       
       // Eventsチャンネルの場合、イベント投稿を開催日順にソート
+      console.log('チャンネル名判定:', { channelName: channel?.name, isEventsChannel });
       if (isEventsChannel) {
+        console.log('Eventsチャンネルでのソート開始');
         const today = new Date();
         const todayStr = today.toISOString().split('T')[0];
+        console.log('今日の日付:', todayStr);
         
         // 今後のイベントと過去のイベントに分ける
         const upcomingEvents = postsData.filter((post: Post) => 
@@ -514,6 +517,14 @@ const ChannelPage: React.FC = () => {
           post.event_id && post.event_date && post.event_date < todayStr
         );
         const nonEventPosts = postsData.filter((post: Post) => !post.event_id);
+        
+        console.log('イベント分類:', {
+          upcoming: upcomingEvents.length,
+          past: pastEvents.length,
+          nonEvent: nonEventPosts.length,
+          upcomingEvents: upcomingEvents.map((e: Post) => ({ id: e.id, title: e.content, date: e.event_date })),
+          pastEvents: pastEvents.map((e: Post) => ({ id: e.id, title: e.content, date: e.event_date }))
+        });
         
         // 今後のイベントを開催日の近い順にソート
         upcomingEvents.sort((a: Post, b: Post) => {
@@ -529,6 +540,7 @@ const ChannelPage: React.FC = () => {
         
         // 今後のイベント → 過去のイベント → その他の投稿の順に並べる
         postsData = [...upcomingEvents, ...pastEvents, ...nonEventPosts];
+        console.log('ソート後の順序:', postsData.map((p: Post) => ({ id: p.id, content: p.content, event_date: p.event_date, event_id: p.event_id })));
       }
       
       setPosts(postsData);
@@ -804,17 +816,137 @@ const ChannelPage: React.FC = () => {
       )}
 
       {/* 投稿一覧 */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {posts.length === 0 ? (
-          <Card>
-            <CardContent sx={{ textAlign: 'center', py: 4 }}>
-              <Typography variant="h6" color="text.secondary">
-                {t('noPosts')}
-              </Typography>
-            </CardContent>
-          </Card>
-        ) : (
-          posts.map((post) => (
+      {isEventsChannel ? (
+        // Eventsチャンネル用の表示
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {(() => {
+            const today = new Date().toISOString().split('T')[0];
+            const upcomingEvents = posts.filter(post => 
+              post.event_id && post.event_date && post.event_date >= today
+            );
+            const pastEvents = posts.filter(post => 
+              post.event_id && post.event_date && post.event_date < today
+            );
+            const nonEventPosts = posts.filter(post => !post.event_id);
+
+            return (
+              <>
+                {/* 今後のイベント */}
+                {upcomingEvents.length > 0 && (
+                  <Box>
+                    <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
+                      {t('upcomingEvents')}
+                    </Typography>
+                    {upcomingEvents.map((post) => (
+                      <Box key={post.id} sx={{ mb: 2 }}>
+                        {post.event_id ? (
+                          <EventPost
+                            event={{
+                              id: post.event_id,
+                              title: post.content,
+                              description: post.content,
+                              event_date: post.event_date || post.created_at,
+                              start_time: post.start_time || '',
+                              end_time: post.end_time || '',
+                              location: post.location || '',
+                              cover_image: post.image_url,
+                              created_by_name: post.username,
+                              created_by_role: '',
+                              created_at: post.created_at,
+                            }}
+                            canEdit={user?.id === post.user_id || user?.role === 'サーバー管理者'}
+                          />
+                        ) : (
+                          <Card>
+                            <CardContent>
+                              <Typography>{post.content}</Typography>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+
+                {/* 過去のイベント */}
+                {pastEvents.length > 0 && (
+                  <Box>
+                    <Typography variant="h5" sx={{ mb: 2, fontWeight: 600, opacity: 0.7 }}>
+                      {t('pastEvents')}
+                    </Typography>
+                    {pastEvents.map((post) => (
+                      <Box key={post.id} sx={{ mb: 2, opacity: 0.7 }}>
+                        {post.event_id ? (
+                          <EventPost
+                            event={{
+                              id: post.event_id,
+                              title: post.content,
+                              description: post.content,
+                              event_date: post.event_date || post.created_at,
+                              start_time: post.start_time || '',
+                              end_time: post.end_time || '',
+                              location: post.location || '',
+                              cover_image: post.image_url,
+                              created_by_name: post.username,
+                              created_by_role: '',
+                              created_at: post.created_at,
+                            }}
+                            canEdit={user?.id === post.user_id || user?.role === 'サーバー管理者'}
+                          />
+                        ) : (
+                          <Card>
+                            <CardContent>
+                              <Typography>{post.content}</Typography>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+
+                {/* その他の投稿 */}
+                {nonEventPosts.length > 0 && (
+                  <Box>
+                    {nonEventPosts.map((post) => (
+                      <Box key={post.id} sx={{ mb: 2 }}>
+                        <Card>
+                          <CardContent>
+                            <Typography>{post.content}</Typography>
+                          </CardContent>
+                        </Card>
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+
+                {/* 投稿がない場合 */}
+                {posts.length === 0 && (
+                  <Card>
+                    <CardContent sx={{ textAlign: 'center', py: 4 }}>
+                      <Typography variant="h6" color="text.secondary">
+                        {t('noPosts')}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            );
+          })()}
+        </Box>
+      ) : (
+        // 通常のチャンネル用の表示
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {posts.length === 0 ? (
+            <Card>
+              <CardContent sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="h6" color="text.secondary">
+                  {t('noPosts')}
+                </Typography>
+              </CardContent>
+            </Card>
+          ) : (
+            posts.map((post) => (
             isEventsChannel ? (
               // Eventsチャンネルの場合、イベント投稿コンポーネントを使用
               post.event_id ? (
@@ -1027,10 +1159,10 @@ const ChannelPage: React.FC = () => {
                 </Collapse>
               </CardContent>
             </Card>
-            )
-          ))
-        )}
-      </Box>
+            ))
+          )}
+        </Box>
+      )}
 
       {/* サイドバー */}
       <ChannelSidebar
