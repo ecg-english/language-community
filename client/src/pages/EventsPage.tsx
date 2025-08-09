@@ -33,6 +33,7 @@ import {
   ChevronRight as ChevronRightIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 
 interface Event {
@@ -53,6 +54,7 @@ interface Event {
 
 const EventsPage: React.FC = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -229,6 +231,19 @@ const EventsPage: React.FC = () => {
       .filter(event => event.event_date >= todayStr)
       .sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime())
       .slice(0, 10); // 最大10件表示
+  };
+
+  const getPastEvents = () => {
+    // ローカルタイムゾーンで今日の日付文字列を作成
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
+    
+    return events
+      .filter(event => event.event_date < todayStr)
+      .sort((a, b) => new Date(b.event_date).getTime() - new Date(a.event_date).getTime()); // 新しい順
   };
 
   const formatTime = (time: string) => {
@@ -623,12 +638,12 @@ const EventsPage: React.FC = () => {
             mb: 3,
             fontSize: { xs: '1.25rem', sm: '1.5rem' }
           }}>
-            Upcoming Events
+            {t('upcomingEvents')}
           </Typography>
           
           {getUpcomingEvents().length === 0 ? (
             <Typography variant="body1" color="text.secondary">
-              No upcoming events
+              {t('noUpcomingEvents')}
             </Typography>
           ) : (
             <Box>
@@ -689,6 +704,77 @@ const EventsPage: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* 過去のイベント一覧 */}
+      {getPastEvents().length > 0 && (
+        <Card elevation={0} sx={{ borderRadius: 3, mt: 4 }}>
+          <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+            <Typography variant="h5" sx={{ 
+              fontWeight: 600, 
+              mb: 3,
+              fontSize: { xs: '1.25rem', sm: '1.5rem' }
+            }}>
+              {t('pastEvents')}
+            </Typography>
+            
+            <Box>
+              {getPastEvents().map((event) => (
+                <Box key={event.id} sx={{ mb: 2, p: 2, border: '1px solid #e0e0e0', borderRadius: 2, opacity: 0.7 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                    <Typography 
+                      variant="h6" 
+                      sx={{ 
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        '&:hover': {
+                          textDecoration: 'underline',
+                        }
+                      }}
+                      onClick={() => handleEventClick(event, {} as React.MouseEvent)}
+                    >
+                      {event.title}
+                    </Typography>
+                    {canEdit && (
+                      <Box>
+                        <IconButton 
+                          size="small" 
+                          onClick={() => handleEditEvent(event)}
+                          sx={{ mr: 1 }}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton 
+                          size="small" 
+                          onClick={() => handleDeleteEvent(event.id)}
+                          color="error"
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    )}
+                  </Box>
+                  
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    {new Date(event.event_date).toLocaleDateString('en-US')} • {formatTimeRange(event.start_time, event.end_time)}
+                  </Typography>
+                  
+                  {event.description && (
+                    <Typography variant="body2" sx={{ mb: 1 }}>
+                      {event.description}
+                    </Typography>
+                  )}
+                  
+                  {event.target_audience && (
+                    <Typography variant="body2" color="text.secondary">
+                      Target: {event.target_audience}
+                    </Typography>
+                  )}
+                </Box>
+              ))}
+            </Box>
+          </CardContent>
+        </Card>
+      )}
 
       {/* イベント詳細・編集ダイアログ */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>

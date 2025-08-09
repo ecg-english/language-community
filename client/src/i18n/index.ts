@@ -157,6 +157,7 @@ const en = {
     coverImage: 'Cover Image',
     selectCoverImage: 'Please select a cover image',
     coverImagePreview: 'Cover image preview',
+    pastEvents: 'Past Events',
     
 
     
@@ -374,6 +375,7 @@ const ja = {
     coverImage: 'カバー画像',
     selectCoverImage: 'カバー画像を選択してください',
     coverImagePreview: 'カバー画像プレビュー',
+    pastEvents: '過去のイベント',
 
     // 月次履歴
     monthlyHistoryTitle: '月次振り返り・目標履歴',
@@ -588,6 +590,7 @@ const jaSimple = {
     coverImage: 'カバーがぞう',
     selectCoverImage: 'カバーがぞうをせんたくしてください',
     coverImagePreview: 'カバーがぞうプレビュー',
+    pastEvents: 'かこのイベント',
     
     // 月次履歴
     monthlyHistoryTitle: 'げつじふりかえり・もくひょうれきし',

@@ -498,8 +498,39 @@ const ChannelPage: React.FC = () => {
     try {
       console.log('投稿取得開始:', { channelId });
       const response = await axios.get(`/api/posts/channels/${channelId}/posts`);
-      const postsData = response.data.posts || [];
+      let postsData = response.data.posts || [];
       console.log('投稿取得成功: ►', { count: postsData.length, posts: postsData });
+      
+      // Eventsチャンネルの場合、イベント投稿を開催日順にソート
+      if (isEventsChannel) {
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        
+        // 今後のイベントと過去のイベントに分ける
+        const upcomingEvents = postsData.filter((post: Post) => 
+          post.event_id && post.event_date && post.event_date >= todayStr
+        );
+        const pastEvents = postsData.filter((post: Post) => 
+          post.event_id && post.event_date && post.event_date < todayStr
+        );
+        const nonEventPosts = postsData.filter((post: Post) => !post.event_id);
+        
+        // 今後のイベントを開催日の近い順にソート
+        upcomingEvents.sort((a: Post, b: Post) => {
+          if (!a.event_date || !b.event_date) return 0;
+          return new Date(a.event_date).getTime() - new Date(b.event_date).getTime();
+        });
+        
+        // 過去のイベントを開催日の新しい順にソート
+        pastEvents.sort((a: Post, b: Post) => {
+          if (!a.event_date || !b.event_date) return 0;
+          return new Date(b.event_date).getTime() - new Date(a.event_date).getTime();
+        });
+        
+        // 今後のイベント → 過去のイベント → その他の投稿の順に並べる
+        postsData = [...upcomingEvents, ...pastEvents, ...nonEventPosts];
+      }
+      
       setPosts(postsData);
     } catch (error) {
       console.error('投稿取得エラー:', error);
