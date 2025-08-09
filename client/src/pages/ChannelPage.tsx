@@ -152,7 +152,8 @@ const ChannelPage: React.FC = () => {
         console.log('投稿取得成功:', { count: postsData.length });
         
         // Eventsチャンネルの場合、イベント投稿を開催日順にソート
-        const isEventsChannel = channel?.name === '🗓️ Events';
+        const isEventsChannel = channelData?.name === '🗓️ Events';
+        console.log('チャンネル判定:', { channelName: channelData?.name, isEventsChannel });
         if (isEventsChannel) {
           console.log('Eventsチャンネルでソート実行');
           // 全てのイベント投稿を開催日順にソート（開催日が近い順）
