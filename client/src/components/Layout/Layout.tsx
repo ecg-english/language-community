@@ -144,6 +144,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   fontWeight: 700,
                   cursor: 'pointer',
                   fontSize: { xs: '1.125rem', sm: '1.25rem' },
+                  display: { xs: 'none', sm: 'block' },
                 }}
                 onClick={() => navigate('/community')}
               >
