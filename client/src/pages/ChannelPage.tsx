@@ -502,43 +502,19 @@ const ChannelPage: React.FC = () => {
       console.log('投稿取得成功: ►', { count: postsData.length, posts: postsData });
       
       // Eventsチャンネルの場合、イベント投稿を開催日順にソート
-      console.log('チャンネル判定:', { channelName: channel?.name, isEventsChannel });
       if (isEventsChannel) {
-        console.log('Eventsチャンネルでソート開始');
-        const today = new Date();
-        const todayStr = today.toISOString().split('T')[0];
-        console.log('今日の日付:', todayStr);
-        
-        // 今後のイベントと過去のイベントに分ける
-        const upcomingEvents = postsData.filter((post: Post) => 
-          post.event_id && post.event_date && post.event_date >= todayStr
-        );
-        const pastEvents = postsData.filter((post: Post) => 
-          post.event_id && post.event_date && post.event_date < todayStr
-        );
+        // 全てのイベント投稿を開催日順にソート（開催日が近い順）
+        const eventPosts = postsData.filter((post: Post) => post.event_id && post.event_date);
         const nonEventPosts = postsData.filter((post: Post) => !post.event_id);
         
-        console.log('分類結果:', { 
-          upcoming: upcomingEvents.length, 
-          past: pastEvents.length, 
-          nonEvent: nonEventPosts.length 
-        });
-        
-        // 今後のイベントを開催日の近い順にソート
-        upcomingEvents.sort((a: Post, b: Post) => {
+        // イベント投稿を開催日の近い順にソート
+        eventPosts.sort((a: Post, b: Post) => {
           if (!a.event_date || !b.event_date) return 0;
           return new Date(a.event_date).getTime() - new Date(b.event_date).getTime();
         });
         
-        // 過去のイベントを開催日の新しい順にソート
-        pastEvents.sort((a: Post, b: Post) => {
-          if (!a.event_date || !b.event_date) return 0;
-          return new Date(b.event_date).getTime() - new Date(a.event_date).getTime();
-        });
-        
-        // 今後のイベント → 過去のイベント → その他の投稿の順に並べる
-        postsData = [...upcomingEvents, ...pastEvents, ...nonEventPosts];
-        console.log('ソート後:', postsData.map((p: Post) => ({ title: p.content, date: p.event_date })));
+        // イベント投稿を先頭に、その他の投稿を後に配置
+        postsData = [...eventPosts, ...nonEventPosts];
       }
       
       setPosts(postsData);
