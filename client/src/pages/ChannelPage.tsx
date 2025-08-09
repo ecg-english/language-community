@@ -106,6 +106,8 @@ const ChannelPage: React.FC = () => {
   const [expandedComments, setExpandedComments] = useState<{ [postId: number]: boolean }>({});
   const [canPost, setCanPost] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPastEvents, setShowPastEvents] = useState(false);
+  const [pastEvents, setPastEvents] = useState<Post[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -156,22 +158,46 @@ const ChannelPage: React.FC = () => {
         console.log('チャンネル判定:', { channelName: channelData?.name, isEventsChannel });
         if (isEventsChannel) {
           console.log('Eventsチャンネルでソート実行');
-          // 全てのイベント投稿を開催日順にソート（開催日が近い順）
+          
+          const today = new Date();
+          const todayStr = today.toISOString().split('T')[0];
+          
+          // イベント投稿と非イベント投稿を分離
           const eventPosts = postsData.filter((post: any) => post.event_id && post.event_date);
           const nonEventPosts = postsData.filter((post: any) => !post.event_id);
           
-          console.log('ソート前のイベント投稿:', eventPosts.map((p: any) => ({ title: p.content, date: p.event_date })));
+          // 今後のイベントと過去のイベントに分ける
+          const upcomingEvents = eventPosts.filter((post: any) => post.event_date >= todayStr);
+          const pastEventPosts = eventPosts.filter((post: any) => post.event_date < todayStr);
           
-          // イベント投稿を開催日の近い順にソート
-          eventPosts.sort((a: any, b: any) => {
+          console.log('イベント分類:', {
+            upcoming: upcomingEvents.length,
+            past: pastEventPosts.length,
+            today: todayStr
+          });
+          
+          // 今後のイベントを開催日の近い順にソート
+          upcomingEvents.sort((a: any, b: any) => {
             if (!a.event_date || !b.event_date) return 0;
             return new Date(a.event_date).getTime() - new Date(b.event_date).getTime();
           });
           
-          console.log('ソート後のイベント投稿:', eventPosts.map((p: any) => ({ title: p.content, date: p.event_date })));
+          // 過去のイベントを開催日の新しい順にソート
+          pastEventPosts.sort((a: any, b: any) => {
+            if (!a.event_date || !b.event_date) return 0;
+            return new Date(b.event_date).getTime() - new Date(a.event_date).getTime();
+          });
           
-          // イベント投稿を先頭に、その他の投稿を後に配置
-          postsData = [...eventPosts, ...nonEventPosts];
+          console.log('ソート後:', {
+            upcoming: upcomingEvents.map((p: any) => ({ title: p.content, date: p.event_date })),
+            past: pastEventPosts.map((p: any) => ({ title: p.content, date: p.event_date }))
+          });
+          
+          // 過去のイベントを別のstateに保存
+          setPastEvents(pastEventPosts);
+          
+          // 今後のイベントと非イベント投稿のみを表示
+          postsData = [...upcomingEvents, ...nonEventPosts];
         }
         
         setPosts(postsData);
@@ -654,18 +680,32 @@ const ChannelPage: React.FC = () => {
                 <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
                   イベントを投稿
                 </Typography>
-                <Button
-                  variant="contained"
-                  onClick={() => setEventFormOpen(true)}
-                  sx={{
-                    py: 1.5,
-                    px: 3,
-                    borderRadius: 2,
-                    fontWeight: 600,
-                  }}
-                >
-                  {t('createEvent')}
-                </Button>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                  <Button
+                    variant="contained"
+                    onClick={() => setEventFormOpen(true)}
+                    sx={{
+                      py: 1.5,
+                      px: 3,
+                      borderRadius: 2,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {t('createEvent')}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={() => setShowPastEvents(!showPastEvents)}
+                    sx={{
+                      py: 1.5,
+                      px: 3,
+                      borderRadius: 2,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {showPastEvents ? '過去のイベントを隠す' : '過去のイベントを表示'} ({pastEvents.length})
+                  </Button>
+                </Box>
               </Box>
             ) : (
               // 通常の投稿フォーム
@@ -1072,6 +1112,36 @@ const ChannelPage: React.FC = () => {
             </Card>
             )
           ))
+        )}
+
+        {/* 過去のイベントセクション */}
+        {isEventsChannel && showPastEvents && pastEvents.length > 0 && (
+          <Box sx={{ mt: 4 }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'text.secondary' }}>
+              過去のイベント
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, opacity: 0.7 }}>
+              {pastEvents.map((post) => (
+                <EventPost
+                  key={post.id}
+                  event={{
+                    id: post.event_id!,
+                    title: post.content,
+                    description: post.content,
+                    event_date: post.event_date || post.created_at,
+                    start_time: post.start_time || '',
+                    end_time: post.end_time || '',
+                    location: post.location || '',
+                    cover_image: post.image_url,
+                    created_by_name: post.username,
+                    created_by_role: '',
+                    created_at: post.created_at,
+                  }}
+                  canEdit={user?.id === post.user_id || user?.role === 'サーバー管理者'}
+                />
+              ))}
+            </Box>
+          </Box>
         )}
       </Box>
 
