@@ -16,6 +16,11 @@ import {
   Collapse,
   Paper,
   Stack,
+  Fab,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -30,6 +35,8 @@ import {
   Close as CloseIcon,
   AutoAwesome as AutoAwesomeIcon,
   Menu as MenuIcon,
+  Add as AddIcon,
+  Edit as EditIcon,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -108,6 +115,8 @@ const ChannelPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPastEvents, setShowPastEvents] = useState(false);
   const [pastEvents, setPastEvents] = useState<Post[]>([]);
+  const [postModalOpen, setPostModalOpen] = useState(false);
+  const [modalNewPost, setModalNewPost] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -348,7 +357,8 @@ const ChannelPage: React.FC = () => {
       const { bio, message } = response.data;
       
       const template = `Hello!\n\n${bio || ''}\n\n${message || ''}`;
-      setNewPost(template);
+      setModalNewPost(template);
+      setPostModalOpen(true);
     } catch (error) {
       console.error('テンプレート取得エラー:', error);
       setError('テンプレートの取得に失敗しました');
@@ -670,8 +680,8 @@ const ChannelPage: React.FC = () => {
         )}
       </Box>
 
-      {/* 投稿フォーム */}
-      {canPost && (
+      {/* 特殊チャンネル用投稿フォーム */}
+      {canPost && (isEventsChannel || channel?.name === '🙋 Introduce Yourself') && (
         <Card sx={{ mb: 4 }}>
           <CardContent>
             {isEventsChannel ? (
@@ -693,133 +703,42 @@ const ChannelPage: React.FC = () => {
                   {t('createEvent')}
                 </Button>
               </Box>
-            ) : (
-              // 通常の投稿フォーム
-              <form onSubmit={handleSubmitPost}>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={3}
-                  value={newPost}
-                  onChange={(e) => setNewPost(e.target.value)}
-                  placeholder={t('postContent')}
-                  variant="outlined"
-                  sx={{ mb: 2 }}
-                />
-              
-              {/* 画像プレビュー */}
-              {imagePreview && (
-                <Box sx={{ mb: 2, position: 'relative' }}>
-                  <img
-                    src={imagePreview}
-                    alt="プレビュー"
-                    style={{
-                      maxWidth: '100%',
-                      maxHeight: '300px',
-                      borderRadius: '8px',
-                      objectFit: 'contain'
-                    }}
-                  />
-                  <IconButton
-                    onClick={handleRemoveImage}
+            ) : channel?.name === '🙋 Introduce Yourself' ? (
+              // Introduce Yourselfチャンネルの場合、テンプレート投稿を表示
+              <Box>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                  自己紹介を投稿
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<EditIcon />}
+                    onClick={() => setPostModalOpen(true)}
                     sx={{
-                      position: 'absolute',
-                      top: 8,
-                      right: 8,
-                      bgcolor: 'rgba(0, 0, 0, 0.5)',
-                      color: 'white',
-                      '&:hover': {
-                        bgcolor: 'rgba(0, 0, 0, 0.7)',
-                      }
+                      py: 1.5,
+                      px: 3,
+                      borderRadius: 2,
+                      fontWeight: 600,
                     }}
                   >
-                    <CloseIcon />
-                  </IconButton>
+                    通常投稿
+                  </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<AutoAwesomeIcon />}
+                    onClick={handleTemplatePost}
+                    sx={{
+                      py: 1.5,
+                      px: 3,
+                      borderRadius: 2,
+                      fontWeight: 600,
+                    }}
+                  >
+                    テンプレート投稿
+                  </Button>
                 </Box>
-              )}
-              
-              <Box sx={{ 
-                display: 'flex', 
-                flexDirection: { xs: 'column', sm: 'row' },
-                justifyContent: 'space-between', 
-                alignItems: { xs: 'stretch', sm: 'center' },
-                gap: { xs: 1, sm: 0 }
-              }}>
-                <Box sx={{ 
-                  display: 'flex', 
-                  gap: 1, 
-                  flexWrap: 'wrap',
-                  justifyContent: { xs: 'center', sm: 'flex-start' }
-                }}>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageSelect}
-                    style={{ display: 'none' }}
-                    id="image-upload-input"
-                  />
-                  <label htmlFor="image-upload-input">
-                    <Button
-                      component="span"
-                      variant="outlined"
-                      startIcon={<ImageIcon />}
-                      disabled={isSubmitting}
-                      size="small"
-                      sx={{
-                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                        px: { xs: 1, sm: 2 },
-                        py: { xs: 0.5, sm: 1 },
-                        minWidth: { xs: 'auto', sm: 'auto' },
-                      }}
-                    >
-                      {t('addImage')}
-                    </Button>
-                  </label>
-                  
-                  {/* テンプレート投稿ボタン（Introduce Yourselfチャンネルのみ） */}
-                  {(channel?.name === 'Introduce Yourself' || channel?.name === '🙋 Introduce Yourself') && (
-                    <Button
-                      variant="outlined"
-                      startIcon={<AutoAwesomeIcon />}
-                      onClick={handleTemplatePost}
-                      disabled={isSubmitting}
-                      size="small"
-                      sx={{
-                        borderColor: 'primary.main',
-                        color: 'primary.main',
-                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                        px: { xs: 1, sm: 2 },
-                        py: { xs: 0.5, sm: 1 },
-                        minWidth: { xs: 'auto', sm: 'auto' },
-                        '&:hover': {
-                          borderColor: 'primary.dark',
-                          backgroundColor: 'primary.light',
-                          color: 'primary.dark',
-                        }
-                      }}
-                    >
-                      {t('templatePost')}
-                    </Button>
-                  )}
-                </Box>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  endIcon={<SendIcon />}
-                  disabled={!newPost.trim() || isSubmitting}
-                  size="small"
-                  sx={{
-                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                    px: { xs: 1, sm: 2 },
-                    py: { xs: 0.5, sm: 1 },
-                    minWidth: { xs: 'auto', sm: 'auto' },
-                  }}
-                >
-                  {isSubmitting ? t('loading') : t('post')}
-                </Button>
               </Box>
-            </form>
-            )}
+            ) : null}
           </CardContent>
         </Card>
       )}
@@ -1158,6 +1077,144 @@ const ChannelPage: React.FC = () => {
         categories={categories}
         currentChannelId={parseInt(channelId || '0')}
       />
+
+      {/* フローティング投稿ボタン */}
+      {canPost && !isEventsChannel && channel?.name !== '🙋 Introduce Yourself' && (
+        <Fab
+          color="primary"
+          sx={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            zIndex: 1000,
+          }}
+          onClick={() => setPostModalOpen(true)}
+        >
+          <AddIcon />
+        </Fab>
+      )}
+
+      {/* 投稿作成モーダル */}
+      <Dialog
+        open={postModalOpen}
+        onClose={() => setPostModalOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          新しい投稿を作成
+        </DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            multiline
+            rows={4}
+            value={modalNewPost}
+            onChange={(e) => setModalNewPost(e.target.value)}
+            placeholder={t('postContent')}
+            variant="outlined"
+            sx={{ mt: 1, mb: 2 }}
+          />
+          
+          {/* 画像プレビュー */}
+          {imagePreview && (
+            <Box sx={{ mb: 2, position: 'relative' }}>
+              <img
+                src={imagePreview}
+                alt="プレビュー"
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '300px',
+                  borderRadius: '8px',
+                  objectFit: 'contain'
+                }}
+              />
+              <IconButton
+                onClick={handleRemoveImage}
+                sx={{
+                  position: 'absolute',
+                  top: 8,
+                  right: 8,
+                  bgcolor: 'rgba(0, 0, 0, 0.5)',
+                  color: 'white',
+                  '&:hover': {
+                    bgcolor: 'rgba(0, 0, 0, 0.7)',
+                  }
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </Box>
+          )}
+          
+          {/* 画像追加ボタン */}
+          <Box sx={{ mb: 2 }}>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageSelect}
+              style={{ display: 'none' }}
+              id="modal-image-upload-input"
+            />
+            <label htmlFor="modal-image-upload-input">
+              <Button
+                component="span"
+                variant="outlined"
+                startIcon={<ImageIcon />}
+                disabled={isSubmitting}
+              >
+                {t('addImage')}
+              </Button>
+            </label>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPostModalOpen(false)} disabled={isSubmitting}>
+            キャンセル
+          </Button>
+          <Button 
+            onClick={async () => {
+              try {
+                setIsSubmitting(true);
+                const numChannelId = parseInt(channelId || '0');
+                let imageUrl = null;
+
+                if (selectedImage) {
+                  // 画像をアップロード
+                  const uploadResponse = await axios.post('/api/posts/upload/image', {
+                    imageData: selectedImage
+                  });
+                  imageUrl = uploadResponse.data.imageUrl;
+                }
+
+                await axios.post(`/api/posts/channels/${numChannelId}/posts`, {
+                  content: modalNewPost,
+                  image_url: imageUrl
+                });
+                
+                setModalNewPost('');
+                setSelectedImage(null);
+                setImagePreview(null);
+                setPostModalOpen(false);
+                
+                // 投稿を再読み込み
+                const postsResponse = await axios.get(`/api/posts/channels/${numChannelId}/posts`);
+                setPosts(postsResponse.data.posts || []);
+              } catch (error: any) {
+                console.error('投稿の作成に失敗しました:', error);
+                setError(error.response?.data?.error || t('postsLoadFailed'));
+              } finally {
+                setIsSubmitting(false);
+              }
+            }}
+            variant="contained"
+            disabled={!modalNewPost.trim() || isSubmitting}
+            startIcon={<SendIcon />}
+          >
+            {isSubmitting ? t('loading') : t('post')}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* イベント投稿フォーム */}
       {isEventsChannel && (
