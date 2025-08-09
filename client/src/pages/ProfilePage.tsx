@@ -25,6 +25,8 @@ import {
   School as SchoolIcon,
   Message as MessageIcon,
   PhotoCamera as PhotoCameraIcon,
+  Image as ImageIcon,
+  AddPhotoAlternate as AddPhotoIcon,
   Chat as DiscordIcon,
   Instagram as InstagramIcon,
   Refresh as RefreshIcon,
@@ -57,7 +59,7 @@ const ProfilePage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -380,19 +382,20 @@ const ProfilePage: React.FC = () => {
               }}>
                 {isEditing ? (
                   <>
-                    <IconButton
+                    <Button
                       onClick={handleSave}
                       disabled={isSaving}
-                      color="primary"
+                      variant="contained"
+                      size="small"
                       sx={{ 
-                        p: { xs: 1, sm: 1.5 },
-                        '&:hover': {
-                          backgroundColor: 'rgba(30, 64, 175, 0.04)',
-                        },
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                        px: { xs: 1.5, sm: 2 },
+                        py: { xs: 0.5, sm: 0.75 },
+                        minWidth: 'auto',
                       }}
                     >
-                      <SaveIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
-                    </IconButton>
+                      {i18n.language === 'ja' ? '保存' : i18n.language === 'simple' ? 'ほぞん' : 'Save'}
+                    </Button>
                     <IconButton 
                       onClick={handleCancel} 
                       color="error"
@@ -466,7 +469,7 @@ const ProfilePage: React.FC = () => {
                     },
                   }}
                 >
-                  <PhotoCameraIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
+                  <AddPhotoIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
                 </IconButton>
               </label>
             </Box>
