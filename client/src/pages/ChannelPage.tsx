@@ -680,32 +680,18 @@ const ChannelPage: React.FC = () => {
                 <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
                   イベントを投稿
                 </Typography>
-                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                  <Button
-                    variant="contained"
-                    onClick={() => setEventFormOpen(true)}
-                    sx={{
-                      py: 1.5,
-                      px: 3,
-                      borderRadius: 2,
-                      fontWeight: 600,
-                    }}
-                  >
-                    {t('createEvent')}
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    onClick={() => setShowPastEvents(!showPastEvents)}
-                    sx={{
-                      py: 1.5,
-                      px: 3,
-                      borderRadius: 2,
-                      fontWeight: 600,
-                    }}
-                  >
-                    {showPastEvents ? '過去のイベントを隠す' : '過去のイベントを表示'} ({pastEvents.length})
-                  </Button>
-                </Box>
+                <Button
+                  variant="contained"
+                  onClick={() => setEventFormOpen(true)}
+                  sx={{
+                    py: 1.5,
+                    px: 3,
+                    borderRadius: 2,
+                    fontWeight: 600,
+                  }}
+                >
+                  {t('createEvent')}
+                </Button>
               </Box>
             ) : (
               // 通常の投稿フォーム
@@ -885,6 +871,26 @@ const ChannelPage: React.FC = () => {
           </Card>
         ) : null;
       })()}
+
+      {/* Eventsチャンネル専用：過去のイベント表示ボタン */}
+      {isEventsChannel && pastEvents.length > 0 && (
+        <Card sx={{ mb: 2 }}>
+          <CardContent sx={{ textAlign: 'center', py: 2 }}>
+            <Button
+              variant="outlined"
+              onClick={() => setShowPastEvents(!showPastEvents)}
+              sx={{
+                py: 1.5,
+                px: 3,
+                borderRadius: 2,
+                fontWeight: 600,
+              }}
+            >
+              {showPastEvents ? '過去のイベントを隠す' : '過去のイベントを表示'} ({pastEvents.length})
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* 投稿一覧 */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
