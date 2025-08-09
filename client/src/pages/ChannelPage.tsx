@@ -631,33 +631,42 @@ const ChannelPage: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* ヘッダー */}
-      <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-          <IconButton
-            onClick={() => setSidebarOpen(true)}
-            disabled={categories.length === 0}
-            sx={{ 
-              border: '1px solid rgba(0, 0, 0, 0.12)',
-              '&:hover': {
-                backgroundColor: 'grey.100',
-              },
-              '&:disabled': {
-                opacity: 0.5,
-              }
-            }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Button
-            variant="outlined"
-            startIcon={<ArrowBackIcon />}
-            onClick={() => navigate('/community')}
-          >
-            {t('back')}
-          </Button>
-        </Box>
+    <>
+      {/* 左上固定のサイドバーボタン */}
+      <IconButton
+        onClick={() => setSidebarOpen(true)}
+        disabled={categories.length === 0}
+        sx={{ 
+          position: 'fixed',
+          top: 16,
+          left: 16,
+          zIndex: 1100,
+          backgroundColor: 'background.paper',
+          border: '1px solid rgba(0, 0, 0, 0.12)',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+          '&:hover': {
+            backgroundColor: 'grey.100',
+          },
+          '&:disabled': {
+            opacity: 0.5,
+          }
+        }}
+      >
+        <MenuIcon />
+      </IconButton>
+
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        {/* ヘッダー */}
+        <Box sx={{ mb: 4 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+            <Button
+              variant="outlined"
+              startIcon={<ArrowBackIcon />}
+              onClick={() => navigate('/community')}
+            >
+              {t('back')}
+            </Button>
+          </Box>
         
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
           <Typography variant="h4" sx={{ fontWeight: 600 }}>
@@ -1226,6 +1235,7 @@ const ChannelPage: React.FC = () => {
         />
       )}
     </Container>
+    </>
   );
 };
 
