@@ -148,8 +148,31 @@ const ChannelPage: React.FC = () => {
 
         // 投稿を取得
         const postsResponse = await axios.get(`/api/posts/channels/${numChannelId}/posts`);
-        const postsData = postsResponse.data.posts || [];
+        let postsData = postsResponse.data.posts || [];
         console.log('投稿取得成功:', { count: postsData.length });
+        
+        // Eventsチャンネルの場合、イベント投稿を開催日順にソート
+        const isEventsChannel = channel?.name === '🗓️ Events';
+        if (isEventsChannel) {
+          console.log('Eventsチャンネルでソート実行');
+          // 全てのイベント投稿を開催日順にソート（開催日が近い順）
+          const eventPosts = postsData.filter((post: any) => post.event_id && post.event_date);
+          const nonEventPosts = postsData.filter((post: any) => !post.event_id);
+          
+          console.log('ソート前のイベント投稿:', eventPosts.map((p: any) => ({ title: p.content, date: p.event_date })));
+          
+          // イベント投稿を開催日の近い順にソート
+          eventPosts.sort((a: any, b: any) => {
+            if (!a.event_date || !b.event_date) return 0;
+            return new Date(a.event_date).getTime() - new Date(b.event_date).getTime();
+          });
+          
+          console.log('ソート後のイベント投稿:', eventPosts.map((p: any) => ({ title: p.content, date: p.event_date })));
+          
+          // イベント投稿を先頭に、その他の投稿を後に配置
+          postsData = [...eventPosts, ...nonEventPosts];
+        }
+        
         setPosts(postsData);
 
         setLoading(false);
@@ -500,22 +523,7 @@ const ChannelPage: React.FC = () => {
       const response = await axios.get(`/api/posts/channels/${channelId}/posts`);
       let postsData = response.data.posts || [];
       console.log('投稿取得成功: ►', { count: postsData.length, posts: postsData });
-      
-      // Eventsチャンネルの場合、イベント投稿を開催日順にソート
-      if (isEventsChannel) {
-        // 全てのイベント投稿を開催日順にソート（開催日が近い順）
-        const eventPosts = postsData.filter((post: Post) => post.event_id && post.event_date);
-        const nonEventPosts = postsData.filter((post: Post) => !post.event_id);
-        
-        // イベント投稿を開催日の近い順にソート
-        eventPosts.sort((a: Post, b: Post) => {
-          if (!a.event_date || !b.event_date) return 0;
-          return new Date(a.event_date).getTime() - new Date(b.event_date).getTime();
-        });
-        
-        // イベント投稿を先頭に、その他の投稿を後に配置
-        postsData = [...eventPosts, ...nonEventPosts];
-      }
+
       
       setPosts(postsData);
     } catch (error) {
