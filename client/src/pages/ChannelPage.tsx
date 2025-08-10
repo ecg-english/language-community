@@ -626,7 +626,8 @@ const ChannelPage: React.FC = () => {
         // 3秒後に成功メッセージを非表示
         setTimeout(() => setShowQaSuccess(false), 3000);
       } else {
-        setError('スタッフチャンネルが見つかりません');
+        setError('スタッフチャンネルが見つかりませんでした。管理者に連絡してください。');
+        console.error('スタッフチャンネルが見つかりません。');
       }
     } catch (error: any) {
       console.error('Q&A投稿に失敗しました:', error);
@@ -657,7 +658,7 @@ const ChannelPage: React.FC = () => {
 
       if (qaChannel) {
         const questionPost = posts.find(p => p.id === postId);
-        const qaContent = `Q: ${questionPost?.content}\n\n質問者: ${questionPost?.is_anonymous ? '[匿名]' : questionPost?.username}\n\nA: [回答を入力してください]`;
+        const qaContent = `Q: ${questionPost?.content}\n\n質問者: ${questionPost?.is_anonymous ? '匿名' : questionPost?.username}\n\nA: [回答を入力してください]`;
         
         await axios.post(`/api/posts/channels/${qaChannel.id}/posts`, {
           content: qaContent,
@@ -869,7 +870,7 @@ const ChannelPage: React.FC = () => {
       </Box>
 
       {/* 特殊チャンネル用投稿フォーム */}
-      {canPost && (isEventsChannel || channel?.name === '🙋 Introduce Yourself' || isQaChannel) && (
+      {(canPost || isQaChannel || isQaStaffChannel) && (isEventsChannel || channel?.name === '🙋 Introduce Yourself' || isQaChannel || isQaStaffChannel) && (
         <Card sx={{ mb: 4 }}>
           <CardContent>
             {isEventsChannel ? (
@@ -1113,74 +1114,88 @@ const ChannelPage: React.FC = () => {
               )
             ) : isQaChannel ? (
               // Q&Aチャンネルの場合、Q&A形式で表示
-              <Card key={post.id} sx={{ mb: 2 }}>
-                <CardContent>
-                  <Typography 
-                    variant="body1" 
-                    sx={{ 
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word',
-                      fontFamily: 'monospace',
-                      backgroundColor: 'grey.50',
-                      p: 2,
-                      borderRadius: 1,
-                      border: '1px solid',
-                      borderColor: 'grey.300'
-                    }}
-                  >
-                    {convertUrlsToLinks(post.content)}
-                  </Typography>
+              <Card key={post.id} sx={{ mb: 3, boxShadow: 2 }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ 
+                    backgroundColor: isDarkMode ? 'grey.900' : 'primary.50',
+                    border: `2px solid ${isDarkMode ? 'grey.700' : 'primary.200'}`,
+                    borderRadius: 2,
+                    p: 3,
+                    position: 'relative'
+                  }}>
+                    {/* Q&Aヘッダー */}
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      mb: 2,
+                      pb: 1,
+                      borderBottom: `1px solid ${isDarkMode ? 'grey.700' : 'primary.200'}`
+                    }}>
+                      <Typography 
+                        variant="h6" 
+                        sx={{ 
+                          fontWeight: 700,
+                          color: isDarkMode ? 'primary.light' : 'primary.main',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1
+                        }}
+                      >
+                        <Box component="span" sx={{ 
+                          backgroundColor: isDarkMode ? 'primary.dark' : 'primary.main',
+                          color: 'white',
+                          borderRadius: '50%',
+                          width: 24,
+                          height: 24,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '0.8rem',
+                          fontWeight: 'bold'
+                        }}>
+                          Q
+                        </Box>
+                        Q&A
+                      </Typography>
+                      <Chip 
+                        label="回答済み" 
+                        color="success" 
+                        size="small" 
+                        sx={{ ml: 'auto' }}
+                      />
+                    </Box>
+                    
+                    {/* Q&Aコンテンツ */}
+                    <Typography 
+                      variant="body1" 
+                      sx={{ 
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                        fontFamily: 'inherit',
+                        lineHeight: 1.6,
+                        color: isDarkMode ? 'grey.100' : 'text.primary'
+                      }}
+                    >
+                      {convertUrlsToLinks(post.content)}
+                    </Typography>
+                  </Box>
                   
                   {/* 管理者のみ削除ボタンを表示 */}
                   {user?.role === 'サーバー管理者' && (
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1, gap: 1 }}>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => handleStartAnswer(post.id)}
-                      >
-                        回答を入力
-                      </Button>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                       <IconButton
                         size="small"
                         color="error"
                         onClick={() => handleAnsweredPostDelete(post.id)}
+                        sx={{
+                          backgroundColor: isDarkMode ? 'grey.800' : 'grey.100',
+                          '&:hover': {
+                            backgroundColor: isDarkMode ? 'grey.700' : 'grey.200'
+                          }
+                        }}
                       >
                         <DeleteIcon />
                       </IconButton>
-                    </Box>
-                  )}
-                  
-                  {/* 回答入力フォーム */}
-                  {editingAnswer === post.id && (
-                    <Box sx={{ mt: 2, p: 2, backgroundColor: 'grey.50', borderRadius: 1 }}>
-                      <TextField
-                        fullWidth
-                        multiline
-                        rows={4}
-                        value={answerContent}
-                        onChange={(e) => setAnswerContent(e.target.value)}
-                        placeholder="回答を入力してください..."
-                        variant="outlined"
-                        sx={{ mb: 2 }}
-                      />
-                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          onClick={handleCancelAnswer}
-                        >
-                          キャンセル
-                        </Button>
-                        <Button
-                          size="small"
-                          variant="contained"
-                          onClick={() => handleSubmitAnswer(post.id)}
-                          disabled={!answerContent.trim()}
-                        >
-                          回答を送信
-                        </Button>
-                      </Box>
                     </Box>
                   )}
                 </CardContent>
@@ -1205,6 +1220,13 @@ const ChannelPage: React.FC = () => {
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => handleStartAnswer(post.id)}
+                      >
+                        回答を入力
+                      </Button>
                       <Button
                         size="small"
                         variant="contained"
@@ -1234,6 +1256,42 @@ const ChannelPage: React.FC = () => {
                   >
                     {convertUrlsToLinks(post.content)}
                   </Typography>
+
+                  {/* 回答入力フォーム */}
+                  {editingAnswer === post.id && (
+                    <Box sx={{ mt: 2, p: 2, backgroundColor: isDarkMode ? 'grey.800' : 'grey.50', borderRadius: 1 }}>
+                      <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                        回答を入力:
+                      </Typography>
+                      <TextField
+                        fullWidth
+                        multiline
+                        rows={4}
+                        value={answerContent}
+                        onChange={(e) => setAnswerContent(e.target.value)}
+                        placeholder="回答を入力してください..."
+                        variant="outlined"
+                        sx={{ mb: 2 }}
+                      />
+                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={handleCancelAnswer}
+                        >
+                          キャンセル
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          onClick={() => handleSubmitAnswer(post.id)}
+                          disabled={!answerContent.trim()}
+                        >
+                          回答を保存
+                        </Button>
+                      </Box>
+                    </Box>
+                  )}
                 </CardContent>
               </Card>
             ) : !isQaChannel && !isQaStaffChannel ? (
