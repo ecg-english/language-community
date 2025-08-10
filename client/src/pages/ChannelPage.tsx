@@ -290,6 +290,74 @@ const ChannelPage: React.FC = () => {
     };
   }, [channelId]);
 
+  // リアルタイムでイベントの状態をチェック（過去のイベントを自動的に移動）
+  useEffect(() => {
+    const isEventsChannel = channel?.name === '🗓️ Events';
+    if (!isEventsChannel || posts.length === 0) return;
+
+    const checkEventStatus = () => {
+      const today = new Date().toISOString().split('T')[0];
+      
+      // 現在の投稿から過去のイベントを特定
+      const currentPastEvents = posts.filter(post => 
+        post.event_id && post.event_date && post.event_date < today
+      );
+      
+      // 現在の投稿から今後のイベントを特定
+      const currentUpcomingEvents = posts.filter(post => 
+        !post.event_id || !post.event_date || post.event_date >= today
+      );
+      
+      // 過去のイベントが新しく見つかった場合、状態を更新
+      if (currentPastEvents.length > 0) {
+        console.log('過去のイベントを検出:', currentPastEvents.length, '件');
+        setPastEvents(prev => {
+          const newPastEvents = [...prev, ...currentPastEvents];
+          // 重複を除去
+          const uniquePastEvents = newPastEvents.filter((event, index, self) => 
+            index === self.findIndex(e => e.id === event.id)
+          );
+          return uniquePastEvents;
+        });
+        
+        // メインの投稿リストから過去のイベントを除去
+        setPosts(currentUpcomingEvents);
+        
+        // 過去のイベントが新しく追加された場合、自動的に表示
+        setShowPastEvents(true);
+      }
+    };
+
+    // 初回チェック
+    checkEventStatus();
+    
+    // ページがアクティブな時は30秒ごと、非アクティブな時は1分ごとにチェック
+    let interval: NodeJS.Timeout;
+    
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // ページが非アクティブな時は1分ごと
+        clearInterval(interval);
+        interval = setInterval(checkEventStatus, 60000);
+      } else {
+        // ページがアクティブな時は30秒ごと
+        clearInterval(interval);
+        interval = setInterval(checkEventStatus, 30000);
+      }
+    };
+    
+    // 初期設定
+    handleVisibilityChange();
+    
+    // ページの可視性変更を監視
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [channel?.name, posts, channelId]);
+
   // 投稿権限をチェックする関数
   const checkPostPermission = (channelType: string, userRole: string): boolean => {
     if (userRole === 'Trial参加者') return false;
@@ -1024,52 +1092,45 @@ const ChannelPage: React.FC = () => {
       )}
 
       {/* Eventsチャンネル用の過去のイベントセクション */}
-      {isEventsChannel && (() => {
-        const today = new Date().toISOString().split('T')[0];
-        const pastEvents = posts.filter(post => 
-          post.event_id && post.event_date && post.event_date < today
-        );
-        
-        return pastEvents.length > 0 ? (
-          <Card sx={{ mb: 2, opacity: 0.8 }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, opacity: 0.8 }}>
-                {t('pastEvents')}
-              </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {pastEvents.map((post) => (
-                  <Box key={post.id} sx={{ opacity: 0.7 }}>
-                    {post.event_id ? (
-                      <EventPost
-                        event={{
-                          id: post.event_id,
-                          title: post.content,
-                          description: post.content,
-                          event_date: post.event_date || post.created_at,
-                          start_time: post.start_time || '',
-                          end_time: post.end_time || '',
-                          location: post.location || '',
-                          cover_image: post.image_url,
-                          created_by_name: post.username,
-                          created_by_role: '',
-                          created_at: post.created_at,
-                        }}
-                        canEdit={user?.id === post.user_id || user?.role === 'サーバー管理者'}
-                      />
-                    ) : (
-                      <Card>
-                        <CardContent>
-                          <Typography>{post.content}</Typography>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </Box>
-                ))}
-              </Box>
-            </CardContent>
-          </Card>
-        ) : null;
-      })()}
+      {isEventsChannel && showPastEvents && pastEvents.length > 0 && (
+        <Card sx={{ mb: 2, opacity: 0.8 }}>
+          <CardContent>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, opacity: 0.8 }}>
+              過去のイベント ({pastEvents.length})
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {pastEvents.map((post) => (
+                <Box key={post.id} sx={{ opacity: 0.7 }}>
+                  {post.event_id ? (
+                    <EventPost
+                      event={{
+                        id: post.event_id,
+                        title: post.content,
+                        description: post.content,
+                        event_date: post.event_date || post.created_at,
+                        start_time: post.start_time || '',
+                        end_time: post.end_time || '',
+                        location: post.location || '',
+                        cover_image: post.image_url,
+                        created_by_name: post.username,
+                        created_by_role: '',
+                        created_at: post.created_at,
+                      }}
+                      canEdit={user?.id === post.user_id || user?.role === 'サーバー管理者'}
+                    />
+                  ) : (
+                    <Card>
+                      <CardContent>
+                        <Typography>{post.content}</Typography>
+                      </CardContent>
+                    </Card>
+                  )}
+                </Box>
+              ))}
+            </Box>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Eventsチャンネル専用：過去のイベント表示ボタン */}
       {isEventsChannel && pastEvents.length > 0 && (
