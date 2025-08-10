@@ -259,6 +259,27 @@ const initializeDatabase = () => {
         console.log('Adding event_id column to posts table...');
         db.prepare('ALTER TABLE posts ADD COLUMN event_id INTEGER').run();
       }
+
+      // Q&A関連のカラムを追加
+      if (!postsColumnNames.includes('is_anonymous')) {
+        console.log('Adding is_anonymous column to posts table...');
+        db.prepare('ALTER TABLE posts ADD COLUMN is_anonymous BOOLEAN DEFAULT 0').run();
+      }
+
+      if (!postsColumnNames.includes('question_type')) {
+        console.log('Adding question_type column to posts table...');
+        db.prepare('ALTER TABLE posts ADD COLUMN question_type TEXT').run();
+      }
+
+      if (!postsColumnNames.includes('original_user_id')) {
+        console.log('Adding original_user_id column to posts table...');
+        db.prepare('ALTER TABLE posts ADD COLUMN original_user_id INTEGER').run();
+      }
+
+      if (!postsColumnNames.includes('original_username')) {
+        console.log('Adding original_username column to posts table...');
+        db.prepare('ALTER TABLE posts ADD COLUMN original_username TEXT').run();
+      }
       
       console.log('Posts table migration completed');
     } catch (error) {

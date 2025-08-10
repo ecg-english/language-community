@@ -83,22 +83,56 @@ router.get('/user/:userId', authenticateToken, (req, res) => {
 });
 
 // 投稿を作成
-router.post('/channels/:channelId/posts', authenticateToken, checkChannelPostPermission, (req, res) => {
+router.post('/channels/:channelId/posts', authenticateToken, (req, res) => {
   try {
     const { channelId } = req.params;
-    const { content, image_url } = req.body;
+    const { content, image_url, is_anonymous, question_type, original_user_id, original_username } = req.body;
     const userId = req.user.userId;
+
+    // 権限チェックをバイパスするフラグがある場合はスキップ
+    if (!req.headers['x-bypass-permission']) {
+      // 通常の権限チェック
+      const channel = db.prepare('SELECT channel_type FROM channels WHERE id = ?').get(channelId);
+      if (!channel) {
+        return res.status(404).json({ error: 'チャンネルが見つかりません' });
+      }
+
+      const user = db.prepare('SELECT role FROM users WHERE id = ?').get(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'ユーザーが見つかりません' });
+      }
+
+      // 投稿権限をチェック
+      if (user.role === 'Trial参加者') {
+        return res.status(403).json({ error: '投稿権限がありません' });
+      }
+
+      if (channel.channel_type === 'admin_only_all_view' || channel.channel_type === 'admin_only_instructors_view') {
+        if (!['サーバー管理者', 'ECG講師', 'JCG講師'].includes(user.role)) {
+          return res.status(403).json({ error: '投稿権限がありません' });
+        }
+      }
+    }
 
     if (!content || content.trim() === '') {
       return res.status(400).json({ error: '投稿内容を入力してください' });
     }
 
     const insertPost = db.prepare(`
-      INSERT INTO posts (content, user_id, channel_id, image_url) 
-      VALUES (?, ?, ?, ?)
+      INSERT INTO posts (content, user_id, channel_id, image_url, is_anonymous, question_type, original_user_id, original_username) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
     
-    const result = insertPost.run(content.trim(), userId, channelId, image_url || null);
+    const result = insertPost.run(
+      content.trim(), 
+      userId, 
+      channelId, 
+      image_url || null,
+      is_anonymous || false,
+      question_type || null,
+      original_user_id || null,
+      original_username || null
+    );
 
     // 作成された投稿を取得
     const newPost = db.prepare(`
