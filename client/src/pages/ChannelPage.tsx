@@ -1025,10 +1025,18 @@ const ChannelPage: React.FC = () => {
 
       {/* Eventsチャンネル用の過去のイベントセクション */}
       {isEventsChannel && (() => {
-        const today = new Date().toISOString().split('T')[0];
-        const pastEvents = posts.filter(post => 
-          post.event_id && post.event_date && post.event_date < today
-        );
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // 時間をリセットして日付のみで比較
+        
+        const pastEvents = posts.filter(post => {
+          if (!post.event_id || !post.event_date) return false;
+          
+          // イベント日付をDateオブジェクトに変換
+          const eventDate = new Date(post.event_date);
+          eventDate.setHours(0, 0, 0, 0);
+          
+          return eventDate < today;
+        });
         
         return pastEvents.length > 0 ? (
           <Card sx={{ mb: 2, opacity: 0.8 }}>
@@ -1093,17 +1101,35 @@ const ChannelPage: React.FC = () => {
 
       {/* 投稿一覧 */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {posts.length === 0 ? (
-          <Card>
-            <CardContent sx={{ textAlign: 'center', py: 4 }}>
-              <Typography variant="h6" color="text.secondary">
-                {t('noPosts')}
-              </Typography>
-            </CardContent>
-          </Card>
-        ) : (
-          posts.map((post) => (
-            isEventsChannel ? (
+        {(() => {
+          // Eventsチャンネルの場合、過去のイベントを除外した投稿を表示
+          let filteredPosts = posts;
+          if (isEventsChannel) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            filteredPosts = posts.filter(post => {
+              if (!post.event_id || !post.event_date) return true; // イベントでない投稿は表示
+              
+              // イベント日付をDateオブジェクトに変換
+              const eventDate = new Date(post.event_date);
+              eventDate.setHours(0, 0, 0, 0);
+              
+              return eventDate >= today; // 今日以降のイベントのみ表示
+            });
+          }
+          
+          return filteredPosts.length === 0 ? (
+            <Card>
+              <CardContent sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="h6" color="text.secondary">
+                  {t('noPosts')}
+                </Typography>
+              </CardContent>
+            </Card>
+          ) : (
+            filteredPosts.map((post) => {
+              if (isEventsChannel) {
               // Eventsチャンネルの場合、イベント投稿コンポーネントを使用
               post.event_id ? (
                 // event_idがある場合は、実際のイベントデータを取得して表示
