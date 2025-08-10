@@ -33,7 +33,8 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useMonthlyNotification } from '../../hooks/useMonthlyNotification';
 import MonthlyUpdateDialog from '../MonthlyUpdateDialog';
-import Sidebar from './Sidebar';
+import ChannelSidebar from '../ChannelSidebar/ChannelSidebar';
+import { useCommunity } from '../../contexts/CommunityContext';
 
 interface LayoutProps {
   children: ReactNode;
@@ -49,6 +50,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { notification, refetch } = useMonthlyNotification();
   const [monthlyDialogOpen, setMonthlyDialogOpen] = React.useState(false);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const { categories, channels } = useCommunity();
+
+  // ChannelSidebar用のデータ形式に変換
+  const sidebarCategories = React.useMemo(() => {
+    return categories.map(category => ({
+      id: category.id,
+      name: category.name,
+      is_collapsed: category.is_collapsed,
+      channels: channels[category.id] || []
+    }));
+  }, [categories, channels]);
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -387,8 +399,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {children}
       </Box>
 
-      {/* サイドバー */}
-      <Sidebar open={sidebarOpen} onClose={handleSidebarClose} />
+      {/* チャンネルサイドバー */}
+      <ChannelSidebar 
+        open={sidebarOpen} 
+        onClose={handleSidebarClose}
+        categories={sidebarCategories}
+      />
       
       {/* 月次通知ダイアログ */}
       <MonthlyUpdateDialog
