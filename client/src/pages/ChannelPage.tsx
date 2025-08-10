@@ -676,7 +676,12 @@ const ChannelPage: React.FC = () => {
 
       if (qaChannel) {
         const questionPost = posts.find(p => p.id === postId);
-        const qaContent = `Q: ${questionPost?.content}\n\n質問者: ${questionPost?.is_anonymous ? '匿名' : questionPost?.username}\n\nA: [回答を入力してください]`;
+        console.log('Q&A転送 - 元の質問投稿:', questionPost);
+        console.log('Q&A転送 - is_anonymous:', questionPost?.is_anonymous);
+        console.log('Q&A転送 - username:', questionPost?.username);
+        
+        const qaContent = `Q: ${questionPost?.content}\n\n質問者: ${questionPost?.is_anonymous ? '匿名' : questionPost?.username}\n\nA: ${answerContent}`;
+        console.log('Q&A転送 - 作成されるコンテンツ:', qaContent);
         
         await axios.post(`/api/posts/channels/${qaChannel.id}/posts`, {
           content: qaContent,
@@ -760,8 +765,13 @@ const ChannelPage: React.FC = () => {
         return;
       }
 
+      console.log('回答入力 - 元の質問投稿:', questionPost);
+      console.log('回答入力 - is_anonymous:', questionPost.is_anonymous);
+      console.log('回答入力 - username:', questionPost.username);
+
       // Q&A形式のコンテンツを作成
       const qaContent = `Q: ${questionPost.content}\n\n質問者: ${questionPost.is_anonymous ? '匿名' : questionPost.username}\n\nA: ${answerContent}`;
+      console.log('回答入力 - 作成されるコンテンツ:', qaContent);
 
       // 回答を投稿として送信
       const numChannelId = parseInt(channelId || '0');
