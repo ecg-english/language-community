@@ -24,6 +24,7 @@ import {
   History as HistoryIcon,
   LightMode as LightModeIcon,
   DarkMode as DarkModeIcon,
+  Menu as MenuIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -32,6 +33,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useMonthlyNotification } from '../../hooks/useMonthlyNotification';
 import MonthlyUpdateDialog from '../MonthlyUpdateDialog';
+import Sidebar from './Sidebar';
 
 interface LayoutProps {
   children: ReactNode;
@@ -46,6 +48,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const { notification, refetch } = useMonthlyNotification();
   const [monthlyDialogOpen, setMonthlyDialogOpen] = React.useState(false);
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -77,6 +80,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const handleLanguageChange = (event: any) => {
     changeLanguage(event.target.value);
+  };
+
+  const handleSidebarToggle = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  const handleSidebarClose = () => {
+    setSidebarOpen(false);
   };
 
   // 月次通知の表示
@@ -137,6 +148,20 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <Container maxWidth="lg">
           <Toolbar sx={{ px: { xs: 0, sm: 2 } }}>
             <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+              {/* ハンバーガーメニューボタン */}
+              <IconButton
+                onClick={handleSidebarToggle}
+                sx={{
+                  mr: 2,
+                  p: { xs: 1, sm: 1.5 },
+                  '&:hover': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                  },
+                }}
+              >
+                <MenuIcon />
+              </IconButton>
+              
               <Typography
                 variant="h6"
                 component="div"
@@ -362,6 +387,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {children}
       </Box>
 
+      {/* サイドバー */}
+      <Sidebar open={sidebarOpen} onClose={handleSidebarClose} />
+      
       {/* 月次通知ダイアログ */}
       <MonthlyUpdateDialog
         open={monthlyDialogOpen}
