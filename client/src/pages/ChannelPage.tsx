@@ -591,10 +591,21 @@ const ChannelPage: React.FC = () => {
       setIsSubmitting(true);
       
       // Q&A投稿をスタッフチャンネルに送信
-      const staffChannelResponse = await axios.get('/api/channels/channels');
-      const staffChannel = staffChannelResponse.data.channels.find(
-        (ch: any) => ch.name === '【要確認】みんなからの質問など'
-      );
+      // まず全てのカテゴリを取得
+      const categoriesResponse = await axios.get('/api/channels/categories');
+      let staffChannel = null;
+      
+      // 各カテゴリからスタッフチャンネルを探す
+      for (const category of categoriesResponse.data.categories) {
+        const channelsResponse = await axios.get(`/api/channels/categories/${category.id}/channels`);
+        const foundChannel = channelsResponse.data.channels.find(
+          (ch: any) => ch.name === '【要確認】みんなからの質問など'
+        );
+        if (foundChannel) {
+          staffChannel = foundChannel;
+          break;
+        }
+      }
 
       if (staffChannel) {
         await axios.post(`/api/posts/channels/${staffChannel.id}/posts`, {
@@ -611,6 +622,8 @@ const ChannelPage: React.FC = () => {
         
         // 3秒後に成功メッセージを非表示
         setTimeout(() => setShowQaSuccess(false), 3000);
+      } else {
+        setError('スタッフチャンネルが見つかりません');
       }
     } catch (error: any) {
       console.error('Q&A投稿に失敗しました:', error);
@@ -623,10 +636,21 @@ const ChannelPage: React.FC = () => {
   const handleQaTransfer = async (postId: number) => {
     try {
       // Q&A投稿を通常チャンネルに転送
-      const qaChannelResponse = await axios.get('/api/channels/channels');
-      const qaChannel = qaChannelResponse.data.channels.find(
-        (ch: any) => ch.name === '💬 Q&A / Help Desk'
-      );
+      // まず全てのカテゴリを取得
+      const categoriesResponse = await axios.get('/api/channels/categories');
+      let qaChannel = null;
+      
+      // 各カテゴリからQ&Aチャンネルを探す
+      for (const category of categoriesResponse.data.categories) {
+        const channelsResponse = await axios.get(`/api/channels/categories/${category.id}/channels`);
+        const foundChannel = channelsResponse.data.channels.find(
+          (ch: any) => ch.name === '💬 Q&A / Help Desk'
+        );
+        if (foundChannel) {
+          qaChannel = foundChannel;
+          break;
+        }
+      }
 
       if (qaChannel) {
         await axios.post(`/api/posts/channels/${qaChannel.id}/posts`, {
@@ -643,6 +667,8 @@ const ChannelPage: React.FC = () => {
           const numChannelId = parseInt(channelId);
           loadPosts(numChannelId);
         }
+      } else {
+        setError('Q&Aチャンネルが見つかりません');
       }
     } catch (error: any) {
       console.error('Q&A転送に失敗しました:', error);
