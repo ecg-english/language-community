@@ -63,6 +63,7 @@ interface Post {
   start_time?: string;
   end_time?: string;
   location?: string;
+  is_anonymous?: boolean; // Q&Aチャンネル用の匿名フラグ
 }
 
 interface Comment {
@@ -117,6 +118,11 @@ const ChannelPage: React.FC = () => {
   const [pastEvents, setPastEvents] = useState<Post[]>([]);
   const [postModalOpen, setPostModalOpen] = useState(false);
   const [modalNewPost, setModalNewPost] = useState('');
+  const [qaModalOpen, setQaModalOpen] = useState(false);
+  const [qaContent, setQaContent] = useState('');
+  const [isAnonymousQa, setIsAnonymousQa] = useState(false);
+  const [showQaSuccess, setShowQaSuccess] = useState(false);
+  const [showAnsweredQa, setShowAnsweredQa] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -553,6 +559,8 @@ const ChannelPage: React.FC = () => {
   };
 
   const isEventsChannel = channel?.name === '🗓️ Events';
+  const isQaChannel = channel?.name === '💬 Q&A / Help Desk';
+  const isQaStaffChannel = channel?.name === '【要確認】みんなからの質問など';
 
   const loadPosts = async (channelId: number) => {
     try {
@@ -573,6 +581,89 @@ const ChannelPage: React.FC = () => {
     if (channelId) {
       const numChannelId = parseInt(channelId);
       loadPosts(numChannelId);
+    }
+  };
+
+  const handleQaSubmit = async () => {
+    if (!qaContent.trim()) return;
+
+    try {
+      setIsSubmitting(true);
+      
+      // Q&A投稿をスタッフチャンネルに送信
+      const staffChannelResponse = await axios.get('/api/channels/channels');
+      const staffChannel = staffChannelResponse.data.channels.find(
+        (ch: any) => ch.name === '【要確認】みんなからの質問など'
+      );
+
+      if (staffChannel) {
+        await axios.post(`/api/posts/channels/${staffChannel.id}/posts`, {
+          content: qaContent,
+          is_anonymous: isAnonymousQa,
+          question_type: 'qa',
+          original_user_id: user?.id,
+          original_username: user?.username
+        });
+
+        setQaContent('');
+        setQaModalOpen(false);
+        setShowQaSuccess(true);
+        
+        // 3秒後に成功メッセージを非表示
+        setTimeout(() => setShowQaSuccess(false), 3000);
+      }
+    } catch (error: any) {
+      console.error('Q&A投稿に失敗しました:', error);
+      setError(error.response?.data?.error || 'Q&A投稿に失敗しました');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleQaTransfer = async (postId: number) => {
+    try {
+      // Q&A投稿を通常チャンネルに転送
+      const qaChannelResponse = await axios.get('/api/channels/channels');
+      const qaChannel = qaChannelResponse.data.channels.find(
+        (ch: any) => ch.name === '💬 Q&A / Help Desk'
+      );
+
+      if (qaChannel) {
+        await axios.post(`/api/posts/channels/${qaChannel.id}/posts`, {
+          content: `Q: ${posts.find(p => p.id === postId)?.content}\n\nA: [回答を入力してください]`,
+          is_answered: true,
+          original_question_id: postId
+        });
+
+        // 元の投稿を削除
+        await axios.delete(`/api/posts/posts/${postId}`);
+        
+        // 投稿を再読み込み
+        if (channelId) {
+          const numChannelId = parseInt(channelId);
+          loadPosts(numChannelId);
+        }
+      }
+    } catch (error: any) {
+      console.error('Q&A転送に失敗しました:', error);
+      setError(error.response?.data?.error || 'Q&A転送に失敗しました');
+    }
+  };
+
+  const handleQaReject = async (postId: number) => {
+    if (window.confirm('この質問を回答拒否として削除しますか？')) {
+      try {
+        await axios.delete(`/api/posts/posts/${postId}`);
+        
+        // 投稿を再読み込み
+        if (channelId) {
+          const numChannelId = parseInt(channelId);
+          loadPosts(numChannelId);
+        }
+      } catch (error: any) {
+        console.error('Q&A削除に失敗しました:', error);
+        setError(error.response?.data?.error || 'Q&A削除に失敗しました');
+      }
     }
   };
 
@@ -690,7 +781,7 @@ const ChannelPage: React.FC = () => {
       </Box>
 
       {/* 特殊チャンネル用投稿フォーム */}
-      {canPost && (isEventsChannel || channel?.name === '🙋 Introduce Yourself') && (
+      {canPost && (isEventsChannel || channel?.name === '🙋 Introduce Yourself' || isQaChannel) && (
         <Card sx={{ mb: 4 }}>
           <CardContent>
             {isEventsChannel ? (
@@ -747,9 +838,41 @@ const ChannelPage: React.FC = () => {
                   </Button>
                 </Box>
               </Box>
+            ) : isQaChannel ? (
+              // Q&Aチャンネルの場合、質問投稿フォームを表示
+              <Box>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                  質問を投稿
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                  <Button
+                    variant="outlined"
+                    onClick={() => setQaModalOpen(true)}
+                    sx={{
+                      py: 1.5,
+                      px: 3,
+                      borderRadius: 2,
+                      fontWeight: 600,
+                    }}
+                  >
+                    質問を投稿
+                  </Button>
+                </Box>
+              </Box>
             ) : null}
           </CardContent>
         </Card>
+      )}
+
+      {/* Q&A成功メッセージ */}
+      {showQaSuccess && (
+        <Alert 
+          severity="success" 
+          sx={{ mb: 2 }}
+          onClose={() => setShowQaSuccess(false)}
+        >
+          送信完了！回答までしばらくお待ちください！
+        </Alert>
       )}
 
       {/* Eventsチャンネル用の過去のイベントセクション */}
@@ -836,23 +959,23 @@ const ChannelPage: React.FC = () => {
               // Eventsチャンネルの場合、イベント投稿コンポーネントを使用
               post.event_id ? (
                 // event_idがある場合は、実際のイベントデータを取得して表示
-                              <EventPost
-                key={post.id}
-                event={{
-                  id: post.event_id,
-                  title: post.content,
-                  description: post.content,
-                  event_date: post.event_date || post.created_at, // イベント日付を優先
-                  start_time: post.start_time || '',
-                  end_time: post.end_time || '',
-                  location: post.location || '',
-                  cover_image: post.image_url,
-                  created_by_name: post.username,
-                  created_by_role: '',
-                  created_at: post.created_at,
-                }}
-                canEdit={user?.id === post.user_id || user?.role === 'サーバー管理者'}
-              />
+                <EventPost
+                  key={post.id}
+                  event={{
+                    id: post.event_id,
+                    title: post.content,
+                    description: post.content,
+                    event_date: post.event_date || post.created_at, // イベント日付を優先
+                    start_time: post.start_time || '',
+                    end_time: post.end_time || '',
+                    location: post.location || '',
+                    cover_image: post.image_url,
+                    created_by_name: post.username,
+                    created_by_role: '',
+                    created_at: post.created_at,
+                  }}
+                  canEdit={user?.id === post.user_id || user?.role === 'サーバー管理者'}
+                />
               ) : (
                 // event_idがない場合は、通常の投稿として表示
                 <Card key={post.id}>
@@ -879,6 +1002,91 @@ const ChannelPage: React.FC = () => {
                   </CardContent>
                 </Card>
               )
+            ) : isQaChannel ? (
+              // Q&Aチャンネルの場合、回答済みQ&Aを表示
+              <Card key={post.id}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                    <Avatar 
+                      sx={{ bgcolor: 'success.main' }}
+                      src={post.avatar_url}
+                    >
+                      {post.username.charAt(0).toUpperCase()}
+                    </Avatar>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        {post.username}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {formatDate(post.created_at)}
+                      </Typography>
+                    </Box>
+                    <Chip label="回答済み" color="success" size="small" />
+                  </Box>
+                  
+                  <Typography 
+                    variant="body1" 
+                    sx={{ 
+                      mb: 2,
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word'
+                    }}
+                  >
+                    {convertUrlsToLinks(post.content)}
+                  </Typography>
+                </CardContent>
+              </Card>
+            ) : isQaStaffChannel ? (
+              // Q&Aスタッフチャンネルの場合、質問を表示
+              <Card key={post.id}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                    <Avatar 
+                      sx={{ bgcolor: 'warning.main' }}
+                      src={post.avatar_url}
+                    >
+                      {post.is_anonymous ? '匿' : post.username.charAt(0).toUpperCase()}
+                    </Avatar>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        {post.is_anonymous ? '[匿名]' : post.username}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {formatDate(post.created_at)}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        color="primary"
+                        onClick={() => handleQaTransfer(post.id)}
+                      >
+                        転送
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color="error"
+                        onClick={() => handleQaReject(post.id)}
+                      >
+                        回答拒否
+                      </Button>
+                    </Box>
+                  </Box>
+                  
+                  <Typography 
+                    variant="body1" 
+                    sx={{ 
+                      mb: 2,
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word'
+                    }}
+                  >
+                    {convertUrlsToLinks(post.content)}
+                  </Typography>
+                </CardContent>
+              </Card>
             ) : (
               // 通常の投稿
               <Card key={post.id}>
@@ -1221,6 +1429,87 @@ const ChannelPage: React.FC = () => {
             startIcon={<SendIcon />}
           >
             {isSubmitting ? t('loading') : t('post')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Q&A投稿モーダル */}
+      <Dialog
+        open={qaModalOpen}
+        onClose={() => setQaModalOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          質問を投稿
+        </DialogTitle>
+        <DialogContent>
+          {/* 匿名/通常切り替えボタン */}
+          <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                variant={!isAnonymousQa ? "contained" : "outlined"}
+                size="small"
+                onClick={() => setIsAnonymousQa(false)}
+                sx={{ fontSize: '0.75rem' }}
+              >
+                通常質問
+              </Button>
+              <Button
+                variant={isAnonymousQa ? "contained" : "outlined"}
+                size="small"
+                onClick={() => setIsAnonymousQa(true)}
+                sx={{ fontSize: '0.75rem' }}
+              >
+                匿名質問
+              </Button>
+            </Box>
+          </Box>
+
+          <TextField
+            fullWidth
+            multiline
+            rows={6}
+            value={qaContent}
+            onChange={(e) => setQaContent(e.target.value)}
+            placeholder="質問内容を入力してください..."
+            variant="outlined"
+            sx={{ 
+              mt: 1, 
+              mb: 2,
+              backgroundColor: isAnonymousQa ? 'rgba(255, 193, 7, 0.1)' : 'rgba(25, 118, 210, 0.1)',
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: isAnonymousQa ? 'rgba(255, 193, 7, 0.3)' : 'rgba(25, 118, 210, 0.3)',
+                },
+                '&:hover fieldset': {
+                  borderColor: isAnonymousQa ? 'rgba(255, 193, 7, 0.5)' : 'rgba(25, 118, 210, 0.5)',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: isAnonymousQa ? '#ffc107' : '#1976d2',
+                },
+              },
+            }}
+          />
+
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {isAnonymousQa ? 
+              '匿名質問として投稿されます。質問者名は[匿名]と表示されます。' : 
+              '通常質問として投稿されます。質問者名が表示されます。'
+            }
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setQaModalOpen(false)} disabled={isSubmitting}>
+            キャンセル
+          </Button>
+          <Button 
+            onClick={handleQaSubmit}
+            variant="contained"
+            disabled={!qaContent.trim() || isSubmitting}
+            startIcon={<SendIcon />}
+          >
+            {isSubmitting ? '送信中...' : '送信'}
           </Button>
         </DialogActions>
       </Dialog>
