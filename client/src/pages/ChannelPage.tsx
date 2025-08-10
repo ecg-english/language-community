@@ -969,7 +969,7 @@ const ChannelPage: React.FC = () => {
               // Q&Aチャンネルの場合、質問投稿フォームを表示
               <Box>
                 <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                  質問を投稿
+                  {t('postQuestion')}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                   <Button
@@ -982,7 +982,7 @@ const ChannelPage: React.FC = () => {
                       fontWeight: 600,
                     }}
                   >
-                    質問を投稿
+                    {t('postQuestion')}
                   </Button>
                 </Box>
               </Box>
@@ -990,7 +990,7 @@ const ChannelPage: React.FC = () => {
               // Q&Aスタッフチャンネルの場合、質問投稿フォームを表示
               <Box>
                 <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                  質問を投稿
+                  {t('postQuestion')}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                   <Button
@@ -1003,7 +1003,7 @@ const ChannelPage: React.FC = () => {
                       fontWeight: 600,
                     }}
                   >
-                    質問を投稿
+                    {t('postQuestion')}
                   </Button>
                 </Box>
               </Box>
@@ -1019,7 +1019,7 @@ const ChannelPage: React.FC = () => {
           sx={{ mb: 2 }}
           onClose={() => setShowQaSuccess(false)}
         >
-          送信完了！回答までしばらくお待ちください！
+          {t('submissionComplete')}
         </Alert>
       )}
 
@@ -1196,7 +1196,7 @@ const ChannelPage: React.FC = () => {
                         Q&A
                       </Typography>
                       <Chip 
-                        label="回答済み" 
+                        label={t('answered')} 
                         color="success" 
                         size="small" 
                         sx={{ ml: 'auto' }}
@@ -1262,24 +1262,39 @@ const ChannelPage: React.FC = () => {
                         size="small"
                         variant="outlined"
                         onClick={() => handleStartAnswer(post.id)}
+                        sx={{
+                          fontSize: { xs: '0.7rem', sm: '0.8rem' },
+                          px: { xs: 1, sm: 2 },
+                          py: { xs: 0.5, sm: 1 }
+                        }}
                       >
-                        回答を入力
+                        {t('enterAnswer')}
                       </Button>
                       <Button
                         size="small"
                         variant="contained"
                         color="primary"
                         onClick={() => handleQaTransfer(post.id)}
+                        sx={{
+                          fontSize: { xs: '0.7rem', sm: '0.8rem' },
+                          px: { xs: 1, sm: 2 },
+                          py: { xs: 0.5, sm: 1 }
+                        }}
                       >
-                        転送
+                        {t('transfer')}
                       </Button>
                       <Button
                         size="small"
                         variant="outlined"
                         color="error"
                         onClick={() => handleQaReject(post.id)}
+                        sx={{
+                          fontSize: { xs: '0.7rem', sm: '0.8rem' },
+                          px: { xs: 1, sm: 2 },
+                          py: { xs: 0.5, sm: 1 }
+                        }}
                       >
-                        回答拒否
+                        {t('rejectAnswer')}
                       </Button>
                     </Box>
                   </Box>
@@ -1297,9 +1312,9 @@ const ChannelPage: React.FC = () => {
 
                   {/* 回答入力フォーム */}
                   {editingAnswer === post.id && (
-                    <Box sx={{ mt: 2, p: 2, backgroundColor: isDarkMode ? 'grey.800' : 'grey.50', borderRadius: 1 }}>
-                      <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                        回答を入力:
+                    <Box sx={{ mt: 2, p: { xs: 1, sm: 2 }, backgroundColor: isDarkMode ? 'grey.800' : 'grey.50', borderRadius: 1 }}>
+                      <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600, fontSize: { xs: '0.8rem', sm: '1rem' } }}>
+                        {t('answerInput')}
                       </Typography>
                       <TextField
                         fullWidth
@@ -1311,21 +1326,31 @@ const ChannelPage: React.FC = () => {
                         variant="outlined"
                         sx={{ mb: 2 }}
                       />
-                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                         <Button
                           size="small"
                           variant="outlined"
                           onClick={handleCancelAnswer}
+                          sx={{
+                            fontSize: { xs: '0.7rem', sm: '0.8rem' },
+                            px: { xs: 1, sm: 2 },
+                            py: { xs: 0.5, sm: 1 }
+                          }}
                         >
-                          キャンセル
+                          {t('cancel')}
                         </Button>
                         <Button
                           size="small"
                           variant="contained"
                           onClick={() => handleSubmitAnswer(post.id)}
                           disabled={!answerContent.trim()}
+                          sx={{
+                            fontSize: { xs: '0.7rem', sm: '0.8rem' },
+                            px: { xs: 1, sm: 2 },
+                            py: { xs: 0.5, sm: 1 }
+                          }}
                         >
-                          回答を保存
+                          {t('saveAnswer')}
                         </Button>
                       </Box>
                     </Box>
@@ -1686,7 +1711,7 @@ const ChannelPage: React.FC = () => {
         fullWidth
       >
         <DialogTitle>
-          質問を投稿
+          {t('postQuestion')}
         </DialogTitle>
         <DialogContent>
           {/* 匿名/通常切り替えボタン */}
@@ -1698,7 +1723,7 @@ const ChannelPage: React.FC = () => {
                 onClick={() => setIsAnonymousQa(false)}
                 sx={{ fontSize: '0.75rem' }}
               >
-                通常質問
+                {t('normalQuestion')}
               </Button>
               <Button
                 variant={isAnonymousQa ? "contained" : "outlined"}
@@ -1706,7 +1731,7 @@ const ChannelPage: React.FC = () => {
                 onClick={() => setIsAnonymousQa(true)}
                 sx={{ fontSize: '0.75rem' }}
               >
-                匿名質問
+                {t('anonymousQuestion')}
               </Button>
             </Box>
           </Box>
@@ -1717,7 +1742,7 @@ const ChannelPage: React.FC = () => {
             rows={6}
             value={qaContent}
             onChange={(e) => setQaContent(e.target.value)}
-            placeholder="質問内容を入力してください..."
+            placeholder={t('questionContent')}
             variant="outlined"
             sx={{ 
               mt: 1, 
@@ -1739,14 +1764,14 @@ const ChannelPage: React.FC = () => {
 
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             {isAnonymousQa ? 
-              '匿名質問として投稿されます。質問者名は[匿名]と表示されます。' : 
-              '通常質問として投稿されます。質問者名が表示されます。'
+              t('anonymousQuestionNote') : 
+              t('normalQuestionNote')
             }
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setQaModalOpen(false)} disabled={isSubmitting}>
-            キャンセル
+            {t('cancel')}
           </Button>
           <Button 
             onClick={handleQaSubmit}
@@ -1754,7 +1779,7 @@ const ChannelPage: React.FC = () => {
             disabled={!qaContent.trim() || isSubmitting}
             startIcon={<SendIcon />}
           >
-            {isSubmitting ? '送信中...' : '送信'}
+            {isSubmitting ? t('loading') : t('post')}
           </Button>
         </DialogActions>
       </Dialog>

@@ -159,6 +159,22 @@ const en = {
     coverImagePreview: 'Cover image preview',
     pastEvents: 'Past Events',
     
+    // Q&A System
+    postQuestion: 'Post Question',
+    answered: 'Answered',
+    normalQuestion: 'Normal Question',
+    anonymousQuestion: 'Anonymous Question',
+    questionContent: 'Please enter your question content...',
+    enterAnswer: 'Enter Answer',
+    transfer: 'Transfer',
+    rejectAnswer: 'Reject Answer',
+    answerInput: 'Answer Input:',
+    saveAnswer: 'Save Answer',
+    questioner: 'Questioner',
+    anonymous: 'Anonymous',
+    submissionComplete: 'Submission complete! Please wait for a response!',
+    anonymousQuestionNote: 'This will be posted as an anonymous question. The questioner name will be displayed as [Anonymous].',
+    normalQuestionNote: 'This will be posted as a normal question. The questioner name will be displayed.',
 
     
     // Monthly History
@@ -377,6 +393,24 @@ const ja = {
     coverImagePreview: 'カバー画像プレビュー',
     pastEvents: '過去のイベント',
 
+    // Q&Aシステム
+    postQuestion: '質問を投稿',
+    answered: '回答済み',
+    normalQuestion: '通常質問',
+    anonymousQuestion: '匿名質問',
+    questionContent: '質問内容を入力してください...',
+    enterAnswer: '回答を入力',
+    transfer: '転送',
+    rejectAnswer: '回答拒否',
+    answerInput: '回答を入力:',
+    saveAnswer: '回答を保存',
+    questioner: '質問者',
+    anonymous: '匿名',
+    submissionComplete: '送信完了！回答までしばらくお待ちください！',
+    anonymousQuestionNote: '匿名質問として投稿されます。質問者名は[匿名]と表示されます。',
+    normalQuestionNote: '通常質問として投稿されます。質問者名が表示されます。',
+
+    
     // 月次履歴
     monthlyHistoryTitle: '月次振り返り・目標履歴',
     monthlyHistoryDescription: 'これまでに記録した月次振り返りと目標の履歴を確認できます',
@@ -591,6 +625,24 @@ const jaSimple = {
     selectCoverImage: 'カバーがぞうをせんたくしてください',
     coverImagePreview: 'カバーがぞうプレビュー',
     pastEvents: 'かこのイベント',
+    
+    // Q&Aシステム
+    postQuestion: 'しつもんをとうこう',
+    answered: 'かいとうずみ',
+    normalQuestion: 'つうじょうしつもん',
+    anonymousQuestion: 'とくめいしつもん',
+    questionContent: 'しつもんないようをにゅうりょくしてください...',
+    enterAnswer: 'かいとうをにゅうりょく',
+    transfer: 'てんそう',
+    rejectAnswer: 'かいとうきょひ',
+    answerInput: 'かいとうをにゅうりょく:',
+    saveAnswer: 'かいとうをほぞん',
+    questioner: 'しつもんしゃ',
+    anonymous: 'とくめい',
+    submissionComplete: 'そうしんかんりょう！かいとうまでしばらくおまちください！',
+    anonymousQuestionNote: 'とくめいしつもんとしてとうこうされます。しつもんしゃめいは[とくめい]とひょうじされます。',
+    normalQuestionNote: 'つうじょうしつもんとしてとうこうされます。しつもんしゃめいがひょうじされます。',
+
     
     // 月次履歴
     monthlyHistoryTitle: 'げつじふりかえり・もくひょうれきし',
