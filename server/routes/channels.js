@@ -91,6 +91,12 @@ router.get('/categories/:categoryId/channels', authenticateToken, (req, res) => 
       ORDER BY c.display_order ASC, c.created_at ASC
     `).all(categoryId);
 
+    // 権限チェックをバイパスするフラグがある場合は全チャンネルを返す
+    if (req.headers['x-bypass-permission']) {
+      console.log('権限チェックをバイパスして全チャンネルを返します');
+      return res.json({ channels: allChannels });
+    }
+
     // ユーザーの権限に基づいてチャンネルをフィルタリング
     const filteredChannels = allChannels.filter(channel => {
       switch (channel.channel_type) {

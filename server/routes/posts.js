@@ -128,7 +128,7 @@ router.post('/channels/:channelId/posts', authenticateToken, (req, res) => {
       userId, 
       channelId, 
       image_url || null,
-      is_anonymous || false,
+      is_anonymous === true ? 1 : 0,
       question_type || null,
       original_user_id || null,
       original_username || null
