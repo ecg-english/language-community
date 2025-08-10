@@ -124,6 +124,8 @@ const ChannelPage: React.FC = () => {
   const [isAnonymousQa, setIsAnonymousQa] = useState(false);
   const [showQaSuccess, setShowQaSuccess] = useState(false);
   const [showAnsweredQa, setShowAnsweredQa] = useState(false);
+  const [editingAnswer, setEditingAnswer] = useState<number | null>(null);
+  const [answerContent, setAnswerContent] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -654,8 +656,11 @@ const ChannelPage: React.FC = () => {
       }
 
       if (qaChannel) {
+        const questionPost = posts.find(p => p.id === postId);
+        const qaContent = `Q: ${questionPost?.content}\n\n質問者: ${questionPost?.is_anonymous ? '[匿名]' : questionPost?.username}\n\nA: [回答を入力してください]`;
+        
         await axios.post(`/api/posts/channels/${qaChannel.id}/posts`, {
-          content: `Q: ${posts.find(p => p.id === postId)?.content}\n\nA: [回答を入力してください]`,
+          content: qaContent,
           is_answered: true,
           original_question_id: postId
         });
@@ -709,6 +714,44 @@ const ChannelPage: React.FC = () => {
         console.error('回答済み投稿の削除に失敗しました:', error);
         setError(error.response?.data?.error || '回答済み投稿の削除に失敗しました');
       }
+    }
+  };
+
+  // 回答入力開始
+  const handleStartAnswer = (postId: number) => {
+    setEditingAnswer(postId);
+    setAnswerContent('');
+  };
+
+  // 回答入力キャンセル
+  const handleCancelAnswer = () => {
+    setEditingAnswer(null);
+    setAnswerContent('');
+  };
+
+  // 回答送信
+  const handleSubmitAnswer = async (postId: number) => {
+    if (!answerContent.trim()) return;
+
+    try {
+      // 回答を投稿として送信
+      await axios.post(`/api/posts/channels/${channelId}/posts`, {
+        content: answerContent,
+        is_answer: true,
+        original_question_id: postId
+      });
+
+      setEditingAnswer(null);
+      setAnswerContent('');
+      
+      // 投稿を再読み込み
+      if (channelId) {
+        const numChannelId = parseInt(channelId);
+        loadPosts(numChannelId);
+      }
+    } catch (error: any) {
+      console.error('回答送信に失敗しました:', error);
+      setError(error.response?.data?.error || '回答送信に失敗しました');
     }
   };
 
@@ -904,6 +947,27 @@ const ChannelPage: React.FC = () => {
                   </Button>
                 </Box>
               </Box>
+            ) : isQaStaffChannel ? (
+              // Q&Aスタッフチャンネルの場合、質問投稿フォームを表示
+              <Box>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                  質問を投稿
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                  <Button
+                    variant="outlined"
+                    onClick={() => setQaModalOpen(true)}
+                    sx={{
+                      py: 1.5,
+                      px: 3,
+                      borderRadius: 2,
+                      fontWeight: 600,
+                    }}
+                  >
+                    質問を投稿
+                  </Button>
+                </Box>
+              </Box>
             ) : null}
           </CardContent>
         </Card>
@@ -1048,50 +1112,77 @@ const ChannelPage: React.FC = () => {
                 </Card>
               )
             ) : isQaChannel ? (
-              // Q&Aチャンネルの場合、回答済みQ&Aを表示
-              <Card key={post.id}>
+              // Q&Aチャンネルの場合、Q&A形式で表示
+              <Card key={post.id} sx={{ mb: 2 }}>
                 <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
-                    <Avatar 
-                      sx={{ bgcolor: 'success.main' }}
-                      src={post.avatar_url}
-                    >
-                      {post.username.charAt(0).toUpperCase()}
-                    </Avatar>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                        {post.username}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {formatDate(post.created_at)}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Chip label="回答済み" color="success" size="small" />
-                      {/* 管理者のみ削除ボタンを表示 */}
-                      {user?.role === 'サーバー管理者' && (
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => handleAnsweredPostDelete(post.id)}
-                          sx={{ ml: 1 }}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      )}
-                    </Box>
-                  </Box>
-                  
                   <Typography 
                     variant="body1" 
                     sx={{ 
-                      mb: 2,
                       whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word'
+                      wordBreak: 'break-word',
+                      fontFamily: 'monospace',
+                      backgroundColor: 'grey.50',
+                      p: 2,
+                      borderRadius: 1,
+                      border: '1px solid',
+                      borderColor: 'grey.300'
                     }}
                   >
                     {convertUrlsToLinks(post.content)}
                   </Typography>
+                  
+                  {/* 管理者のみ削除ボタンを表示 */}
+                  {user?.role === 'サーバー管理者' && (
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1, gap: 1 }}>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => handleStartAnswer(post.id)}
+                      >
+                        回答を入力
+                      </Button>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleAnsweredPostDelete(post.id)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
+                  )}
+                  
+                  {/* 回答入力フォーム */}
+                  {editingAnswer === post.id && (
+                    <Box sx={{ mt: 2, p: 2, backgroundColor: 'grey.50', borderRadius: 1 }}>
+                      <TextField
+                        fullWidth
+                        multiline
+                        rows={4}
+                        value={answerContent}
+                        onChange={(e) => setAnswerContent(e.target.value)}
+                        placeholder="回答を入力してください..."
+                        variant="outlined"
+                        sx={{ mb: 2 }}
+                      />
+                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={handleCancelAnswer}
+                        >
+                          キャンセル
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          onClick={() => handleSubmitAnswer(post.id)}
+                          disabled={!answerContent.trim()}
+                        >
+                          回答を送信
+                        </Button>
+                      </Box>
+                    </Box>
+                  )}
                 </CardContent>
               </Card>
             ) : isQaStaffChannel ? (
@@ -1145,8 +1236,8 @@ const ChannelPage: React.FC = () => {
                   </Typography>
                 </CardContent>
               </Card>
-            ) : (
-              // 通常の投稿
+            ) : !isQaChannel && !isQaStaffChannel ? (
+              // 通常の投稿（Q&Aチャンネル以外）
               <Card key={post.id}>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
@@ -1310,7 +1401,7 @@ const ChannelPage: React.FC = () => {
                 </Collapse>
               </CardContent>
             </Card>
-            )
+            ) : null
           ))
         )}
 
@@ -1354,7 +1445,7 @@ const ChannelPage: React.FC = () => {
       />
 
       {/* フローティング投稿ボタン */}
-      {canPost && !isEventsChannel && channel?.name !== '🙋 Introduce Yourself' && (
+      {canPost && !isEventsChannel && channel?.name !== '🙋 Introduce Yourself' && !isQaChannel && !isQaStaffChannel && (
         <Fab
           color="primary"
           sx={{
