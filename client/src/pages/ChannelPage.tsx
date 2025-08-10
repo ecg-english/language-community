@@ -677,18 +677,10 @@ const ChannelPage: React.FC = () => {
       if (qaChannel) {
         const questionPost = posts.find(p => p.id === postId);
         console.log('Q&A転送 - 元の質問投稿:', questionPost);
-        console.log('Q&A転送 - is_anonymous:', questionPost?.is_anonymous);
-        console.log('Q&A転送 - username:', questionPost?.username);
         
-        // 元の質問内容から「Q: 」を除去して質問内容のみを取得
-        const originalContent = questionPost?.content || '';
-        const questionContent = originalContent.startsWith('Q: ') ? originalContent.substring(3) : originalContent;
-        
-        const qaContent = `Q: ${questionContent}\n\n質問者: ${questionPost?.is_anonymous ? '匿名' : questionPost?.username}\n\nA: ${answerContent}`;
-        console.log('Q&A転送 - 作成されるコンテンツ:', qaContent);
-        
+        // 既に完成したQ&A形式の投稿をそのまま転送
         await axios.post(`/api/posts/channels/${qaChannel.id}/posts`, {
-          content: qaContent,
+          content: questionPost?.content, // 既存のコンテンツをそのまま使用
           is_answered: true,
           original_question_id: postId
         });
