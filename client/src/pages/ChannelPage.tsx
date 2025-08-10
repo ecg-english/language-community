@@ -64,6 +64,7 @@ interface Post {
   end_time?: string;
   location?: string;
   is_anonymous?: boolean; // Q&Aチャンネル用の匿名フラグ
+  is_answered?: boolean; // Q&Aチャンネル用の回答済みフラグ
 }
 
 interface Comment {
@@ -693,6 +694,24 @@ const ChannelPage: React.FC = () => {
     }
   };
 
+  // 回答済み投稿の削除（管理者のみ）
+  const handleAnsweredPostDelete = async (postId: number) => {
+    if (window.confirm('この回答済み投稿を削除しますか？')) {
+      try {
+        await axios.delete(`/api/posts/posts/${postId}`);
+        
+        // 投稿を再読み込み
+        if (channelId) {
+          const numChannelId = parseInt(channelId);
+          loadPosts(numChannelId);
+        }
+      } catch (error: any) {
+        console.error('回答済み投稿の削除に失敗しました:', error);
+        setError(error.response?.data?.error || '回答済み投稿の削除に失敗しました');
+      }
+    }
+  };
+
 
 
   console.log('ChannelPage レンダリング状態:', { 
@@ -1047,7 +1066,20 @@ const ChannelPage: React.FC = () => {
                         {formatDate(post.created_at)}
                       </Typography>
                     </Box>
-                    <Chip label="回答済み" color="success" size="small" />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Chip label="回答済み" color="success" size="small" />
+                      {/* 管理者のみ削除ボタンを表示 */}
+                      {user?.role === 'サーバー管理者' && (
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleAnsweredPostDelete(post.id)}
+                          sx={{ ml: 1 }}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      )}
+                    </Box>
                   </Box>
                   
                   <Typography 
