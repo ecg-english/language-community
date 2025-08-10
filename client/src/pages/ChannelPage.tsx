@@ -211,8 +211,18 @@ const ChannelPage: React.FC = () => {
             past: pastEventPosts.map((p: any) => ({ title: p.content, date: p.event_date }))
           });
           
+          console.log('過去のイベント自動表示設定:', { 
+            pastCount: pastEventPosts.length, 
+            willShow: pastEventPosts.length > 0 
+          });
+          
           // 過去のイベントを別のstateに保存
           setPastEvents(pastEventPosts);
+          
+          // 過去のイベントがある場合は自動的に表示
+          if (pastEventPosts.length > 0) {
+            setShowPastEvents(true);
+          }
           
           // 今後のイベントと非イベント投稿のみを表示
           postsData = [...upcomingEvents, ...nonEventPosts];
@@ -297,6 +307,7 @@ const ChannelPage: React.FC = () => {
 
     const checkEventStatus = () => {
       const today = new Date().toISOString().split('T')[0];
+      console.log('リアルタイムチェック実行:', { today, postsCount: posts.length });
       
       // 現在の投稿から過去のイベントを特定
       const currentPastEvents = posts.filter(post => 
@@ -307,6 +318,12 @@ const ChannelPage: React.FC = () => {
       const currentUpcomingEvents = posts.filter(post => 
         !post.event_id || !post.event_date || post.event_date >= today
       );
+      
+      console.log('イベント分類結果:', {
+        past: currentPastEvents.length,
+        upcoming: currentUpcomingEvents.length,
+        pastEvents: currentPastEvents.map(p => ({ id: p.id, date: p.event_date, title: p.content }))
+      });
       
       // 過去のイベントが新しく見つかった場合、状態を更新
       if (currentPastEvents.length > 0) {
@@ -356,7 +373,7 @@ const ChannelPage: React.FC = () => {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [channel?.name, posts, channelId]);
+  }, [channel?.name, channelId]); // postsを依存配列から除去して無限ループを防ぐ
 
   // 投稿権限をチェックする関数
   const checkPostPermission = (channelType: string, userRole: string): boolean => {
