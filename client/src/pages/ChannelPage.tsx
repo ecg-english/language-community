@@ -680,7 +680,11 @@ const ChannelPage: React.FC = () => {
         console.log('Q&A転送 - is_anonymous:', questionPost?.is_anonymous);
         console.log('Q&A転送 - username:', questionPost?.username);
         
-        const qaContent = `Q: ${questionPost?.content}\n\n質問者: ${questionPost?.is_anonymous ? '匿名' : questionPost?.username}\n\nA: ${answerContent}`;
+        // 元の質問内容から「Q: 」を除去して質問内容のみを取得
+        const originalContent = questionPost?.content || '';
+        const questionContent = originalContent.startsWith('Q: ') ? originalContent.substring(3) : originalContent;
+        
+        const qaContent = `Q: ${questionContent}\n\n質問者: ${questionPost?.is_anonymous ? '匿名' : questionPost?.username}\n\nA: ${answerContent}`;
         console.log('Q&A転送 - 作成されるコンテンツ:', qaContent);
         
         await axios.post(`/api/posts/channels/${qaChannel.id}/posts`, {
@@ -769,8 +773,12 @@ const ChannelPage: React.FC = () => {
       console.log('回答入力 - is_anonymous:', questionPost.is_anonymous);
       console.log('回答入力 - username:', questionPost.username);
 
+      // 元の質問内容から「Q: 」を除去して質問内容のみを取得
+      const originalContent = questionPost.content || '';
+      const questionContent = originalContent.startsWith('Q: ') ? originalContent.substring(3) : originalContent;
+
       // Q&A形式のコンテンツを作成
-      const qaContent = `Q: ${questionPost.content}\n\n質問者: ${questionPost.is_anonymous ? '匿名' : questionPost.username}\n\nA: ${answerContent}`;
+      const qaContent = `Q: ${questionContent}\n\n質問者: ${questionPost.is_anonymous ? '匿名' : questionPost.username}\n\nA: ${answerContent}`;
       console.log('回答入力 - 作成されるコンテンツ:', qaContent);
 
       // 回答を投稿として送信
