@@ -1108,67 +1108,6 @@ const ChannelPage: React.FC = () => {
         </Alert>
       )}
 
-      {/* Eventsチャンネル用の過去のイベントセクション */}
-      {isEventsChannel && showPastEvents && pastEvents.length > 0 && (
-        <Card sx={{ mb: 2, opacity: 0.8 }}>
-          <CardContent>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, opacity: 0.8 }}>
-              過去のイベント ({pastEvents.length})
-            </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {pastEvents.map((post) => (
-                <Box key={post.id} sx={{ opacity: 0.7 }}>
-                  {post.event_id ? (
-                    <EventPost
-                      event={{
-                        id: post.event_id,
-                        title: post.content,
-                        description: post.content,
-                        event_date: post.event_date || post.created_at,
-                        start_time: post.start_time || '',
-                        end_time: post.end_time || '',
-                        location: post.location || '',
-                        cover_image: post.image_url,
-                        created_by_name: post.username,
-                        created_by_role: '',
-                        created_at: post.created_at,
-                      }}
-                      canEdit={user?.id === post.user_id || user?.role === 'サーバー管理者'}
-                    />
-                  ) : (
-                    <Card>
-                      <CardContent>
-                        <Typography>{post.content}</Typography>
-                      </CardContent>
-                    </Card>
-                  )}
-                </Box>
-              ))}
-            </Box>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Eventsチャンネル専用：過去のイベント表示ボタン */}
-      {isEventsChannel && pastEvents.length > 0 && (
-        <Card sx={{ mb: 2 }}>
-          <CardContent sx={{ textAlign: 'center', py: 2 }}>
-            <Button
-              variant="outlined"
-              onClick={() => setShowPastEvents(!showPastEvents)}
-              sx={{
-                py: 1.5,
-                px: 3,
-                borderRadius: 2,
-                fontWeight: 600,
-              }}
-            >
-              {showPastEvents ? '過去のイベントを隠す' : '過去のイベントを表示'} ({pastEvents.length})
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
       {/* 投稿一覧 */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {posts.length === 0 ? (
@@ -1428,7 +1367,7 @@ const ChannelPage: React.FC = () => {
                             py: { xs: 0.5, sm: 1 }
                           }}
                         >
-                          {t('saveAnswer')}
+                          {t('submit')}
                         </Button>
                       </Box>
                     </Box>
@@ -1438,202 +1377,239 @@ const ChannelPage: React.FC = () => {
             ) : !isQaChannel && !isQaStaffChannel ? (
               // 通常の投稿（Q&Aチャンネル以外）
               <Card key={post.id}>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
-                  <Avatar 
-                    sx={{ bgcolor: 'primary.main' }}
-                    src={post.avatar_url}
-                  >
-                    {post.username.charAt(0).toUpperCase()}
-                  </Avatar>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                      {post.username}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {formatDate(post.created_at)}
-                    </Typography>
-                  </Box>
-                  {(user?.id === post.user_id || user?.role === 'サーバー管理者') && (
-                    <IconButton
-                      onClick={() => handleDeletePost(post.id)}
-                      size="small"
-                      color="error"
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                    <Avatar 
+                      sx={{ bgcolor: 'primary.main' }}
+                      src={post.avatar_url}
                     >
-                      <DeleteIcon />
-                    </IconButton>
-                  )}
-                </Box>
-                
-                <Typography 
-                  variant="body1" 
-                  sx={{ 
-                    mb: 2,
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word'
-                  }}
-                >
-                  {convertUrlsToLinks(post.content)}
-                </Typography>
-                
-                {/* 画像表示 */}
-                {post.image_url && (
-                  <Box sx={{ mb: 2 }}>
-                    <img
-                      src={post.image_url}
-                      alt="投稿画像"
-                      style={{
-                        maxWidth: '100%',
-                        maxHeight: '400px',
-                        borderRadius: '8px',
-                        objectFit: 'contain'
-                      }}
-                    />
-                  </Box>
-                )}
-                
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Button
-                    size="small"
-                    startIcon={post.user_liked ? <ThumbUpIcon /> : <ThumbUpOutlinedIcon />}
-                    onClick={() => handleLike(post.id)}
-                    sx={{ color: post.user_liked ? 'primary.main' : 'text.secondary' }}
-                  >
-                    {post.like_count} {t('like')}
-                  </Button>
-                  <Button
-                    size="small"
-                    startIcon={<CommentIcon />}
-                    onClick={() => handleToggleComments(post.id)}
-                    endIcon={expandedComments[post.id] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                    sx={{ color: 'text.secondary' }}
-                  >
-                    {post.comment_count} {t('comments')}
-                  </Button>
-                </Box>
-
-                {/* コメントセクション */}
-                <Collapse in={expandedComments[post.id]} timeout="auto" unmountOnExit>
-                  <Box sx={{ mt: 2 }}>
-                    <Divider sx={{ mb: 2 }} />
-                    
-                    {/* コメント入力 */}
-                    <Box sx={{ mb: 2, display: 'flex', gap: 1 }}>
-                      <TextField
-                        fullWidth
+                      {post.username.charAt(0).toUpperCase()}
+                    </Avatar>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        {post.username}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {formatDate(post.created_at)}
+                      </Typography>
+                    </Box>
+                    {(user?.id === post.user_id || user?.role === 'サーバー管理者') && (
+                      <IconButton
                         size="small"
-                        placeholder={t('writeComment')}
-                        value={newComment[post.id] || ''}
-                        onChange={(e) => setNewComment(prev => ({ ...prev, [post.id]: e.target.value }))}
-                        variant="outlined"
+                        color="error"
+                        onClick={() => handleDeletePost(post.id)}
                         sx={{
-                          '& .MuiOutlinedInput-root': {
-                            '& fieldset': {
-                              borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.23)' : 'rgba(0, 0, 0, 0.12)',
-                            },
-                            '&:hover fieldset': {
-                              borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.23)',
-                            },
-                            '&.Mui-focused fieldset': {
-                              borderColor: isDarkMode ? 'primary.main' : 'primary.main',
-                            },
-                          },
+                          backgroundColor: isDarkMode ? 'grey.800' : 'grey.100',
+                          '&:hover': {
+                            backgroundColor: isDarkMode ? 'grey.700' : 'grey.200'
+                          }
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    )}
+                  </Box>
+                  
+                  <Typography 
+                    variant="body1" 
+                    sx={{ 
+                      mb: 2,
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word'
+                    }}
+                  >
+                    {convertUrlsToLinks(post.content)}
+                  </Typography>
+                  
+                  {/* 画像表示 */}
+                  {post.image_url && (
+                    <Box sx={{ mb: 2 }}>
+                      <img
+                        src={post.image_url}
+                        alt="投稿画像"
+                        style={{
+                          maxWidth: '100%',
+                          maxHeight: '400px',
+                          borderRadius: '8px',
+                          objectFit: 'contain'
                         }}
                       />
-                      <Button
-                        variant="contained"
-                        size="small"
-                        onClick={() => handleSubmitComment(post.id)}
-                        disabled={!newComment[post.id]?.trim()}
-                      >
-                        {t('sendComment')}
-                      </Button>
                     </Box>
-
-                    {/* コメント一覧 */}
-                    {comments[post.id]?.map((comment) => (
-                      <Paper key={comment.id} sx={{ p: 2, mb: 1, bgcolor: 'background.paper' }}>
-                        <Stack direction="row" spacing={2} alignItems="flex-start">
-                          <Avatar 
-                            sx={{ width: 32, height: 32 }}
-                            src={comment.avatar_url}
-                          >
-                            {comment.username.charAt(0).toUpperCase()}
-                          </Avatar>
-                          <Box sx={{ flexGrow: 1 }}>
-                            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
-                              <Typography variant="subtitle2" fontWeight={600}>
-                                {comment.username}
-                              </Typography>
-                              <Chip
-                                label={comment.role}
-                                size="small"
-                                sx={{ fontSize: '0.7rem' }}
-                              />
-                              <Typography variant="caption" color="text.secondary">
-                                {formatDate(comment.created_at)}
-                              </Typography>
-                            </Stack>
-                            <Typography 
-                              variant="body2"
-                              sx={{
-                                whiteSpace: 'pre-wrap',
-                                wordBreak: 'break-word'
-                              }}
-                            >
-                              {convertUrlsToLinks(comment.content)}
-                            </Typography>
-                          </Box>
-                          {(user?.id === comment.user_id || user?.role === 'サーバー管理者') && (
-                            <IconButton
-                              onClick={() => handleDeleteComment(comment.id)}
-                              size="small"
-                              color="error"
-                            >
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
-                          )}
-                        </Stack>
-                      </Paper>
-                    ))}
+                  )}
+                  
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Button
+                      size="small"
+                      startIcon={post.user_liked ? <ThumbUpIcon /> : <ThumbUpOutlinedIcon />}
+                      onClick={() => handleLike(post.id)}
+                      sx={{ color: post.user_liked ? 'primary.main' : 'text.secondary' }}
+                    >
+                      {post.like_count} {t('like')}
+                    </Button>
+                    <Button
+                      size="small"
+                      startIcon={<CommentIcon />}
+                      onClick={() => handleToggleComments(post.id)}
+                      endIcon={expandedComments[post.id] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                      sx={{ color: 'text.secondary' }}
+                    >
+                      {post.comment_count} {t('comments')}
+                    </Button>
                   </Box>
-                </Collapse>
-              </CardContent>
-            </Card>
+
+                  {/* コメントセクション */}
+                  <Collapse in={expandedComments[post.id]} timeout="auto" unmountOnExit>
+                    <Box sx={{ mt: 2 }}>
+                      <Divider sx={{ mb: 2 }} />
+                      
+                      {/* コメント入力 */}
+                      <Box sx={{ mb: 2, display: 'flex', gap: 1 }}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          placeholder={t('writeComment')}
+                          value={newComment[post.id] || ''}
+                          onChange={(e) => setNewComment(prev => ({ ...prev, [post.id]: e.target.value }))}
+                          variant="outlined"
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '& fieldset': {
+                                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.23)' : 'rgba(0, 0, 0, 0.12)',
+                              },
+                              '&:hover fieldset': {
+                                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.23)',
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: isDarkMode ? 'primary.main' : 'primary.main',
+                              },
+                            },
+                          }}
+                        />
+                        <Button
+                          variant="contained"
+                          size="small"
+                          onClick={() => handleSubmitComment(post.id)}
+                          disabled={!newComment[post.id]?.trim()}
+                        >
+                          {t('sendComment')}
+                        </Button>
+                      </Box>
+
+                      {/* コメント一覧 */}
+                      {comments[post.id]?.map((comment) => (
+                        <Paper key={comment.id} sx={{ p: 2, mb: 1, bgcolor: 'background.paper' }}>
+                          <Stack direction="row" spacing={2} alignItems="flex-start">
+                            <Avatar 
+                              sx={{ width: 32, height: 32 }}
+                              src={comment.avatar_url}
+                            >
+                              {comment.username.charAt(0).toUpperCase()}
+                            </Avatar>
+                            <Box sx={{ flexGrow: 1 }}>
+                              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+                                <Typography variant="subtitle2" fontWeight={600}>
+                                  {comment.username}
+                                </Typography>
+                                <Chip
+                                  label={comment.role}
+                                  size="small"
+                                  sx={{ fontSize: '0.7rem' }}
+                                />
+                                <Typography variant="caption" color="text.secondary">
+                                  {formatDate(comment.created_at)}
+                                </Typography>
+                              </Stack>
+                              <Typography 
+                                variant="body2"
+                                sx={{
+                                  whiteSpace: 'pre-wrap',
+                                  wordBreak: 'break-word'
+                                }}
+                              >
+                                {convertUrlsToLinks(comment.content)}
+                              </Typography>
+                            </Box>
+                            {(user?.id === comment.user_id || user?.role === 'サーバー管理者') && (
+                              <IconButton
+                                onClick={() => handleDeleteComment(comment.id)}
+                                size="small"
+                                color="error"
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            )}
+                          </Stack>
+                        </Paper>
+                      ))}
+                    </Box>
+                  </Collapse>
+                </CardContent>
+              </Card>
             ) : null
           ))
         )}
+      </Box>
 
-        {/* 過去のイベントセクション */}
-        {isEventsChannel && showPastEvents && pastEvents.length > 0 && (
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'text.secondary' }}>
-              過去のイベント
+      {/* Eventsチャンネル専用：過去のイベント表示ボタン */}
+      {isEventsChannel && pastEvents.length > 0 && (
+        <Card sx={{ mb: 2, mt: 2 }}>
+          <CardContent sx={{ textAlign: 'center', py: 2 }}>
+            <Button
+              variant="outlined"
+              onClick={() => setShowPastEvents(!showPastEvents)}
+              sx={{
+                py: 1.5,
+                px: 3,
+                borderRadius: 2,
+                fontWeight: 600,
+              }}
+            >
+              {showPastEvents ? '過去のイベントを隠す' : '過去のイベントを表示'} ({pastEvents.length})
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Eventsチャンネル用の過去のイベントセクション */}
+      {isEventsChannel && showPastEvents && pastEvents.length > 0 && (
+        <Card sx={{ mb: 2, opacity: 0.8 }}>
+          <CardContent>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, opacity: 0.8 }}>
+              過去のイベント ({pastEvents.length})
             </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, opacity: 0.7 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {pastEvents.map((post) => (
-                <EventPost
-                  key={post.id}
-                  event={{
-                    id: post.event_id!,
-                    title: post.content,
-                    description: post.content,
-                    event_date: post.event_date || post.created_at,
-                    start_time: post.start_time || '',
-                    end_time: post.end_time || '',
-                    location: post.location || '',
-                    cover_image: post.image_url,
-                    created_by_name: post.username,
-                    created_by_role: '',
-                    created_at: post.created_at,
-                  }}
-                  canEdit={user?.id === post.user_id || user?.role === 'サーバー管理者'}
-                />
+                <Box key={post.id} sx={{ opacity: 0.7 }}>
+                  {post.event_id ? (
+                    <EventPost
+                      event={{
+                        id: post.event_id,
+                        title: post.content,
+                        description: post.content,
+                        event_date: post.event_date || post.created_at,
+                        start_time: post.start_time || '',
+                        end_time: post.end_time || '',
+                        location: post.location || '',
+                        cover_image: post.image_url,
+                        created_by_name: post.username,
+                        created_by_role: '',
+                        created_at: post.created_at,
+                      }}
+                      canEdit={user?.id === post.user_id || user?.role === 'サーバー管理者'}
+                    />
+                  ) : (
+                    <Card>
+                      <CardContent>
+                        <Typography>{post.content}</Typography>
+                      </CardContent>
+                    </Card>
+                  )}
+                </Box>
               ))}
             </Box>
-          </Box>
-        )}
-      </Box>
+          </CardContent>
+        </Card>
+      )}
 
       {/* サイドバー */}
       <ChannelSidebar
