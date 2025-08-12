@@ -150,11 +150,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppBar 
-        position="static" 
+        position="fixed" 
         elevation={0}
         sx={{
           borderBottom: '1px solid',
           borderColor: 'divider',
+          zIndex: (theme) => theme.zIndex.drawer + 1,
         }}
       >
         <Container maxWidth="lg">
@@ -394,6 +395,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           flexGrow: 1,
           bgcolor: 'background.default',
           minHeight: 'calc(100vh - 80px)',
+          pt: '80px', // AppBarの高さを考慮してメインコンテンツにパディングを追加
         }}
       >
         {children}
