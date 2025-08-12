@@ -57,6 +57,23 @@ const CommunityPage: React.FC = () => {
     }
   }, [loadCategories]); // loadCategoriesを依存配列に追加
 
+  // カテゴリが読み込まれた時に、開いた状態のカテゴリのチャンネルを自動的に読み込む
+  useEffect(() => {
+    if (categories.length > 0) {
+      console.log('Categories loaded, checking for expanded categories');
+      const expandedCategories = categories.filter(cat => !cat.is_collapsed);
+      console.log('Expanded categories found:', expandedCategories.map(cat => cat.name));
+      
+      // 開いた状態のカテゴリのチャンネルを読み込む
+      expandedCategories.forEach(category => {
+        if (!channels[category.id] || channels[category.id].length === 0) {
+          console.log(`Loading channels for expanded category: ${category.name}`);
+          loadChannels(category.id);
+        }
+      });
+    }
+  }, [categories, channels, loadChannels]);
+
   const handleCategoryToggle = (categoryId: number) => {
     const category = categories.find(cat => cat.id === categoryId);
     if (category && !category.is_collapsed) {

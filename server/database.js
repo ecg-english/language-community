@@ -335,6 +335,13 @@ const initializeDatabase = () => {
       console.log('Existing categories found, skipping initial category creation');
     }
 
+    // 既存のカテゴリを開いた状態に更新（マイグレーション）
+    db.prepare(`
+      UPDATE categories SET is_collapsed = 0 WHERE is_collapsed = 1
+    `).run();
+
+    console.log('Categories migration completed: all categories set to expanded state');
+
     console.log('Database initialized successfully');
   } catch (error) {
     console.error('Database initialization error:', error);

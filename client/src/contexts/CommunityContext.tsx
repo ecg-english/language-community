@@ -90,7 +90,16 @@ export const CommunityProvider: React.FC<CommunityProviderProps> = ({ children }
   const loadCategories = useCallback(async () => {
     try {
       const response = await axios.get('/api/channels/categories');
-      setCategories(response.data.categories || []);
+      const categoriesData = response.data.categories || [];
+      
+      // カテゴリをデフォルトで開いた状態に設定
+      const expandedCategories = categoriesData.map(category => ({
+        ...category,
+        is_collapsed: false // デフォルトで開いた状態
+      }));
+      
+      setCategories(expandedCategories);
+      console.log('Categories loaded and set to expanded state by default');
     } catch (error) {
       console.error('カテゴリ読み込みエラー:', error);
       throw error;
