@@ -93,7 +93,7 @@ export const CommunityProvider: React.FC<CommunityProviderProps> = ({ children }
       const categoriesData = response.data.categories || [];
       
       // カテゴリをデフォルトで開いた状態に設定
-      const expandedCategories = categoriesData.map(category => ({
+      const expandedCategories = categoriesData.map((category: Category) => ({
         ...category,
         is_collapsed: false // デフォルトで開いた状態
       }));
