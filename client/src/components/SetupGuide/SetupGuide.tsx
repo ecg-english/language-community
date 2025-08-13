@@ -23,9 +23,12 @@ import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
   Settings as SettingsIcon,
+  Person as PersonIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 interface ChecklistItem {
   id: string;
@@ -38,6 +41,7 @@ interface ChecklistItem {
 const SetupGuide: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [expanded, setExpanded] = useState(true);
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [isHidden, setIsHidden] = useState(false);
@@ -101,6 +105,42 @@ const SetupGuide: React.FC = () => {
     }
   }, [user?.id]);
 
+  // プロフィール完了状態をチェック
+  const checkProfileCompletion = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const response = await axios.get(`/api/auth/users/${user.id}`);
+      const profileData = response.data.user;
+      
+      // 一言メッセージと自己紹介が記入されているかチェック
+      const hasMessage = profileData.message && profileData.message.trim() !== '';
+      const hasBio = profileData.bio && profileData.bio.trim() !== '';
+      
+      if (hasMessage && hasBio) {
+        setChecklist(prev => 
+          prev.map(item => 
+            item.id === 'profile' 
+              ? { ...item, completed: true }
+              : item
+          )
+        );
+      }
+    } catch (error) {
+      console.error('プロフィール完了チェックエラー:', error);
+    }
+  };
+
+  // プロフィール完了状態を定期的にチェック
+  useEffect(() => {
+    if (user?.id) {
+      checkProfileCompletion();
+      // 30秒ごとにチェック
+      const interval = setInterval(checkProfileCompletion, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user?.id]);
+
   // チェックリストの状態をローカルストレージに保存
   useEffect(() => {
     if (user?.id) {
@@ -123,6 +163,10 @@ const SetupGuide: React.FC = () => {
     if (user?.id) {
       localStorage.setItem(`setupGuideHidden_${user.id}`, 'true');
     }
+  };
+
+  const handleProfileNavigation = () => {
+    navigate(`/profile/${user?.id}`);
   };
 
   const completedCount = checklist.filter(item => item.completed).length;
@@ -190,12 +234,12 @@ const SetupGuide: React.FC = () => {
                     border: '1px solid rgba(0, 0, 0, 0.08)',
                     borderRadius: 1,
                     mb: 1,
-                    cursor: 'pointer',
+                    cursor: item.id === 'profile' ? 'default' : 'pointer',
                     '&:hover': {
-                      backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                      backgroundColor: item.id === 'profile' ? 'transparent' : 'rgba(0, 0, 0, 0.02)',
                     },
                   }}
-                  onClick={() => toggleItem(item.id)}
+                  onClick={() => item.id !== 'profile' && toggleItem(item.id)}
                 >
                   <ListItemIcon sx={{ minWidth: 40 }}>
                     {item.completed ? (
@@ -206,7 +250,7 @@ const SetupGuide: React.FC = () => {
                   </ListItemIcon>
                   <ListItemText
                     primary={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'space-between' }}>
                         <Typography
                           variant="body2"
                           sx={{
@@ -217,6 +261,24 @@ const SetupGuide: React.FC = () => {
                         >
                           {item.title}
                         </Typography>
+                        {item.id === 'profile' && !item.completed && (
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<PersonIcon />}
+                            onClick={handleProfileNavigation}
+                            sx={{
+                              borderRadius: 2,
+                              textTransform: 'none',
+                              fontWeight: 500,
+                              fontSize: '0.75rem',
+                              py: 0.5,
+                              px: 1.5,
+                            }}
+                          >
+                            {t('profile')}
+                          </Button>
+                        )}
                       </Box>
                     }
                     secondary={
@@ -255,13 +317,13 @@ const SetupGuide: React.FC = () => {
                           border: '1px solid rgba(0, 0, 0, 0.08)',
                           borderRadius: 1,
                           mb: 1,
-                          cursor: 'pointer',
+                          cursor: item.id === 'profile' ? 'default' : 'pointer',
                           opacity: 0.6,
                           '&:hover': {
-                            backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                            backgroundColor: item.id === 'profile' ? 'transparent' : 'rgba(0, 0, 0, 0.02)',
                           },
                         }}
-                        onClick={() => toggleItem(item.id)}
+                        onClick={() => item.id !== 'profile' && toggleItem(item.id)}
                       >
                         <ListItemIcon sx={{ minWidth: 40 }}>
                           {item.completed ? (
@@ -272,7 +334,7 @@ const SetupGuide: React.FC = () => {
                         </ListItemIcon>
                         <ListItemText
                           primary={
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'space-between' }}>
                               <Typography
                                 variant="body2"
                                 sx={{
@@ -283,6 +345,24 @@ const SetupGuide: React.FC = () => {
                               >
                                 {item.title}
                               </Typography>
+                              {item.id === 'profile' && !item.completed && (
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  startIcon={<PersonIcon />}
+                                  onClick={handleProfileNavigation}
+                                  sx={{
+                                    borderRadius: 2,
+                                    textTransform: 'none',
+                                    fontWeight: 500,
+                                    fontSize: '0.75rem',
+                                    py: 0.5,
+                                    px: 1.5,
+                                  }}
+                                >
+                                  {t('profile')}
+                                </Button>
+                              )}
                             </Box>
                           }
                           secondary={
