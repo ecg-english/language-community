@@ -18,7 +18,7 @@ import {
 } from '@mui/material';
 import { Language, EmailOutlined, LockOutlined } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useNavigate, Link as RouterLink, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -30,6 +30,7 @@ const LoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { t } = useTranslation();
   const { currentLanguage, changeLanguage } = useLanguage();
   const { isDarkMode } = useTheme();
@@ -41,7 +42,14 @@ const LoginPage: React.FC = () => {
 
     try {
       await login(email, password);
-      navigate('/community');
+      
+      // URLパラメータからリダイレクト先を取得
+      const redirectTo = searchParams.get('redirect');
+      if (redirectTo) {
+        navigate(redirectTo);
+      } else {
+        navigate('/community');
+      }
     } catch (error: any) {
       setError(error.message);
     } finally {

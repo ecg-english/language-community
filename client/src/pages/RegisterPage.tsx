@@ -18,7 +18,7 @@ import {
 } from '@mui/material';
 import { Language, PersonAddOutlined, EmailOutlined, LockOutlined } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useNavigate, Link as RouterLink, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -32,6 +32,7 @@ const RegisterPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { t } = useTranslation();
   const { currentLanguage, changeLanguage } = useLanguage();
   const { isDarkMode } = useTheme();
@@ -54,7 +55,14 @@ const RegisterPage: React.FC = () => {
 
     try {
       await register(username, email, password);
-      navigate('/community');
+      
+      // URLパラメータからリダイレクト先を取得
+      const redirectTo = searchParams.get('redirect');
+      if (redirectTo) {
+        navigate(redirectTo);
+      } else {
+        navigate('/community');
+      }
     } catch (error: any) {
       setError(error.message);
     } finally {
