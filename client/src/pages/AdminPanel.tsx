@@ -42,6 +42,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useCommunity } from '../contexts/CommunityContext';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -67,6 +68,7 @@ function TabPanel(props: TabPanelProps) {
 
 const AdminPanel: React.FC = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const {
     categories,
     channels,
@@ -433,11 +435,11 @@ const AdminPanel: React.FC = () => {
   ];
 
   const channelTypes = [
-    { value: 'all_post_all_view', label: '全員投稿・全員閲覧' },
-    { value: 'admin_only_all_view', label: '管理者のみ投稿・全員閲覧' },
-    { value: 'instructors_post_all_view', label: '講師以上投稿・全員閲覧' },
-    { value: 'admin_only_instructors_view', label: '管理者のみ投稿・講師以上閲覧' },
-    { value: 'class1_post_class1_view', label: 'Class1以上投稿・Class1以上閲覧' }
+    { value: 'all_post_all_view', label: t('channelType.all_post_all_view') },
+    { value: 'admin_only_all_view', label: t('channelType.admin_only_all_view') },
+    { value: 'instructors_post_all_view', label: t('channelType.instructors_post_all_view') },
+    { value: 'admin_only_instructors_view', label: t('channelType.admin_only_instructors_view') },
+    { value: 'class1_post_class1_view', label: t('channelType.class1_post_class1_view') }
   ];
 
   if (user?.role !== 'サーバー管理者') {

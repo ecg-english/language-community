@@ -111,17 +111,17 @@ const CommunityPage: React.FC = () => {
   const getChannelTypeLabel = (channelType: string) => {
     switch (channelType) {
       case 'admin_only_instructors_view':
-        return 'スタッフ専用通知';
+        return t('channelTypeStaffOnly');
       case 'admin_only_all_view':
-        return 'お知らせ';
+        return t('channelTypeAnnouncement');
       case 'instructors_post_all_view':
-        return '講師投稿';
+        return t('channelTypeInstructorPost');
       case 'all_post_all_view':
-        return '一般投稿';
+        return t('channelTypeGeneralPost');
       case 'class1_post_class1_view':
-        return 'Class1限定';
+        return t('channelTypeClass1Only');
       default:
-        return '不明';
+        return t('unknown');
     }
   };
 

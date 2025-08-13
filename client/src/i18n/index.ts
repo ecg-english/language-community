@@ -86,6 +86,7 @@ const en = {
     channelTypeInstructorPost: 'Instructor Post',
     channelTypeGeneralPost: 'General Post',
     channelTypeClass1Only: 'Class1 Only',
+    unknown: 'Unknown',
     
     // チェックリストガイド
     setupGuide: 'Setup Guide',
@@ -203,7 +204,13 @@ const en = {
     changeRole: 'Change Role',
     categoryName: 'Category Name',
     channelName: 'Channel Name',
-    channelType: 'Channel Type',
+    channelType: {
+      all_post_all_view: 'All members post, All members view',
+      admin_only_all_view: 'Admin only post, All members view',
+      instructors_post_all_view: 'Instructors only post, All members view',
+      admin_only_instructors_view: 'Admin only post, Instructors only view',
+      class1_post_class1_view: 'Class1 Members post, Class1 Members view'
+    },
     allPostAllView: 'All members post, All members view',
     adminOnlyAllView: 'Admin only post, All members view',
     adminOnlyInstructorsView: 'Instructors only post, Instructors only view',
@@ -320,6 +327,7 @@ const ja = {
     channelTypeInstructorPost: '講師投稿',
     channelTypeGeneralPost: '一般投稿',
     channelTypeClass1Only: 'Class1限定',
+    unknown: '不明',
     
     // チェックリストガイド
     setupGuide: 'セットアップガイド',
@@ -436,7 +444,13 @@ const ja = {
     changeRole: 'ロール変更',
     categoryName: 'カテゴリ名',
     channelName: 'チャンネル名',
-    channelType: 'チャンネルタイプ',
+    channelType: {
+      all_post_all_view: '全メンバー発言可能・全メンバー閲覧可能',
+      admin_only_all_view: 'サーバー管理者のみ発言可能・全メンバー閲覧可能',
+      instructors_post_all_view: 'サーバー管理者、ECG講師、JCG講師のみ発言可能・全メンバー閲覧可能',
+      admin_only_instructors_view: 'サーバー管理者のみ発言可能・サーバー管理者、ECG講師、JCG講師のみ閲覧可能',
+      class1_post_class1_view: 'Class1 Members投稿・Class1 Members閲覧'
+    },
     allPostAllView: '全メンバー発言可能・全メンバー閲覧可能',
     adminOnlyAllView: 'サーバー管理者のみ発言可能・全メンバー閲覧可能',
     adminOnlyInstructorsView: 'サーバー管理者、ECG講師、JCG講師のみ発言可能・サーバー管理者、ECG講師、JCG講師のみ閲覧可能',
@@ -553,6 +567,7 @@ const jaSimple = {
     channelTypeInstructorPost: 'きょうしのとうこう',
     channelTypeGeneralPost: 'みんなのとうこう',
     channelTypeClass1Only: 'Class1せんよう',
+    unknown: 'ふめい',
     
     // チェックリストガイド
     setupGuide: 'セットアップガイド',
@@ -669,11 +684,17 @@ const jaSimple = {
     changeRole: 'ロールへんこう',
     categoryName: 'カテゴリめい',
     channelName: 'チャンネルめい',
-    channelType: 'チャンネルタイプ',
-    allPostAllView: 'ぜんメンバーはつげんかのう・ぜんメンバーえつらんかのう',
-    adminOnlyAllView: 'サーバーかんりしゃのみはつげんかのう・ぜんメンバーえつらんかのう',
-    adminOnlyInstructorsView: 'サーバーかんりしゃ、ECGきょうし、JCGきょうしのみはつげんかのう・サーバーかんりしゃ、ECGきょうし、JCGきょうしのみえつらんかのう',
-    instructorsPostAllView: 'サーバーかんりしゃ、ECGきょうし、JCGきょうしのみはつげんかのう・ぜんメンバーえつらんかのう',
+    channelType: {
+      all_post_all_view: 'ぜんメンバーはつげんかのう・ぜんメンバーえつらんかのう',
+      admin_only_all_view: 'サーバーかんりしゃのみはつげんかのう・ぜんメンバーえつらんかのう',
+      instructors_post_all_view: 'サーバーかんりしゃ、ECGきょうし、JCGきょうしのみはつげんかのう・ぜんメンバーえつらんかのう',
+      admin_only_instructors_view: 'サーバーかんりしゃのみはつげんかのう・サーバーかんりしゃ、ECGきょうし、JCGきょうしのみえつらんかのう',
+      class1_post_class1_view: 'Class1 Membersとうこう・Class1 Membersえつらん'
+    },
+    allPostAllView: '全メンバー発言可能・全メンバー閲覧可能',
+    adminOnlyAllView: 'サーバー管理者のみ発言可能・全メンバー閲覧可能',
+    adminOnlyInstructorsView: 'サーバー管理者、ECG講師、JCG講師のみ発言可能・サーバー管理者、ECG講師、JCG講師のみ閲覧可能',
+    instructorsPostAllView: 'サーバー管理者、ECG講師、JCG講師のみ発言可能・全メンバー閲覧可能',
     class1PostClass1View: 'とうこう: かんりしゃ・きょうし・Class1 Members, えつらん: かんりしゃ・きょうし・Class1 Members',
     create: 'さくせい',
     update: 'こうしん',
