@@ -250,13 +250,20 @@ const SetupGuide: React.FC = () => {
                   </ListItemIcon>
                   <ListItemText
                     primary={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'space-between' }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        gap: 1, 
+                        justifyContent: 'space-between',
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        alignItems: { xs: 'flex-start', sm: 'center' },
+                      }}>
                         <Typography
                           variant="body2"
                           sx={{
                             fontWeight: item.completed ? 500 : 400,
                             textDecoration: item.completed ? 'line-through' : 'none',
                             color: item.completed ? 'text.secondary' : 'text.primary',
+                            width: { xs: '100%', sm: 'auto' },
                           }}
                         >
                           {item.title}
@@ -271,9 +278,15 @@ const SetupGuide: React.FC = () => {
                               borderRadius: 2,
                               textTransform: 'none',
                               fontWeight: 500,
-                              fontSize: '0.75rem',
-                              py: 0.5,
-                              px: 1.5,
+                              fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                              py: { xs: 0.25, sm: 0.5 },
+                              px: { xs: 1, sm: 1.5 },
+                              minWidth: { xs: 'auto', sm: 'auto' },
+                              alignSelf: { xs: 'flex-end', sm: 'center' },
+                              mt: { xs: 1, sm: 0 },
+                              '& .MuiButton-startIcon': {
+                                marginRight: { xs: 0.5, sm: 0.5 },
+                              },
                             }}
                           >
                             {t('profile')}
@@ -334,13 +347,20 @@ const SetupGuide: React.FC = () => {
                         </ListItemIcon>
                         <ListItemText
                           primary={
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'space-between' }}>
+                            <Box sx={{ 
+                              display: 'flex', 
+                              gap: 1, 
+                              justifyContent: 'space-between',
+                              flexDirection: { xs: 'column', sm: 'row' },
+                              alignItems: { xs: 'flex-start', sm: 'center' },
+                            }}>
                               <Typography
                                 variant="body2"
                                 sx={{
                                   fontWeight: item.completed ? 500 : 400,
                                   textDecoration: item.completed ? 'line-through' : 'none',
                                   color: item.completed ? 'text.secondary' : 'text.primary',
+                                  width: { xs: '100%', sm: 'auto' },
                                 }}
                               >
                                 {item.title}
@@ -355,9 +375,15 @@ const SetupGuide: React.FC = () => {
                                     borderRadius: 2,
                                     textTransform: 'none',
                                     fontWeight: 500,
-                                    fontSize: '0.75rem',
-                                    py: 0.5,
-                                    px: 1.5,
+                                    fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                                    py: { xs: 0.25, sm: 0.5 },
+                                    px: { xs: 1, sm: 1.5 },
+                                    minWidth: { xs: 'auto', sm: 'auto' },
+                                    alignSelf: { xs: 'flex-end', sm: 'center' },
+                                    mt: { xs: 1, sm: 0 },
+                                    '& .MuiButton-startIcon': {
+                                      marginRight: { xs: 0.5, sm: 0.5 },
+                                    },
                                   }}
                                 >
                                   {t('profile')}
