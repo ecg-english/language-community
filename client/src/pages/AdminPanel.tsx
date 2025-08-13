@@ -110,6 +110,10 @@ const AdminPanel: React.FC = () => {
   const [newRole, setNewRole] = useState('');
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
 
+  // ユーザー削除用
+  const [deleteUserDialogOpen, setDeleteUserDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<any>(null);
+
   useEffect(() => {
     if (user?.role === 'サーバー管理者') {
       loadData();
@@ -198,11 +202,31 @@ const AdminPanel: React.FC = () => {
       setRoleDialogOpen(false);
       setSelectedUser(null);
       setNewRole('');
-      setSuccess('ユーザーロールが変更されました');
+      setSuccess('ユーザーのロールが変更されました');
       setError('');
     } catch (error: any) {
       setError(error.response?.data?.error || 'ロールの変更に失敗しました');
     }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    try {
+      await axios.delete(`/api/auth/users/${userToDelete.id}`);
+      await loadUsers();
+      setDeleteUserDialogOpen(false);
+      setUserToDelete(null);
+      setSuccess('ユーザーが削除されました');
+      setError('');
+    } catch (error: any) {
+      setError(error.response?.data?.error || 'ユーザーの削除に失敗しました');
+    }
+  };
+
+  const openDeleteUserDialog = (user: any) => {
+    setUserToDelete(user);
+    setDeleteUserDialogOpen(true);
   };
 
   const openRoleDialog = (user: any) => {
@@ -497,6 +521,14 @@ const AdminPanel: React.FC = () => {
                             color="primary"
                           >
                             <EditIcon />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={() => openDeleteUserDialog(user)}
+                            color="error"
+                            disabled={user.role === 'サーバー管理者'}
+                          >
+                            <DeleteIcon />
                           </IconButton>
                         </TableCell>
                       </TableRow>
@@ -862,6 +894,25 @@ const AdminPanel: React.FC = () => {
               <Button onClick={() => setRoleDialogOpen(false)}>キャンセル</Button>
               <Button onClick={handleChangeUserRole} variant="contained">
                 変更
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* ユーザー削除ダイアログ */}
+          <Dialog open={deleteUserDialogOpen} onClose={() => setDeleteUserDialogOpen(false)}>
+            <DialogTitle>ユーザーを削除</DialogTitle>
+            <DialogContent>
+              <Typography variant="body2" sx={{ mb: 2 }}>
+                {userToDelete?.username} を削除しますか？
+              </Typography>
+              <Typography variant="body2" color="error">
+                この操作は取り消せません。
+              </Typography>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setDeleteUserDialogOpen(false)}>キャンセル</Button>
+              <Button onClick={handleDeleteUser} variant="contained" color="error">
+                削除
               </Button>
             </DialogActions>
           </Dialog>

@@ -692,4 +692,50 @@ router.post('/upload/avatar', authenticateToken, (req, res) => {
   }
 });
 
+// ユーザー削除（管理者のみ）
+router.delete('/users/:userId', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const { userId } = req.params;
+    const requestingUserId = req.user.userId;
+
+    // 自分自身を削除しようとしている場合はエラー
+    if (parseInt(userId) === requestingUserId) {
+      return res.status(400).json({ error: '自分自身を削除することはできません' });
+    }
+
+    // 削除対象のユーザーを確認
+    const userToDelete = db.prepare('SELECT id, username, role FROM users WHERE id = ?').get(userId);
+    if (!userToDelete) {
+      return res.status(404).json({ error: 'ユーザーが見つかりません' });
+    }
+
+    // サーバー管理者を削除しようとしている場合はエラー
+    if (userToDelete.role === 'サーバー管理者') {
+      return res.status(400).json({ error: 'サーバー管理者は削除できません' });
+    }
+
+    // ユーザーに関連するデータを削除（投稿、コメント、いいねなど）
+    db.prepare('DELETE FROM likes WHERE user_id = ?').run(userId);
+    db.prepare('DELETE FROM comments WHERE user_id = ?').run(userId);
+    db.prepare('DELETE FROM posts WHERE user_id = ?').run(userId);
+    db.prepare('DELETE FROM event_attendees WHERE user_id = ?').run(userId);
+    
+    // ユーザーを削除
+    db.prepare('DELETE FROM users WHERE id = ?').run(userId);
+
+    console.log(`ユーザーが削除されました: ${userToDelete.username} (ID: ${userId})`);
+
+    res.json({
+      message: 'ユーザーが削除されました',
+      deletedUser: {
+        id: userToDelete.id,
+        username: userToDelete.username
+      }
+    });
+  } catch (error) {
+    console.error('ユーザー削除エラー:', error);
+    res.status(500).json({ error: 'ユーザーの削除に失敗しました' });
+  }
+});
+
 module.exports = router; 
