@@ -29,7 +29,7 @@ const initializeDatabase = () => {
         username TEXT UNIQUE NOT NULL,
         email TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
-        role TEXT DEFAULT 'Trial参加者',
+        role TEXT DEFAULT 'ビジター',
         bio TEXT,
         avatar_url TEXT,
         message TEXT,
@@ -341,6 +341,10 @@ const initializeDatabase = () => {
     `).run();
 
     console.log('Categories migration completed: all categories set to expanded state');
+
+    // 注意: 新規ユーザーのデフォルトロールを「ビジター」に変更
+    // 既存ユーザーのロールは変更されません
+    console.log('New users will be assigned "ビジター" role by default');
 
     console.log('Database initialized successfully');
   } catch (error) {

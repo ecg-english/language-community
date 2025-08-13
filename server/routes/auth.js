@@ -48,7 +48,7 @@ router.post('/register', async (req, res) => {
       VALUES (?, ?, ?, ?, ?)
     `);
     
-    const result = insertUser.run(username, email, hashedPassword, 'Trial参加者', '');
+    const result = insertUser.run(username, email, hashedPassword, 'ビジター', '');
 
     // JWTトークンの生成
     const token = jwt.sign(
@@ -56,7 +56,7 @@ router.post('/register', async (req, res) => {
         userId: result.lastInsertRowid, 
         username, 
         email, 
-        role: 'Trial参加者' 
+        role: 'ビジター' 
       },
       JWT_SECRET,
       { expiresIn: '24h' }
@@ -69,7 +69,7 @@ router.post('/register', async (req, res) => {
         id: result.lastInsertRowid,
         username,
         email,
-        role: 'Trial参加者',
+        role: 'ビジター',
         bio: ''
       }
     });

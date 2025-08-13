@@ -403,6 +403,8 @@ const AdminPanel: React.FC = () => {
         return 'linear-gradient(135deg, #48cae4 0%, #0077b6 100%)';
       case 'JCGメンバー':
         return 'linear-gradient(135deg, #a8e6cf 0%, #56ab2f 100%)';
+      case 'ビジター':
+        return 'linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%)';
       default:
         return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
     }
@@ -420,6 +422,7 @@ const AdminPanel: React.FC = () => {
   };
 
   const roles = [
+    'ビジター',
     'Trial参加者',
     'ECGメンバー',
     'JCGメンバー',

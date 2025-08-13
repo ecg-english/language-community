@@ -295,20 +295,22 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </Typography>
         </MenuItem>
 
-        <MenuItem
-          onClick={handleMemberList}
-          sx={{
-            py: 1.5,
-            '&:hover': {
-              backgroundColor: 'rgba(30, 64, 175, 0.04)',
-            },
-          }}
-        >
-          <PeopleIcon sx={{ mr: 2, color: 'primary.main' }} />
-          <Typography variant="body2" fontWeight={500}>
-            {t('memberList')}
-          </Typography>
-        </MenuItem>
+        {user?.role !== 'ビジター' && (
+          <MenuItem
+            onClick={handleMemberList}
+            sx={{
+              py: 1.5,
+              '&:hover': {
+                backgroundColor: 'rgba(30, 64, 175, 0.04)',
+              },
+            }}
+          >
+            <PeopleIcon sx={{ mr: 2, color: 'primary.main' }} />
+            <Typography variant="body2" fontWeight={500}>
+              {t('memberList')}
+            </Typography>
+          </MenuItem>
+        )}
 
         <MenuItem
           onClick={() => navigate('/features')}
@@ -340,20 +342,22 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </Typography>
         </MenuItem>
 
-        <MenuItem
-          onClick={() => navigate('/monthly-history')}
-          sx={{
-            py: 1.5,
-            '&:hover': {
-              backgroundColor: 'rgba(30, 64, 175, 0.04)',
-            },
-          }}
-        >
-          <HistoryIcon sx={{ mr: 2, color: 'primary.main' }} />
-          <Typography variant="body2" fontWeight={500}>
-            {t('monthlyHistory')}
-          </Typography>
-        </MenuItem>
+        {user?.role !== 'ビジター' && (
+          <MenuItem
+            onClick={() => navigate('/monthly-history')}
+            sx={{
+              py: 1.5,
+              '&:hover': {
+                backgroundColor: 'rgba(30, 64, 175, 0.04)',
+              },
+            }}
+          >
+            <HistoryIcon sx={{ mr: 2, color: 'primary.main' }} />
+            <Typography variant="body2" fontWeight={500}>
+              {t('monthlyHistory')}
+            </Typography>
+          </MenuItem>
+        )}
 
         {user?.role === 'サーバー管理者' && (
           <MenuItem

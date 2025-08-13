@@ -99,6 +99,12 @@ router.get('/categories/:categoryId/channels', authenticateToken, (req, res) => 
 
     // ユーザーの権限に基づいてチャンネルをフィルタリング
     const filteredChannels = allChannels.filter(channel => {
+      // ビジターは基本的に閲覧不可、Eventsチャンネルのみ閲覧可能
+      if (userRole === 'ビジター') {
+        // Eventsチャンネル（ID: 12）のみ閲覧可能
+        return channel.id === 12;
+      }
+      
       switch (channel.channel_type) {
         case 'admin_only_instructors_view':
           // 管理者・講師のみ閲覧可能
@@ -111,8 +117,8 @@ router.get('/categories/:categoryId/channels', authenticateToken, (req, res) => 
         case 'admin_only_all_view':
         case 'instructors_post_all_view':
         case 'all_post_all_view':
-          // 全メンバー閲覧可能
-          return true;
+          // 全メンバー閲覧可能（ビジター以外）
+          return !['ビジター'].includes(userRole);
         
         default:
           console.warn('未知のチャンネルタイプ:', channel.channel_type);

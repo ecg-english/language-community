@@ -377,7 +377,7 @@ const ChannelPage: React.FC = () => {
 
   // 投稿権限をチェックする関数
   const checkPostPermission = (channelType: string, userRole: string): boolean => {
-    if (userRole === 'Trial参加者') return false;
+    if (userRole === 'Trial参加者' || userRole === 'ビジター') return false;
     
     switch (channelType) {
       case 'all_post_all_view':
