@@ -139,14 +139,22 @@ const SetupGuide: React.FC = () => {
     if (!user?.id) return;
     
     try {
+      console.log('自己紹介完了チェック開始:', { userId: user.id });
+      
       // 自己紹介チャンネル（ID: 13）での投稿をチェック
-      const response = await axios.get('/api/channels/channels/13/posts');
+      const response = await axios.get('/api/posts/channels/13/posts');
       const posts = response.data.posts || [];
+      
+      console.log('自己紹介チャンネルの投稿数:', posts.length);
+      console.log('投稿一覧:', posts.map((p: any) => ({ id: p.id, user_id: p.user_id, content: p.content.substring(0, 50) })));
       
       // ユーザーが投稿しているかチェック
       const hasUserPost = posts.some((post: any) => post.user_id === user.id);
       
+      console.log('ユーザーの投稿有無:', hasUserPost);
+      
       if (hasUserPost) {
+        console.log('自己紹介完了としてマーク');
         setChecklist(prev => 
           prev.map(item => 
             item.id === 'introduce' 
@@ -176,11 +184,11 @@ const SetupGuide: React.FC = () => {
     if (user?.id) {
       checkProfileCompletion();
       checkIntroduceCompletion();
-      // 30秒ごとにチェック
+      // 10秒ごとにチェック（より頻繁に）
       const interval = setInterval(() => {
         checkProfileCompletion();
         checkIntroduceCompletion();
-      }, 30000);
+      }, 10000);
       return () => clearInterval(interval);
     }
   }, [user?.id]);
