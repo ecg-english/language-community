@@ -24,6 +24,9 @@ import {
   ExpandLess as ExpandLessIcon,
   Settings as SettingsIcon,
   Person as PersonIcon,
+  Chat as ChatIcon,
+  Announcement as AnnouncementIcon,
+  ContactSupport as ContactSupportIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
@@ -169,6 +172,20 @@ const SetupGuide: React.FC = () => {
     navigate(`/profile/${user?.id}`);
   };
 
+  const handleIntroduceNavigation = () => {
+    navigate('/channel/2'); // 自己紹介チャンネル
+  };
+
+  const handleAnnouncementsNavigation = () => {
+    navigate('/channel/1'); // お知らせチャンネル
+  };
+
+  const handleContactInstructorNavigation = () => {
+    // InstagramやDiscordへの案内ページまたは外部リンク
+    // とりあえずお知らせチャンネルに遷移
+    navigate('/channel/1');
+  };
+
   const completedCount = checklist.filter(item => item.completed).length;
   const totalCount = checklist.length;
   const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
@@ -234,12 +251,18 @@ const SetupGuide: React.FC = () => {
                     border: '1px solid rgba(0, 0, 0, 0.08)',
                     borderRadius: 1,
                     mb: 1,
-                    cursor: item.id === 'profile' ? 'default' : 'pointer',
+                    cursor: ['profile', 'introduce', 'announcements', 'contact'].includes(item.id) ? 'default' : 'pointer',
                     '&:hover': {
-                      backgroundColor: item.id === 'profile' ? 'transparent' : 'rgba(0, 0, 0, 0.02)',
+                      backgroundColor: ['profile', 'introduce', 'announcements', 'contact'].includes(item.id) ? 'transparent' : 'rgba(0, 0, 0, 0.02)',
                     },
                   }}
-                  onClick={() => item.id !== 'profile' && toggleItem(item.id)}
+                  onClick={() => {
+                    // プロフィール、自己紹介、お知らせ、講師連絡の項目はボタンで遷移するためクリック不可
+                    if (['profile', 'introduce', 'announcements', 'contact'].includes(item.id)) {
+                      return;
+                    }
+                    toggleItem(item.id);
+                  }}
                 >
                   <ListItemIcon sx={{ minWidth: 40 }}>
                     {item.completed ? (
@@ -293,6 +316,75 @@ const SetupGuide: React.FC = () => {
                             {t('profile')}
                           </Button>
                         )}
+                        {item.id === 'introduce' && !item.completed && (
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<ChatIcon />}
+                            onClick={handleIntroduceNavigation}
+                            sx={{
+                              borderRadius: 2,
+                              textTransform: 'none',
+                              fontWeight: 500,
+                              fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                              py: { xs: 0.25, sm: 0.5 },
+                              px: { xs: 1, sm: 1.5 },
+                              minWidth: { xs: 'auto', sm: 'auto' },
+                              flexShrink: 0,
+                              '& .MuiButton-startIcon': {
+                                marginRight: { xs: 0.5, sm: 0.5 },
+                              },
+                            }}
+                          >
+                            {t('channels')}
+                          </Button>
+                        )}
+                        {item.id === 'announcements' && !item.completed && (
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<AnnouncementIcon />}
+                            onClick={handleAnnouncementsNavigation}
+                            sx={{
+                              borderRadius: 2,
+                              textTransform: 'none',
+                              fontWeight: 500,
+                              fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                              py: { xs: 0.25, sm: 0.5 },
+                              px: { xs: 1, sm: 1.5 },
+                              minWidth: { xs: 'auto', sm: 'auto' },
+                              flexShrink: 0,
+                              '& .MuiButton-startIcon': {
+                                marginRight: { xs: 0.5, sm: 0.5 },
+                              },
+                            }}
+                          >
+                            {t('channels')}
+                          </Button>
+                        )}
+                        {item.id === 'contact' && !item.completed && (
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<ContactSupportIcon />}
+                            onClick={handleContactInstructorNavigation}
+                            sx={{
+                              borderRadius: 2,
+                              textTransform: 'none',
+                              fontWeight: 500,
+                              fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                              py: { xs: 0.25, sm: 0.5 },
+                              px: { xs: 1, sm: 1.5 },
+                              minWidth: { xs: 'auto', sm: 'auto' },
+                              flexShrink: 0,
+                              '& .MuiButton-startIcon': {
+                                marginRight: { xs: 0.5, sm: 0.5 },
+                              },
+                            }}
+                          >
+                            {t('channels')}
+                          </Button>
+                        )}
                       </Box>
                     }
                     secondary={
@@ -331,13 +423,19 @@ const SetupGuide: React.FC = () => {
                           border: '1px solid rgba(0, 0, 0, 0.08)',
                           borderRadius: 1,
                           mb: 1,
-                          cursor: item.id === 'profile' ? 'default' : 'pointer',
+                          cursor: ['profile', 'introduce', 'announcements', 'contact'].includes(item.id) ? 'default' : 'pointer',
                           opacity: 0.6,
                           '&:hover': {
-                            backgroundColor: item.id === 'profile' ? 'transparent' : 'rgba(0, 0, 0, 0.02)',
+                            backgroundColor: ['profile', 'introduce', 'announcements', 'contact'].includes(item.id) ? 'transparent' : 'rgba(0, 0, 0, 0.02)',
                           },
                         }}
-                        onClick={() => item.id !== 'profile' && toggleItem(item.id)}
+                        onClick={() => {
+                          // プロフィール、自己紹介、お知らせ、講師連絡の項目はボタンで遷移するためクリック不可
+                          if (['profile', 'introduce', 'announcements', 'contact'].includes(item.id)) {
+                            return;
+                          }
+                          toggleItem(item.id);
+                        }}
                       >
                         <ListItemIcon sx={{ minWidth: 40 }}>
                           {item.completed ? (
@@ -389,6 +487,75 @@ const SetupGuide: React.FC = () => {
                                   }}
                                 >
                                   {t('profile')}
+                                </Button>
+                              )}
+                              {item.id === 'introduce' && !item.completed && (
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  startIcon={<ChatIcon />}
+                                  onClick={handleIntroduceNavigation}
+                                  sx={{
+                                    borderRadius: 2,
+                                    textTransform: 'none',
+                                    fontWeight: 500,
+                                    fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                                    py: { xs: 0.25, sm: 0.5 },
+                                    px: { xs: 1, sm: 1.5 },
+                                    minWidth: { xs: 'auto', sm: 'auto' },
+                                    flexShrink: 0,
+                                    '& .MuiButton-startIcon': {
+                                      marginRight: { xs: 0.5, sm: 0.5 },
+                                    },
+                                  }}
+                                >
+                                  {t('channels')}
+                                </Button>
+                              )}
+                              {item.id === 'announcements' && !item.completed && (
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  startIcon={<AnnouncementIcon />}
+                                  onClick={handleAnnouncementsNavigation}
+                                  sx={{
+                                    borderRadius: 2,
+                                    textTransform: 'none',
+                                    fontWeight: 500,
+                                    fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                                    py: { xs: 0.25, sm: 0.5 },
+                                    px: { xs: 1, sm: 1.5 },
+                                    minWidth: { xs: 'auto', sm: 'auto' },
+                                    flexShrink: 0,
+                                    '& .MuiButton-startIcon': {
+                                      marginRight: { xs: 0.5, sm: 0.5 },
+                                    },
+                                  }}
+                                >
+                                  {t('channels')}
+                                </Button>
+                              )}
+                              {item.id === 'contact' && !item.completed && (
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  startIcon={<ContactSupportIcon />}
+                                  onClick={handleContactInstructorNavigation}
+                                  sx={{
+                                    borderRadius: 2,
+                                    textTransform: 'none',
+                                    fontWeight: 500,
+                                    fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                                    py: { xs: 0.25, sm: 0.5 },
+                                    px: { xs: 1, sm: 1.5 },
+                                    minWidth: { xs: 'auto', sm: 'auto' },
+                                    flexShrink: 0,
+                                    '& .MuiButton-startIcon': {
+                                      marginRight: { xs: 0.5, sm: 0.5 },
+                                    },
+                                  }}
+                                >
+                                  {t('channels')}
                                 </Button>
                               )}
                             </Box>
