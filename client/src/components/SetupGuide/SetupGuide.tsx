@@ -24,8 +24,8 @@ import {
   ExpandLess as ExpandLessIcon,
   Settings as SettingsIcon,
   Person as PersonIcon,
-  Chat as ChatIcon,
-  Announcement as AnnouncementIcon,
+  WavingHand as WavingHandIcon,
+  Campaign as CampaignIcon,
   ContactSupport as ContactSupportIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
@@ -364,7 +364,7 @@ const SetupGuide: React.FC = () => {
                           <Button
                             variant="outlined"
                             size="small"
-                            startIcon={<ChatIcon />}
+                            startIcon={<WavingHandIcon />}
                             onClick={handleIntroduceNavigation}
                             sx={{
                               borderRadius: 2,
@@ -380,14 +380,14 @@ const SetupGuide: React.FC = () => {
                               },
                             }}
                           >
-                            {t('channels')}
+                            {t('setupGuideIntroduce')}
                           </Button>
                         )}
                         {item.id === 'announcements' && !item.completed && (
                           <Button
                             variant="outlined"
                             size="small"
-                            startIcon={<AnnouncementIcon />}
+                            startIcon={<CampaignIcon />}
                             onClick={handleAnnouncementsNavigation}
                             sx={{
                               borderRadius: 2,
@@ -403,7 +403,7 @@ const SetupGuide: React.FC = () => {
                               },
                             }}
                           >
-                            {t('channels')}
+                            {t('setupGuideAnnouncements')}
                           </Button>
                         )}
                       </Box>
@@ -515,7 +515,7 @@ const SetupGuide: React.FC = () => {
                                 <Button
                                   variant="outlined"
                                   size="small"
-                                  startIcon={<ChatIcon />}
+                                  startIcon={<WavingHandIcon />}
                                   onClick={handleIntroduceNavigation}
                                   sx={{
                                     borderRadius: 2,
@@ -531,14 +531,14 @@ const SetupGuide: React.FC = () => {
                                     },
                                   }}
                                 >
-                                  {t('channels')}
+                                  {t('setupGuideIntroduce')}
                                 </Button>
                               )}
                               {item.id === 'announcements' && !item.completed && (
                                 <Button
                                   variant="outlined"
                                   size="small"
-                                  startIcon={<AnnouncementIcon />}
+                                  startIcon={<CampaignIcon />}
                                   onClick={handleAnnouncementsNavigation}
                                   sx={{
                                     borderRadius: 2,
@@ -554,7 +554,7 @@ const SetupGuide: React.FC = () => {
                                     },
                                   }}
                                 >
-                                  {t('channels')}
+                                  {t('setupGuideAnnouncements')}
                                 </Button>
                               )}
                             </Box>

@@ -88,6 +88,11 @@ const en = {
     channelTypeClass1Only: 'Class1 Only',
     unknown: 'Unknown',
     
+    // セットアップガイドボタン
+    setupGuideProfile: 'Profile',
+    setupGuideIntroduce: 'Introduce',
+    setupGuideAnnouncements: 'Announcements',
+    
     // チェックリストガイド
     setupGuide: 'Setup Guide',
     setupGuideTitle: 'What to do when joining the community',
@@ -329,6 +334,11 @@ const ja = {
     channelTypeClass1Only: 'Class1限定',
     unknown: '不明',
     
+    // セットアップガイドボタン
+    setupGuideProfile: 'プロフィール',
+    setupGuideIntroduce: '自己紹介',
+    setupGuideAnnouncements: 'お知らせ',
+    
     // チェックリストガイド
     setupGuide: 'セットアップガイド',
     setupGuideTitle: 'コミュニティに参加する際の手順',
@@ -568,6 +578,11 @@ const jaSimple = {
     channelTypeGeneralPost: 'みんなのとうこう',
     channelTypeClass1Only: 'Class1せんよう',
     unknown: 'ふめい',
+    
+    // セットアップガイドボタン
+    setupGuideProfile: 'プロフィール',
+    setupGuideIntroduce: '自己紹介',
+    setupGuideAnnouncements: 'お知らせ',
     
     // チェックリストガイド
     setupGuide: 'セットアップガイド',
