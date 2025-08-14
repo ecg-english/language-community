@@ -134,12 +134,53 @@ const SetupGuide: React.FC = () => {
     }
   };
 
+  // 自己紹介チャンネルでの投稿完了チェック
+  const checkIntroduceCompletion = async () => {
+    if (!user?.id) return;
+    
+    try {
+      // 自己紹介チャンネル（ID: 13）での投稿をチェック
+      const response = await axios.get('/api/channels/channels/13/posts');
+      const posts = response.data.posts || [];
+      
+      // ユーザーが投稿しているかチェック
+      const hasUserPost = posts.some((post: any) => post.user_id === user.id);
+      
+      if (hasUserPost) {
+        setChecklist(prev => 
+          prev.map(item => 
+            item.id === 'introduce' 
+              ? { ...item, completed: true }
+              : item
+          )
+        );
+      }
+    } catch (error) {
+      console.error('自己紹介完了チェックエラー:', error);
+    }
+  };
+
+  // お知らせチャンネルを開いた時の完了チェック
+  const checkAnnouncementsCompletion = () => {
+    setChecklist(prev => 
+      prev.map(item => 
+        item.id === 'announcements' 
+          ? { ...item, completed: true }
+          : item
+      )
+    );
+  };
+
   // プロフィール完了状態を定期的にチェック
   useEffect(() => {
     if (user?.id) {
       checkProfileCompletion();
+      checkIntroduceCompletion();
       // 30秒ごとにチェック
-      const interval = setInterval(checkProfileCompletion, 30000);
+      const interval = setInterval(() => {
+        checkProfileCompletion();
+        checkIntroduceCompletion();
+      }, 30000);
       return () => clearInterval(interval);
     }
   }, [user?.id]);
@@ -173,17 +214,19 @@ const SetupGuide: React.FC = () => {
   };
 
   const handleIntroduceNavigation = () => {
-    navigate('/channel/2'); // 自己紹介チャンネル
+    navigate('/channel/13'); // 自己紹介チャンネル（正しいID）
   };
 
   const handleAnnouncementsNavigation = () => {
-    navigate('/channel/1'); // お知らせチャンネル
+    navigate('/channel/11'); // お知らせチャンネル（正しいID）
+    // お知らせチャンネルを開いた時に自動でチェック
+    checkAnnouncementsCompletion();
   };
 
   const handleContactInstructorNavigation = () => {
     // InstagramやDiscordへの案内ページまたは外部リンク
     // とりあえずお知らせチャンネルに遷移
-    navigate('/channel/1');
+    navigate('/channel/11');
   };
 
   const completedCount = checklist.filter(item => item.completed).length;
@@ -251,14 +294,15 @@ const SetupGuide: React.FC = () => {
                     border: '1px solid rgba(0, 0, 0, 0.08)',
                     borderRadius: 1,
                     mb: 1,
-                    cursor: ['profile', 'introduce', 'announcements', 'contact'].includes(item.id) ? 'default' : 'pointer',
+                    cursor: ['profile', 'introduce', 'announcements'].includes(item.id) ? 'default' : 'pointer',
                     '&:hover': {
-                      backgroundColor: ['profile', 'introduce', 'announcements', 'contact'].includes(item.id) ? 'transparent' : 'rgba(0, 0, 0, 0.02)',
+                      backgroundColor: ['profile', 'introduce', 'announcements'].includes(item.id) ? 'transparent' : 'rgba(0, 0, 0, 0.02)',
                     },
                   }}
                   onClick={() => {
-                    // プロフィール、自己紹介、お知らせ、講師連絡の項目はボタンで遷移するためクリック不可
-                    if (['profile', 'introduce', 'announcements', 'contact'].includes(item.id)) {
+                    // プロフィール、自己紹介、お知らせの項目はボタンで遷移するためクリック不可
+                    // contact（講師連絡）は手動チェックのみ
+                    if (['profile', 'introduce', 'announcements'].includes(item.id)) {
                       return;
                     }
                     toggleItem(item.id);
@@ -362,29 +406,6 @@ const SetupGuide: React.FC = () => {
                             {t('channels')}
                           </Button>
                         )}
-                        {item.id === 'contact' && !item.completed && (
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            startIcon={<ContactSupportIcon />}
-                            onClick={handleContactInstructorNavigation}
-                            sx={{
-                              borderRadius: 2,
-                              textTransform: 'none',
-                              fontWeight: 500,
-                              fontSize: { xs: '0.7rem', sm: '0.75rem' },
-                              py: { xs: 0.25, sm: 0.5 },
-                              px: { xs: 1, sm: 1.5 },
-                              minWidth: { xs: 'auto', sm: 'auto' },
-                              flexShrink: 0,
-                              '& .MuiButton-startIcon': {
-                                marginRight: { xs: 0.5, sm: 0.5 },
-                              },
-                            }}
-                          >
-                            {t('channels')}
-                          </Button>
-                        )}
                       </Box>
                     }
                     secondary={
@@ -423,15 +444,16 @@ const SetupGuide: React.FC = () => {
                           border: '1px solid rgba(0, 0, 0, 0.08)',
                           borderRadius: 1,
                           mb: 1,
-                          cursor: ['profile', 'introduce', 'announcements', 'contact'].includes(item.id) ? 'default' : 'pointer',
+                          cursor: ['profile', 'introduce', 'announcements'].includes(item.id) ? 'default' : 'pointer',
                           opacity: 0.6,
                           '&:hover': {
-                            backgroundColor: ['profile', 'introduce', 'announcements', 'contact'].includes(item.id) ? 'transparent' : 'rgba(0, 0, 0, 0.02)',
+                            backgroundColor: ['profile', 'introduce', 'announcements'].includes(item.id) ? 'transparent' : 'rgba(0, 0, 0, 0.02)',
                           },
                         }}
                         onClick={() => {
-                          // プロフィール、自己紹介、お知らせ、講師連絡の項目はボタンで遷移するためクリック不可
-                          if (['profile', 'introduce', 'announcements', 'contact'].includes(item.id)) {
+                          // プロフィール、自己紹介、お知らせの項目はボタンで遷移するためクリック不可
+                          // contact（講師連絡）は手動チェックのみ
+                          if (['profile', 'introduce', 'announcements'].includes(item.id)) {
                             return;
                           }
                           toggleItem(item.id);
@@ -518,29 +540,6 @@ const SetupGuide: React.FC = () => {
                                   size="small"
                                   startIcon={<AnnouncementIcon />}
                                   onClick={handleAnnouncementsNavigation}
-                                  sx={{
-                                    borderRadius: 2,
-                                    textTransform: 'none',
-                                    fontWeight: 500,
-                                    fontSize: { xs: '0.7rem', sm: '0.75rem' },
-                                    py: { xs: 0.25, sm: 0.5 },
-                                    px: { xs: 1, sm: 1.5 },
-                                    minWidth: { xs: 'auto', sm: 'auto' },
-                                    flexShrink: 0,
-                                    '& .MuiButton-startIcon': {
-                                      marginRight: { xs: 0.5, sm: 0.5 },
-                                    },
-                                  }}
-                                >
-                                  {t('channels')}
-                                </Button>
-                              )}
-                              {item.id === 'contact' && !item.completed && (
-                                <Button
-                                  variant="outlined"
-                                  size="small"
-                                  startIcon={<ContactSupportIcon />}
-                                  onClick={handleContactInstructorNavigation}
                                   sx={{
                                     borderRadius: 2,
                                     textTransform: 'none',
