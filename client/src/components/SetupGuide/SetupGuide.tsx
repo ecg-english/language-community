@@ -179,19 +179,52 @@ const SetupGuide: React.FC = () => {
     );
   };
 
+  // 現在のURLをチェックして、お知らせチャンネルを開いているか確認
+  const checkCurrentPageForAnnouncements = () => {
+    const currentPath = window.location.pathname;
+    if (currentPath === '/channel/11') {
+      console.log('お知らせチャンネルを開いているため、チェックを入れます');
+      checkAnnouncementsCompletion();
+    }
+  };
+
   // プロフィール完了状態を定期的にチェック
   useEffect(() => {
     if (user?.id) {
       checkProfileCompletion();
       checkIntroduceCompletion();
+      checkCurrentPageForAnnouncements();
       // 10秒ごとにチェック（より頻繁に）
       const interval = setInterval(() => {
         checkProfileCompletion();
         checkIntroduceCompletion();
+        checkCurrentPageForAnnouncements();
       }, 10000);
       return () => clearInterval(interval);
     }
   }, [user?.id]);
+
+  // お知らせチャンネルページを開いた時のチェック
+  useEffect(() => {
+    checkCurrentPageForAnnouncements();
+  }, []);
+
+  // URL変更時のチェック
+  useEffect(() => {
+    const handleUrlChange = () => {
+      checkCurrentPageForAnnouncements();
+    };
+
+    // ページ読み込み時とURL変更時にチェック
+    window.addEventListener('popstate', handleUrlChange);
+    
+    // 初期チェック
+    handleUrlChange();
+
+    return () => {
+      window.removeEventListener('popstate', handleUrlChange);
+    };
+  }, []);
 
   // チェックリストの状態をローカルストレージに保存
   useEffect(() => {
@@ -228,7 +261,9 @@ const SetupGuide: React.FC = () => {
   const handleAnnouncementsNavigation = () => {
     navigate('/channel/11'); // お知らせチャンネル（正しいID）
     // お知らせチャンネルを開いた時に自動でチェック
-    checkAnnouncementsCompletion();
+    setTimeout(() => {
+      checkAnnouncementsCompletion();
+    }, 100); // 少し遅延させてナビゲーション完了後にチェック
   };
 
   const handleContactInstructorNavigation = () => {
