@@ -93,9 +93,11 @@ const SetupGuide: React.FC = () => {
         // 保存された完了状態を新しいチェックリストに適用
         const updatedChecklist = newChecklist.map(item => {
           const savedItem = savedItems.find((saved: any) => saved.id === item.id);
-          const result = savedItem ? { ...item, completed: savedItem.completed } : item;
+          let result = savedItem ? { ...item, completed: savedItem.completed } : item;
+          // お知らせ項目を強制的に未完了にする（テスト用）
           if (item.id === 'announcements') {
-            console.log('announcements項目更新:', result);
+            result = { ...result, completed: false };
+            console.log('announcements項目を強制的に未完了に設定:', result);
           }
           return result;
         });
