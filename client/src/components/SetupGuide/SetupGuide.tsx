@@ -399,38 +399,31 @@ const SetupGuide: React.FC = () => {
                           </Button>
                         )}
                         {item.id === 'announcements' && !item.completed && (
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            startIcon={<CampaignIcon />}
-                            onClick={() => {
-                              console.log('お知らせボタンクリック！');
-                              setChecklist(prev => 
-                                prev.map(item => 
-                                  item.id === 'announcements' 
-                                    ? { ...item, completed: true }
-                                    : item
-                                )
-                              );
-                              navigate('/channel/11');
-                            }}
-                            sx={{
-                              borderRadius: 2,
-                              textTransform: 'none',
-                              fontWeight: 500,
-                              fontSize: { xs: '0.7rem', sm: '0.75rem' },
-                              py: { xs: 0.25, sm: 0.5 },
-                              px: { xs: 1, sm: 1.5 },
-                              minWidth: { xs: 'auto', sm: 'auto' },
-                              flexShrink: 0,
-                              '& .MuiButton-startIcon': {
-                                marginRight: { xs: 0.5, sm: 0.5 },
-                              },
-                            }}
-                          >
-                            {t('setupGuideAnnouncements')}
-                          </Button>
-                        )}
+                                <button
+                                  onClick={() => {
+                                    alert('お知らせボタンがクリックされました！');
+                                    setChecklist(prev => 
+                                      prev.map(item => 
+                                        item.id === 'announcements' 
+                                          ? { ...item, completed: true }
+                                          : item
+                                      )
+                                    );
+                                    navigate('/channel/11');
+                                  }}
+                                  style={{
+                                    padding: '8px 16px',
+                                    border: '1px solid #1976d2',
+                                    borderRadius: '16px',
+                                    backgroundColor: 'white',
+                                    color: '#1976d2',
+                                    cursor: 'pointer',
+                                    fontSize: '12px'
+                                  }}
+                                >
+                                  お知らせ
+                                </button>
+                              )}
                       </Box>
                     }
                     secondary={
