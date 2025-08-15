@@ -297,11 +297,6 @@ const SetupGuide: React.FC = () => {
                 return null;
               }
 
-              // お知らせ項目のデバッグ
-              if (item.id === 'announcements') {
-                console.log('お知らせ項目:', item.completed ? '完了済み' : '未完了');
-              }
-
               return (
                 <ListItem
                   key={item.id}
@@ -309,15 +304,15 @@ const SetupGuide: React.FC = () => {
                     border: '1px solid rgba(0, 0, 0, 0.08)',
                     borderRadius: 1,
                     mb: 1,
-                    cursor: ['profile', 'introduce', 'announcements'].includes(item.id) ? 'default' : 'pointer',
+                    cursor: ['profile', 'introduce'].includes(item.id) ? 'default' : 'pointer',
                     '&:hover': {
-                      backgroundColor: ['profile', 'introduce', 'announcements'].includes(item.id) ? 'transparent' : 'rgba(0, 0, 0, 0.02)',
+                      backgroundColor: ['profile', 'introduce'].includes(item.id) ? 'transparent' : 'rgba(0, 0, 0, 0.02)',
                     },
                   }}
                   onClick={() => {
-                    // プロフィール、自己紹介、お知らせの項目はボタンで遷移するためクリック不可
-                    // contact（講師連絡）は手動チェックのみ
-                    if (['profile', 'introduce', 'announcements'].includes(item.id)) {
+                    // プロフィール、自己紹介の項目はボタンで遷移するためクリック不可
+                    // contact（講師連絡）とお知らせは手動チェック可能
+                    if (['profile', 'introduce'].includes(item.id)) {
                       return;
                     }
                     toggleItem(item.id);
@@ -467,14 +462,14 @@ const SetupGuide: React.FC = () => {
                             backgroundColor: ['profile', 'introduce', 'announcements'].includes(item.id) ? 'transparent' : 'rgba(0, 0, 0, 0.02)',
                           },
                         }}
-                        onClick={() => {
-                          // プロフィール、自己紹介、お知らせの項目はボタンで遷移するためクリック不可
-                          // contact（講師連絡）は手動チェックのみ
-                          if (['profile', 'introduce', 'announcements'].includes(item.id)) {
-                            return;
-                          }
-                          toggleItem(item.id);
-                        }}
+                                          onClick={() => {
+                    // プロフィール、自己紹介の項目はボタンで遷移するためクリック不可
+                    // contact（講師連絡）とお知らせは手動チェック可能
+                    if (['profile', 'introduce'].includes(item.id)) {
+                      return;
+                    }
+                    toggleItem(item.id);
+                  }}
                       >
                         <ListItemIcon sx={{ minWidth: 40 }}>
                           {item.completed ? (
@@ -557,14 +552,6 @@ const SetupGuide: React.FC = () => {
                                   size="small"
                                   startIcon={<CampaignIcon />}
                                   onClick={() => {
-                                    console.log('お知らせボタンクリック！');
-                                    setChecklist(prev => 
-                                      prev.map(item => 
-                                        item.id === 'announcements' 
-                                          ? { ...item, completed: true }
-                                          : item
-                                      )
-                                    );
                                     navigate('/channel/11');
                                   }}
                                   sx={{
