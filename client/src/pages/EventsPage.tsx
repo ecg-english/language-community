@@ -152,7 +152,7 @@ const EventsPage: React.FC = () => {
         mode: 'no-cors' // GASの制限により必要
       });
       
-      setReservationMessage('予約完了です！確認メールを送信しました。');
+      setReservationMessage('営業日予約完了です！確認メールを送信しました。');
       setTimeout(() => {
         setReservationDialogOpen(false);
         setReservationMessage('');
@@ -160,7 +160,7 @@ const EventsPage: React.FC = () => {
       
     } catch (error) {
       console.error('予約エラー:', error);
-      setReservationMessage('予約の送信に失敗しました。もう一度お試しください。');
+      setReservationMessage('営業日予約の送信に失敗しました。もう一度お試しください。');
     } finally {
       setReservationLoading(false);
     }
@@ -450,7 +450,7 @@ const EventsPage: React.FC = () => {
                   weekdayLessons.push({
                     id: day.getTime(),
                     title: 'ECG 神戸三宮',
-                    description: '英語学習コミュニティのレッスン',
+                    description: 'ECG営業日',
                     target_audience: 'ビジター',
                     start_time: '18:00',
                     end_time: '21:00',
@@ -597,7 +597,7 @@ const EventsPage: React.FC = () => {
                             {event.title}
                             {(event as any).isEcgLesson && (
                               <span style={{ color: '#ff9800', fontSize: '0.5rem', marginLeft: '4px' }}>
-                                [予約可能]
+                                [営業日予約]
                               </span>
                             )}
                           </Typography>
@@ -1044,7 +1044,7 @@ const EventsPage: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* ECGレッスン予約ダイアログ */}
+      {/* ECG営業日予約ダイアログ */}
       <Dialog
         open={reservationDialogOpen}
         onClose={() => setReservationDialogOpen(false)}
@@ -1052,7 +1052,7 @@ const EventsPage: React.FC = () => {
         fullWidth
       >
         <DialogTitle>
-          ECGレッスン予約
+          ECG営業日予約
         </DialogTitle>
         <DialogContent>
           {selectedLesson && (
@@ -1066,6 +1066,16 @@ const EventsPage: React.FC = () => {
               <Typography variant="body1" sx={{ mb: 2 }}>
                 場所: 神戸三宮
               </Typography>
+              <Typography variant="body2" sx={{ mb: 2 }}>
+                <a 
+                  href="https://maps.app.goo.gl/gHTXyhjhds27a75q7" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ color: '#1976d2', textDecoration: 'none' }}
+                >
+                  📍 地図を開く
+                </a>
+              </Typography>
               
               {reservationMessage && (
                 <Alert 
@@ -1077,7 +1087,7 @@ const EventsPage: React.FC = () => {
               )}
               
               <Typography variant="body2" color="text.secondary">
-                予約完了後、確認メールをお送りします。
+                営業日予約完了後、確認メールをお送りします。
               </Typography>
             </Box>
           )}
@@ -1095,7 +1105,7 @@ const EventsPage: React.FC = () => {
             disabled={reservationLoading || reservationMessage.includes('完了')}
             startIcon={reservationLoading ? <CircularProgress size={20} /> : null}
           >
-            {reservationLoading ? '予約中...' : '予約する'}
+            {reservationLoading ? '予約中...' : '営業日予約する'}
           </Button>
         </DialogActions>
       </Dialog>
