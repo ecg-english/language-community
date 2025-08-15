@@ -168,20 +168,6 @@ const SetupGuide: React.FC = () => {
     }
   };
 
-  // お知らせチャンネルを開いた時の完了チェック
-  const checkAnnouncementsCompletion = () => {
-    console.log('お知らせ完了チェック実行');
-    setChecklist(prev => {
-      const updated = prev.map(item => 
-        item.id === 'announcements' 
-          ? { ...item, completed: true }
-          : item
-      );
-      console.log('チェックリスト更新:', updated.map(item => ({ id: item.id, completed: item.completed })));
-      return updated;
-    });
-  };
-
   // プロフィール完了状態を定期的にチェック
   useEffect(() => {
     if (user?.id) {
@@ -231,8 +217,14 @@ const SetupGuide: React.FC = () => {
 
   const handleAnnouncementsNavigation = () => {
     console.log('お知らせボタンがクリックされました');
-    // お知らせチャンネルを開いた時に自動でチェック
-    checkAnnouncementsCompletion();
+    // お知らせボタンを押した時にチェックを入れる
+    setChecklist(prev => 
+      prev.map(item => 
+        item.id === 'announcements' 
+          ? { ...item, completed: true }
+          : item
+      )
+    );
     navigate('/channel/11'); // お知らせチャンネル（正しいID）
   };
 
