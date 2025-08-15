@@ -51,6 +51,7 @@ const SetupGuide: React.FC = () => {
 
   // チェックリストの初期化と翻訳の更新
   useEffect(() => {
+    console.log('=== チェックリスト初期化開始 ===');
     const newChecklist: ChecklistItem[] = [
       {
         id: 'profile',
@@ -79,23 +80,36 @@ const SetupGuide: React.FC = () => {
       },
     ];
 
+    console.log('新しいチェックリスト:', newChecklist);
+    console.log('announcements項目:', newChecklist.find(item => item.id === 'announcements'));
+
     // ローカルストレージからチェックリストの状態を読み込み
     if (user?.id) {
       const savedChecklist = localStorage.getItem(`setupGuideChecklist_${user.id}`);
+      console.log('保存されたチェックリスト:', savedChecklist);
       if (savedChecklist) {
         const savedItems = JSON.parse(savedChecklist);
+        console.log('パースされた保存項目:', savedItems);
         // 保存された完了状態を新しいチェックリストに適用
         const updatedChecklist = newChecklist.map(item => {
           const savedItem = savedItems.find((saved: any) => saved.id === item.id);
-          return savedItem ? { ...item, completed: savedItem.completed } : item;
+          const result = savedItem ? { ...item, completed: savedItem.completed } : item;
+          if (item.id === 'announcements') {
+            console.log('announcements項目更新:', result);
+          }
+          return result;
         });
+        console.log('更新されたチェックリスト:', updatedChecklist);
         setChecklist(updatedChecklist);
       } else {
+        console.log('保存されたチェックリストなし、新規作成');
         setChecklist(newChecklist);
       }
     } else {
+      console.log('ユーザーIDなし、新規作成');
       setChecklist(newChecklist);
     }
+    console.log('=== チェックリスト初期化完了 ===');
   }, [t, user?.id]); // tが変更されたときに再実行
 
   // 非表示状態をローカルストレージから読み込み
@@ -312,6 +326,15 @@ const SetupGuide: React.FC = () => {
                 return null;
               }
 
+              // お知らせ項目のデバッグ
+              if (item.id === 'announcements') {
+                console.log('=== お知らせ項目レンダリング ===');
+                console.log('item:', item);
+                console.log('item.completed:', item.completed);
+                console.log('!item.completed:', !item.completed);
+                console.log('ボタン表示条件:', item.id === 'announcements' && !item.completed);
+              }
+
               return (
                 <ListItem
                   key={item.id}
@@ -409,33 +432,38 @@ const SetupGuide: React.FC = () => {
                           </Button>
                         )}
                         {item.id === 'announcements' && !item.completed && (
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            startIcon={<CampaignIcon />}
-                            onClick={(e) => {
-                              console.log('=== お知らせボタンonClick直接実行 ===');
-                              console.log('ボタンクリックイベント:', e);
-                              console.log('item.id:', item.id);
-                              console.log('item.completed:', item.completed);
-                              handleAnnouncementsNavigation(e);
-                            }}
-                            sx={{
-                              borderRadius: 2,
-                              textTransform: 'none',
-                              fontWeight: 500,
-                              fontSize: { xs: '0.7rem', sm: '0.75rem' },
-                              py: { xs: 0.25, sm: 0.5 },
-                              px: { xs: 1, sm: 1.5 },
-                              minWidth: { xs: 'auto', sm: 'auto' },
-                              flexShrink: 0,
-                              '& .MuiButton-startIcon': {
-                                marginRight: { xs: 0.5, sm: 0.5 },
-                              },
-                            }}
-                          >
-                            {t('setupGuideAnnouncements')}
-                          </Button>
+                          (() => {
+                            console.log('=== お知らせボタンレンダリング開始 ===');
+                            return (
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                startIcon={<CampaignIcon />}
+                                onClick={(e) => {
+                                  console.log('=== お知らせボタンonClick直接実行 ===');
+                                  console.log('ボタンクリックイベント:', e);
+                                  console.log('item.id:', item.id);
+                                  console.log('item.completed:', item.completed);
+                                  handleAnnouncementsNavigation(e);
+                                }}
+                                sx={{
+                                  borderRadius: 2,
+                                  textTransform: 'none',
+                                  fontWeight: 500,
+                                  fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                                  py: { xs: 0.25, sm: 0.5 },
+                                  px: { xs: 1, sm: 1.5 },
+                                  minWidth: { xs: 'auto', sm: 'auto' },
+                                  flexShrink: 0,
+                                  '& .MuiButton-startIcon': {
+                                    marginRight: { xs: 0.5, sm: 0.5 },
+                                  },
+                                }}
+                              >
+                                {t('setupGuideAnnouncements')}
+                              </Button>
+                            );
+                          })()
                         )}
                       </Box>
                     }
