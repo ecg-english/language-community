@@ -385,30 +385,37 @@ const SetupGuide: React.FC = () => {
                           </Button>
                         )}
                         {item.id === 'announcements' && !item.completed && (
-                                <button
-                                  onClick={() => {
-                                    // 強制的にチェックリストを更新
-                                    const updatedChecklist = checklist.map(item => 
-                                      item.id === 'announcements' 
-                                        ? { ...item, completed: true }
-                                        : item
-                                    );
-                                    setChecklist(updatedChecklist);
-                                    navigate('/channel/11');
-                                  }}
-                                  style={{
-                                    padding: '8px 16px',
-                                    border: '1px solid #1976d2',
-                                    borderRadius: '16px',
-                                    backgroundColor: 'white',
-                                    color: '#1976d2',
-                                    cursor: 'pointer',
-                                    fontSize: '12px'
-                                  }}
-                                >
-                                  お知らせ
-                                </button>
-                              )}
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<CampaignIcon />}
+                            onClick={() => {
+                              // 強制的にチェックリストを更新
+                              const updatedChecklist = checklist.map(item => 
+                                item.id === 'announcements' 
+                                  ? { ...item, completed: true }
+                                  : item
+                              );
+                              setChecklist(updatedChecklist);
+                              navigate('/channel/11');
+                            }}
+                            sx={{
+                              borderRadius: 2,
+                              textTransform: 'none',
+                              fontWeight: 500,
+                              fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                              py: { xs: 0.25, sm: 0.5 },
+                              px: { xs: 1, sm: 1.5 },
+                              minWidth: { xs: 'auto', sm: 'auto' },
+                              flexShrink: 0,
+                              '& .MuiButton-startIcon': {
+                                marginRight: { xs: 0.5, sm: 0.5 },
+                              },
+                            }}
+                          >
+                            {t('setupGuideAnnouncements')}
+                          </Button>
+                        )}
                       </Box>
                     }
                     secondary={
