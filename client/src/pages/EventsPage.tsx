@@ -132,7 +132,7 @@ const EventsPage: React.FC = () => {
     
     try {
       // GAS経由でメール送信
-      const gasUrl = 'https://script.google.com/macros/s/YOUR_GAS_DEPLOYMENT_ID/exec';
+      const gasUrl = 'https://script.google.com/macros/s/AKfycbyruZZqWKzAiwYR1sCCgnOMKg6k2vBfKRqqhrl_EEDy7NiF1etRjNeD9I69siVdu_4/exec';
       
       const reservationData = {
         userName: user.username,
