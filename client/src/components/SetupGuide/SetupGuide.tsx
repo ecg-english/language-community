@@ -185,8 +185,10 @@ const SetupGuide: React.FC = () => {
 
   // チェックリストの状態をローカルストレージに保存
   useEffect(() => {
+    console.log('チェックリスト状態変更:', checklist);
     if (user?.id) {
       localStorage.setItem(`setupGuideChecklist_${user.id}`, JSON.stringify(checklist));
+      console.log('ローカルストレージに保存完了:', `setupGuideChecklist_${user.id}`);
     }
   }, [checklist, user?.id]);
 
@@ -218,17 +220,32 @@ const SetupGuide: React.FC = () => {
   };
 
   const handleAnnouncementsNavigation = (e: React.MouseEvent) => {
+    console.log('=== お知らせボタンクリック開始 ===');
+    console.log('イベント:', e);
+    console.log('現在のチェックリスト:', checklist);
+    
     e.stopPropagation(); // イベントの伝播を停止
+    console.log('イベント伝播停止完了');
+    
     console.log('お知らせボタンがクリックされました');
+    
     // お知らせボタンを押した時にチェックを入れる
-    setChecklist(prev => 
-      prev.map(item => 
-        item.id === 'announcements' 
-          ? { ...item, completed: true }
-          : item
-      )
-    );
+    setChecklist(prev => {
+      console.log('setChecklist実行前の状態:', prev);
+      const updated = prev.map(item => {
+        if (item.id === 'announcements') {
+          console.log('announcements項目を更新:', { ...item, completed: true });
+          return { ...item, completed: true };
+        }
+        return item;
+      });
+      console.log('setChecklist実行後の状態:', updated);
+      return updated;
+    });
+    
+    console.log('チェックリスト更新完了、遷移開始');
     navigate('/channel/11'); // お知らせチャンネル（正しいID）
+    console.log('=== お知らせボタンクリック終了 ===');
   };
 
   const handleContactInstructorNavigation = () => {
@@ -396,7 +413,13 @@ const SetupGuide: React.FC = () => {
                             variant="outlined"
                             size="small"
                             startIcon={<CampaignIcon />}
-                            onClick={handleAnnouncementsNavigation}
+                            onClick={(e) => {
+                              console.log('=== お知らせボタンonClick直接実行 ===');
+                              console.log('ボタンクリックイベント:', e);
+                              console.log('item.id:', item.id);
+                              console.log('item.completed:', item.completed);
+                              handleAnnouncementsNavigation(e);
+                            }}
                             sx={{
                               borderRadius: 2,
                               textTransform: 'none',
