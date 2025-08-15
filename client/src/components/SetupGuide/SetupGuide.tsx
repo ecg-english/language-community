@@ -207,15 +207,18 @@ const SetupGuide: React.FC = () => {
     }
   };
 
-  const handleProfileNavigation = () => {
+  const handleProfileNavigation = (e: React.MouseEvent) => {
+    e.stopPropagation(); // イベントの伝播を停止
     navigate(`/profile/${user?.id}`);
   };
 
-  const handleIntroduceNavigation = () => {
+  const handleIntroduceNavigation = (e: React.MouseEvent) => {
+    e.stopPropagation(); // イベントの伝播を停止
     navigate('/channel/13'); // 自己紹介チャンネル（正しいID）
   };
 
-  const handleAnnouncementsNavigation = () => {
+  const handleAnnouncementsNavigation = (e: React.MouseEvent) => {
+    e.stopPropagation(); // イベントの伝播を停止
     console.log('お知らせボタンがクリックされました');
     // お知らせボタンを押した時にチェックを入れる
     setChecklist(prev => 
