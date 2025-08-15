@@ -34,6 +34,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 interface Event {
@@ -55,6 +56,7 @@ interface Event {
 const EventsPage: React.FC = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1180,9 +1182,19 @@ const EventsPage: React.FC = () => {
             </>
           )}
           {selectedEvent && !isEditing && (
-            <Button onClick={() => setDialogOpen(false)}>
-              Close
-            </Button>
+            <>
+              <Button 
+                onClick={() => navigate('/channel/12')}
+                variant="outlined"
+                color="primary"
+                startIcon={<EventIcon />}
+              >
+                Events チャンネル
+              </Button>
+              <Button onClick={() => setDialogOpen(false)}>
+                Close
+              </Button>
+            </>
           )}
         </DialogActions>
       </Dialog>
