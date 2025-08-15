@@ -72,6 +72,12 @@ const EventsPage: React.FC = () => {
     end_time: '',
     participation_method: '',
   });
+  
+  // ECGレッスン予約用のstate
+  const [reservationDialogOpen, setReservationDialogOpen] = useState(false);
+  const [selectedLesson, setSelectedLesson] = useState<any>(null);
+  const [reservationLoading, setReservationLoading] = useState(false);
+  const [reservationMessage, setReservationMessage] = useState('');
 
   const canEdit = ['サーバー管理者', 'ECG講師', 'JCG講師'].includes(user?.role || '');
 
@@ -111,6 +117,53 @@ const EventsPage: React.FC = () => {
       newDate.setMonth(prev.getMonth() + 1);
       return newDate;
     });
+  };
+
+  const handleEcgLessonClick = (lesson: any) => {
+    setSelectedLesson(lesson);
+    setReservationDialogOpen(true);
+  };
+
+  const handleReservation = async () => {
+    if (!selectedLesson || !user) return;
+    
+    setReservationLoading(true);
+    setReservationMessage('');
+    
+    try {
+      // GAS経由でメール送信
+      const gasUrl = 'https://script.google.com/macros/s/YOUR_GAS_DEPLOYMENT_ID/exec';
+      
+      const reservationData = {
+        userName: user.username,
+        userEmail: user.email,
+        lessonTitle: selectedLesson.title,
+        lessonDate: selectedLesson.event_date,
+        lessonTime: `${selectedLesson.start_time} - ${selectedLesson.end_time}`,
+        timestamp: new Date().toISOString()
+      };
+      
+      const response = await fetch(gasUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reservationData),
+        mode: 'no-cors' // GASの制限により必要
+      });
+      
+      setReservationMessage('予約完了です！確認メールを送信しました。');
+      setTimeout(() => {
+        setReservationDialogOpen(false);
+        setReservationMessage('');
+      }, 3000);
+      
+    } catch (error) {
+      console.error('予約エラー:', error);
+      setReservationMessage('予約の送信に失敗しました。もう一度お試しください。');
+    } finally {
+      setReservationLoading(false);
+    }
   };
 
   const handleDateClick = (date: Date) => {
@@ -386,6 +439,35 @@ const EventsPage: React.FC = () => {
           }}>
             {days.map((day, index) => {
               const dayEvents = day ? getEventsForDate(day) : [];
+              
+              // ビジター専用: 平日のECGレッスンを追加（月水金）
+              const isVisitor = user?.role === 'ビジター';
+              const weekdayLessons = [];
+              
+              if (isVisitor && day) {
+                const dayOfWeek = day.getDay(); // 0:日曜, 1:月曜, 2:火曜, 3:水曜, 4:木曜, 5:金曜, 6:土曜
+                if (dayOfWeek === 1 || dayOfWeek === 3 || dayOfWeek === 5) { // 月水金
+                  weekdayLessons.push({
+                    id: day.getTime(),
+                    title: 'ECG 神戸三宮',
+                    description: '英語学習コミュニティのレッスン',
+                    target_audience: 'ビジター',
+                    start_time: '18:00',
+                    end_time: '21:00',
+                    participation_method: '現地参加',
+                    created_by: 0,
+                    created_by_name: 'ECG English',
+                    created_by_role: 'ECG講師',
+                    cover_image: '',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                    isEcgLesson: true,
+                    event_date: day.toISOString().split('T')[0]
+                  });
+                }
+              }
+              
+              const allDayEvents = [...dayEvents, ...weekdayLessons];
               const isSelected = day && selectedDate && 
                 day.getDate() === selectedDate.getDate() && 
                 day.getMonth() === selectedDate.getMonth() && 
@@ -401,11 +483,11 @@ const EventsPage: React.FC = () => {
                     p: { xs: 0.5, sm: 1 },
                     cursor: canEdit ? 'pointer' : 'default',
                     backgroundColor: isSelected ? '#1976d2' : 
-                      (dayEvents.length > 0 ? 'rgba(25, 118, 210, 0.05)' : 'transparent'),
+                      (allDayEvents.length > 0 ? 'rgba(25, 118, 210, 0.05)' : 'transparent'),
                     color: isSelected ? 'white' : 'text.primary',
                     '&:hover': canEdit ? {
-                      backgroundColor: isSelected ? '#1976d2' : 
-                        (dayEvents.length > 0 ? 'rgba(25, 118, 210, 0.1)' : '#f5f5f5'),
+                                              backgroundColor: isSelected ? '#1976d2' : 
+                        (allDayEvents.length > 0 ? 'rgba(25, 118, 210, 0.1)' : '#f5f5f5'),
                     } : {},
                     borderRadius: 1,
                     display: 'flex',
@@ -442,7 +524,7 @@ const EventsPage: React.FC = () => {
                     position: 'relative'
                   }}>
                     {/* スマホ・タブレット版: イベントがある場合のみドットを表示 */}
-                    {dayEvents.length > 0 && (
+                    {allDayEvents.length > 0 && (
                       <Box sx={{
                         display: { xs: 'flex', lg: 'none' },
                         flexDirection: 'column',
@@ -456,7 +538,7 @@ const EventsPage: React.FC = () => {
                           backgroundColor: isSelected ? 'white' : '#1976d2',
                           opacity: 0.8
                         }} />
-                        {dayEvents.length > 1 && (
+                        {allDayEvents.length > 1 && (
                           <Typography 
                             variant="caption" 
                             sx={{ 
@@ -466,7 +548,7 @@ const EventsPage: React.FC = () => {
                               fontWeight: 500
                             }}
                           >
-                            {dayEvents.length}
+                            {allDayEvents.length}
                           </Typography>
                         )}
                       </Box>
@@ -480,7 +562,7 @@ const EventsPage: React.FC = () => {
                       overflow: 'hidden',
                       width: '100%'
                     }}>
-                      {dayEvents.slice(0, 3).map((event, eventIndex) => (
+                      {allDayEvents.slice(0, 3).map((event, eventIndex) => (
                         <Box key={event.id} sx={{ 
                           mb: { xs: 0.25, sm: 0.5 },
                           backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.05)',
@@ -503,9 +585,21 @@ const EventsPage: React.FC = () => {
                               fontWeight: 500,
                               lineHeight: 1.2,
                             }}
-                            onClick={(e) => handleEventClick(event, e)}
+                            onClick={(e) => {
+                              if ((event as any).isEcgLesson) {
+                                e.stopPropagation();
+                                handleEcgLessonClick(event as any);
+                              } else {
+                                handleEventClick(event, e);
+                              }
+                            }}
                           >
                             {event.title}
+                            {(event as any).isEcgLesson && (
+                              <span style={{ color: '#ff9800', fontSize: '0.5rem', marginLeft: '4px' }}>
+                                [予約可能]
+                              </span>
+                            )}
                           </Typography>
                           {event.start_time && (
                             <Typography 
@@ -518,7 +612,14 @@ const EventsPage: React.FC = () => {
                                 display: 'block',
                                 lineHeight: 1.1,
                               }}
-                              onClick={(e) => handleEventClick(event, e)}
+                              onClick={(e) => {
+                                if ((event as any).isEcgLesson) {
+                                  e.stopPropagation();
+                                  handleEcgLessonClick(event as any);
+                                } else {
+                                  handleEventClick(event, e);
+                                }
+                              }}
                             >
                               {formatTime(event.start_time)}
                             </Typography>
@@ -527,7 +628,7 @@ const EventsPage: React.FC = () => {
                       ))}
                       
                       {/* 追加イベントがある場合の表示 */}
-                      {dayEvents.length > 3 && (
+                      {allDayEvents.length > 3 && (
                         <Typography 
                           variant="caption" 
                           sx={{ 
@@ -539,7 +640,7 @@ const EventsPage: React.FC = () => {
                             mt: 'auto'
                           }}
                         >
-                          +{dayEvents.length - 3} more
+                          +{allDayEvents.length - 3} more
                         </Typography>
                       )}
                     </Box>
@@ -940,6 +1041,62 @@ const EventsPage: React.FC = () => {
               Close
             </Button>
           )}
+        </DialogActions>
+      </Dialog>
+
+      {/* ECGレッスン予約ダイアログ */}
+      <Dialog
+        open={reservationDialogOpen}
+        onClose={() => setReservationDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          ECGレッスン予約
+        </DialogTitle>
+        <DialogContent>
+          {selectedLesson && (
+            <Box sx={{ py: 2 }}>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                {selectedLesson.title}
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 1 }}>
+                日時: {new Date(selectedLesson.event_date).toLocaleDateString('ja-JP')} {selectedLesson.start_time} - {selectedLesson.end_time}
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                場所: 神戸三宮
+              </Typography>
+              
+              {reservationMessage && (
+                <Alert 
+                  severity={reservationMessage.includes('完了') ? 'success' : 'error'} 
+                  sx={{ mb: 2 }}
+                >
+                  {reservationMessage}
+                </Alert>
+              )}
+              
+              <Typography variant="body2" color="text.secondary">
+                予約完了後、確認メールをお送りします。
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setReservationDialogOpen(false)}
+            disabled={reservationLoading}
+          >
+            キャンセル
+          </Button>
+          <Button 
+            onClick={handleReservation}
+            variant="contained"
+            disabled={reservationLoading || reservationMessage.includes('完了')}
+            startIcon={reservationLoading ? <CircularProgress size={20} /> : null}
+          >
+            {reservationLoading ? '予約中...' : '予約する'}
+          </Button>
         </DialogActions>
       </Dialog>
     </Container>
