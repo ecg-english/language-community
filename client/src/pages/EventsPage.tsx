@@ -616,13 +616,50 @@ const EventsPage: React.FC = () => {
                       
                       {/* 通常イベントの表示 */}
                       {allDayEvents.filter((event: any) => !event.isEcgLesson).length > 0 && (
-                        <Box sx={{
-                          width: 6,
-                          height: 6,
-                          borderRadius: '50%',
-                          backgroundColor: isSelected ? 'white' : '#1976d2',
-                          opacity: 0.8
-                        }} />
+                        <Box
+                          sx={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: '50%',
+                            backgroundColor: isSelected ? 'white' : '#e91e63',
+                            border: '2px solid',
+                            borderColor: isSelected ? '#e91e63' : '#c2185b',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            boxShadow: isSelected ? '0 2px 8px rgba(233, 30, 99, 0.3)' : '0 2px 4px rgba(233, 30, 99, 0.2)',
+                            '&:hover': {
+                              transform: 'scale(1.1)',
+                              boxShadow: '0 4px 12px rgba(233, 30, 99, 0.4)',
+                            },
+                            transition: 'all 0.2s ease'
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const regularEvents = allDayEvents.filter((event: any) => !event.isEcgLesson);
+                            if (regularEvents.length === 1) {
+                              handleEventClick(regularEvents[0], e);
+                            } else if (regularEvents.length > 1) {
+                              setMultiEventList(regularEvents);
+                              setMultiEventDate(day);
+                              setEventSelectionDialogOpen(true);
+                            }
+                          }}
+                        >
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+                              fill={isSelected ? '#e91e63' : 'white'}
+                            />
+                          </svg>
+                        </Box>
                       )}
                       
                       {/* 複数イベントがある場合の数表示 */}
@@ -653,13 +690,18 @@ const EventsPage: React.FC = () => {
                       {allDayEvents.slice(0, 3).map((event, eventIndex) => (
                         <Box key={event.id} sx={{ 
                           mb: { xs: 0.25, sm: 0.5 },
-                          backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.05)',
+                          backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : ((event as any).isEcgLesson ? 'rgba(0,0,0,0.05)' : 'rgba(233, 30, 99, 0.1)'),
+                          border: (event as any).isEcgLesson ? 'none' : '1px solid',
+                          borderColor: isSelected ? 'rgba(255,255,255,0.3)' : 'rgba(233, 30, 99, 0.3)',
                           borderRadius: 0.5,
                           p: { xs: 0.25, sm: 0.5 },
                           cursor: 'pointer',
                           '&:hover': {
-                            backgroundColor: isSelected ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)',
-                          }
+                            backgroundColor: isSelected ? 'rgba(255,255,255,0.3)' : ((event as any).isEcgLesson ? 'rgba(0,0,0,0.1)' : 'rgba(233, 30, 99, 0.15)'),
+                            transform: (event as any).isEcgLesson ? 'none' : 'translateY(-1px)',
+                            boxShadow: (event as any).isEcgLesson ? 'none' : '0 2px 4px rgba(233, 30, 99, 0.2)',
+                          },
+                          transition: (event as any).isEcgLesson ? 'none' : 'all 0.2s ease'
                         }}>
                           <Typography 
                             variant="caption" 
@@ -690,6 +732,15 @@ const EventsPage: React.FC = () => {
                                 marginLeft: '4px' 
                               }}>
                                 [{event.title.includes('ECG') ? 'ECG' : 'JCG'}営業日]
+                              </span>
+                            )}
+                            {!(event as any).isEcgLesson && (
+                              <span style={{ 
+                                color: '#e91e63', 
+                                fontSize: '0.5rem', 
+                                marginLeft: '4px' 
+                              }}>
+                                🎉
                               </span>
                             )}
                           </Typography>
@@ -1245,7 +1296,7 @@ const EventsPage: React.FC = () => {
                 >
                   <CardContent sx={{ py: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      {isBusinessDay && (
+                      {isBusinessDay ? (
                         <Box
                           sx={{
                             width: 24,
@@ -1262,6 +1313,34 @@ const EventsPage: React.FC = () => {
                         >
                           {isECG ? 'E' : isJCG ? 'J' : '•'}
                         </Box>
+                      ) : (
+                        <Box
+                          sx={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: '50%',
+                            backgroundColor: '#e91e63',
+                            border: '2px solid #c2185b',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: '0 2px 4px rgba(233, 30, 99, 0.2)'
+                          }}
+                        >
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+                              fill="white"
+                            />
+                          </svg>
+                        </Box>
                       )}
                       <Box sx={{ flex: 1 }}>
                         <Typography variant="h6" sx={{ fontWeight: 600 }}>
@@ -1273,6 +1352,11 @@ const EventsPage: React.FC = () => {
                         {isBusinessDay && (
                           <Typography variant="body2" color="text.secondary">
                             {isECG ? 'ECG営業日' : isJCG ? 'JCG営業日' : '営業日'}
+                          </Typography>
+                        )}
+                        {!isBusinessDay && (
+                          <Typography variant="body2" color="text.secondary" sx={{ color: '#e91e63' }}>
+                            🎉 特別イベント
                           </Typography>
                         )}
                       </Box>
