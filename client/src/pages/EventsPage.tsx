@@ -78,6 +78,11 @@ const EventsPage: React.FC = () => {
   const [selectedLesson, setSelectedLesson] = useState<any>(null);
   const [reservationLoading, setReservationLoading] = useState(false);
   const [reservationMessage, setReservationMessage] = useState('');
+  
+  // 複数イベント選択用のstate
+  const [eventSelectionDialogOpen, setEventSelectionDialogOpen] = useState(false);
+  const [multiEventList, setMultiEventList] = useState<any[]>([]);
+  const [multiEventDate, setMultiEventDate] = useState<Date | null>(null);
 
   const canEdit = ['サーバー管理者', 'ECG講師', 'JCG講師'].includes(user?.role || '');
 
@@ -519,7 +524,23 @@ const EventsPage: React.FC = () => {
                   }}
                   onClick={() => {
                     if (day) {
-                      handleDateClick(day);
+                      // 複数イベントがある場合は選択ダイアログを表示
+                      if (allDayEvents.length > 1) {
+                        setMultiEventList(allDayEvents);
+                        setMultiEventDate(day);
+                        setEventSelectionDialogOpen(true);
+                      } else if (allDayEvents.length === 1) {
+                        // 単一イベントの場合は直接処理
+                        const event = allDayEvents[0];
+                        if ((event as any).isEcgLesson) {
+                          handleEcgLessonClick(event);
+                        } else {
+                          handleEventClick(event, {} as any);
+                        }
+                      } else {
+                        // イベントがない場合は日付選択
+                        handleDateClick(day);
+                      }
                     }
                   }}
                 >
@@ -546,14 +567,55 @@ const EventsPage: React.FC = () => {
                     alignItems: 'center',
                     position: 'relative'
                   }}>
-                    {/* スマホ・タブレット版: イベントがある場合のみドットを表示 */}
-                    {allDayEvents.length > 0 && (
-                      <Box sx={{
-                        display: { xs: 'flex', lg: 'none' },
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: 0.5
-                      }}>
+                                      {/* スマホ・タブレット版: 営業日とイベントを色分け表示 */}
+                  {allDayEvents.length > 0 && (
+                    <Box sx={{
+                      display: { xs: 'flex', lg: 'none' },
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: 0.5,
+                      width: '100%'
+                    }}>
+                      {/* 営業日の表示 */}
+                      {allDayEvents.filter((event: any) => event.isEcgLesson).map((event: any, index: number) => {
+                        const isECG = event.title.includes('ECG');
+                        const isJCG = event.title.includes('JCG');
+                        
+                        return (
+                          <Box
+                            key={`mobile-${event.id}-${index}`}
+                            sx={{
+                              width: 20,
+                              height: 20,
+                              borderRadius: '50%',
+                              backgroundColor: isSelected ? 'white' : (isECG ? '#4fc3f7' : '#ff9800'),
+                              color: isSelected ? '#1976d2' : 'white',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.6rem',
+                              fontWeight: 'bold',
+                              cursor: 'pointer',
+                              '&:hover': {
+                                opacity: 0.8
+                              }
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (event.isEcgLesson) {
+                                handleEcgLessonClick(event);
+                              } else {
+                                handleEventClick(event, e);
+                              }
+                            }}
+                          >
+                            {isECG ? 'E' : isJCG ? 'J' : '•'}
+                          </Box>
+                        );
+                      })}
+                      
+                      {/* 通常イベントの表示 */}
+                      {allDayEvents.filter((event: any) => !event.isEcgLesson).length > 0 && (
                         <Box sx={{
                           width: 6,
                           height: 6,
@@ -561,21 +623,24 @@ const EventsPage: React.FC = () => {
                           backgroundColor: isSelected ? 'white' : '#1976d2',
                           opacity: 0.8
                         }} />
-                        {allDayEvents.length > 1 && (
-                          <Typography 
-                            variant="caption" 
-                            sx={{ 
-                              fontSize: '0.5rem',
-                              color: 'inherit',
-                              opacity: 0.7,
-                              fontWeight: 500
-                            }}
-                          >
-                            {allDayEvents.length}
-                          </Typography>
-                        )}
-                      </Box>
-                    )}
+                      )}
+                      
+                      {/* 複数イベントがある場合の数表示 */}
+                      {allDayEvents.length > 1 && (
+                        <Typography 
+                          variant="caption" 
+                          sx={{ 
+                            fontSize: '0.5rem',
+                            color: 'inherit',
+                            opacity: 0.7,
+                            fontWeight: 500
+                          }}
+                        >
+                          {allDayEvents.length}
+                        </Typography>
+                      )}
+                    </Box>
+                  )}
                     
                     {/* デスクトップ版: 従来の表示 */}
                     <Box sx={{ 
@@ -609,8 +674,8 @@ const EventsPage: React.FC = () => {
                               lineHeight: 1.2,
                             }}
                             onClick={(e) => {
+                              e.stopPropagation();
                               if ((event as any).isEcgLesson) {
-                                e.stopPropagation();
                                 handleEcgLessonClick(event as any);
                               } else {
                                 handleEventClick(event, e);
@@ -619,8 +684,12 @@ const EventsPage: React.FC = () => {
                           >
                             {event.title}
                             {(event as any).isEcgLesson && (
-                              <span style={{ color: '#ff9800', fontSize: '0.5rem', marginLeft: '4px' }}>
-                                [営業日予約]
+                              <span style={{ 
+                                color: event.title.includes('ECG') ? '#4fc3f7' : '#ff9800', 
+                                fontSize: '0.5rem', 
+                                marginLeft: '4px' 
+                              }}>
+                                [{event.title.includes('ECG') ? 'ECG' : 'JCG'}営業日]
                               </span>
                             )}
                           </Typography>
@@ -1129,6 +1198,94 @@ const EventsPage: React.FC = () => {
             startIcon={reservationLoading ? <CircularProgress size={20} /> : null}
           >
             {reservationLoading ? '予約中...' : '営業日予約する'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* 複数イベント選択ダイアログ */}
+      <Dialog
+        open={eventSelectionDialogOpen}
+        onClose={() => setEventSelectionDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          {multiEventDate && `${multiEventDate.getMonth() + 1}月${multiEventDate.getDate()}日のイベント`}
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ py: 2 }}>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              表示するイベントを選択してください：
+            </Typography>
+            {multiEventList.map((event, index) => {
+              const isECG = event.title.includes('ECG');
+              const isJCG = event.title.includes('JCG');
+              const isBusinessDay = (event as any).isEcgLesson;
+              
+              return (
+                <Card 
+                  key={index} 
+                  sx={{ 
+                    mb: 2, 
+                    cursor: 'pointer',
+                    border: '1px solid',
+                    borderColor: isBusinessDay ? (isECG ? '#4fc3f7' : '#ff9800') : '#e0e0e0',
+                    '&:hover': {
+                      backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                    }
+                  }}
+                  onClick={() => {
+                    setEventSelectionDialogOpen(false);
+                    if (isBusinessDay) {
+                      handleEcgLessonClick(event);
+                    } else {
+                      handleEventClick(event, {} as any);
+                    }
+                  }}
+                >
+                  <CardContent sx={{ py: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      {isBusinessDay && (
+                        <Box
+                          sx={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: '50%',
+                            backgroundColor: isECG ? '#4fc3f7' : '#ff9800',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '0.8rem',
+                            fontWeight: 'bold'
+                          }}
+                        >
+                          {isECG ? 'E' : isJCG ? 'J' : '•'}
+                        </Box>
+                      )}
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                          {event.title}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {event.start_time} - {event.end_time}
+                        </Typography>
+                        {isBusinessDay && (
+                          <Typography variant="body2" color="text.secondary">
+                            {isECG ? 'ECG営業日' : isJCG ? 'JCG営業日' : '営業日'}
+                          </Typography>
+                        )}
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEventSelectionDialogOpen(false)}>
+            キャンセル
           </Button>
         </DialogActions>
       </Dialog>
