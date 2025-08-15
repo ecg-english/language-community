@@ -159,7 +159,7 @@ const EventsPage: React.FC = () => {
         mode: 'no-cors' // GASの制限により必要
       });
       
-      setReservationMessage('営業日予約完了です！確認メールを送信しました。');
+      setReservationMessage(t('reservationCompleteMessage'));
       setTimeout(() => {
         setReservationDialogOpen(false);
         setReservationMessage('');
@@ -167,7 +167,7 @@ const EventsPage: React.FC = () => {
       
     } catch (error) {
       console.error('予約エラー:', error);
-      setReservationMessage('営業日予約の送信に失敗しました。もう一度お試しください。');
+      setReservationMessage(t('reservationFailedMessage'));
     } finally {
       setReservationLoading(false);
     }
@@ -1207,7 +1207,7 @@ const EventsPage: React.FC = () => {
         fullWidth
       >
         <DialogTitle>
-          ECG営業日予約
+          {selectedLesson?.title?.includes('ECG') ? t('businessDayReservationECG') : t('businessDayReservationJCG')}
         </DialogTitle>
         <DialogContent>
           {selectedLesson && (
@@ -1216,10 +1216,10 @@ const EventsPage: React.FC = () => {
                 {selectedLesson.title}
               </Typography>
               <Typography variant="body1" sx={{ mb: 1 }}>
-                日時: {new Date(selectedLesson.event_date).toLocaleDateString('ja-JP')} {selectedLesson.start_time} - {selectedLesson.end_time}
+                {t('businessDayDateTime')}: {new Date(selectedLesson.event_date).toLocaleDateString('ja-JP')} {selectedLesson.start_time} - {selectedLesson.end_time}
               </Typography>
               <Typography variant="body1" sx={{ mb: 2 }}>
-                場所: 神戸三宮
+                {t('businessDayLocation')}: 神戸三宮
               </Typography>
               <Typography variant="body2" sx={{ mb: 2 }}>
                 <a 
@@ -1228,7 +1228,7 @@ const EventsPage: React.FC = () => {
                   rel="noopener noreferrer"
                   style={{ color: '#1976d2', textDecoration: 'none' }}
                 >
-                  📍 地図を開く
+                  📍 {t('openMap')}
                 </a>
               </Typography>
               
@@ -1242,7 +1242,7 @@ const EventsPage: React.FC = () => {
               )}
               
               <Typography variant="body2" color="text.secondary">
-                営業日予約完了後、確認メールをお送りします。
+                {t('reservationNote')}
               </Typography>
             </Box>
           )}
@@ -1252,7 +1252,7 @@ const EventsPage: React.FC = () => {
             onClick={() => setReservationDialogOpen(false)}
             disabled={reservationLoading}
           >
-            キャンセル
+            {t('businessDayCancel')}
           </Button>
           <Button 
             onClick={handleReservation}
@@ -1260,7 +1260,7 @@ const EventsPage: React.FC = () => {
             disabled={reservationLoading || reservationMessage.includes('完了')}
             startIcon={reservationLoading ? <CircularProgress size={20} /> : null}
           >
-            {reservationLoading ? '予約中...' : '営業日予約する'}
+            {reservationLoading ? t('reservationInProgress') : t('reserveBusinessDay')}
           </Button>
         </DialogActions>
       </Dialog>

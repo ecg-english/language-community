@@ -165,6 +165,20 @@ const en = {
     coverImagePreview: 'Cover image preview',
     pastEvents: 'Past Events',
     
+    // 営業日予約
+    businessDayReservation: 'Business Day Reservation',
+    businessDayReservationECG: 'ECG Business Day Reservation',
+    businessDayReservationJCG: 'JCG Business Day Reservation',
+    businessDayDateTime: 'Date & Time',
+    businessDayLocation: 'Location',
+    openMap: 'Open Map',
+    reservationCompleteMessage: 'Reservation complete! Confirmation email will be sent.',
+    reservationFailedMessage: 'Reservation failed. Please try again.',
+    reservationInProgress: 'Reserving...',
+    reserveBusinessDay: 'Reserve Business Day',
+    businessDayCancel: 'Cancel',
+    reservationNote: 'After business day reservation is complete, we will send a confirmation email.',
+    
     // Q&A System
     postQuestion: 'Post Question',
     answered: 'Answered',
@@ -410,6 +424,20 @@ const ja = {
     selectCoverImage: 'カバー画像を選択してください',
     coverImagePreview: 'カバー画像プレビュー',
     pastEvents: '過去のイベント',
+    
+    // 営業日予約
+    businessDayReservation: '営業日予約',
+    businessDayReservationECG: 'ECG営業日予約',
+    businessDayReservationJCG: 'JCG営業日予約',
+    businessDayDateTime: '日時',
+    businessDayLocation: '場所',
+    openMap: '地図を開く',
+    reservationCompleteMessage: '営業日予約完了です！確認メールを送信しました。',
+    reservationFailedMessage: '営業日予約の送信に失敗しました。もう一度お試しください。',
+    reservationInProgress: '予約中...',
+    reserveBusinessDay: '営業日予約する',
+    businessDayCancel: 'キャンセル',
+    reservationNote: '営業日予約完了後、確認メールをお送りします。',
 
     // Q&Aシステム
     postQuestion: '質問を投稿',
@@ -656,6 +684,20 @@ const jaSimple = {
     coverImagePreview: 'カバーがぞうプレビュー',
     pastEvents: 'かこのイベント',
     
+    // 営業日予約
+    businessDayReservation: 'えいぎょうびよやく',
+    businessDayReservationECG: 'ECGえいぎょうびよやく',
+    businessDayReservationJCG: 'JCGえいぎょうびよやく',
+    businessDayDateTime: 'にちじ',
+    businessDayLocation: 'ばしょ',
+    openMap: 'ちずをひらく',
+    reservationCompleteMessage: 'えいぎょうびよやくかんりょうです！かくにんメールをそうしんしました。',
+    reservationFailedMessage: 'えいぎょうびよやくのそうしんにしっぱいしました。もういちどおためしください。',
+    reservationInProgress: 'よやくちゅう...',
+    reserveBusinessDay: 'えいぎょうびよやくする',
+    businessDayCancel: 'キャンセル',
+    reservationNote: 'えいぎょうびよやくかんりょうご、かくにんメールをおおくりします。',
+
     // Q&Aシステム
     postQuestion: 'しつもんをとうこう',
     answered: 'かいとうずみ',
