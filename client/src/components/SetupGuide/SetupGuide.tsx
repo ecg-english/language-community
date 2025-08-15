@@ -233,35 +233,6 @@ const SetupGuide: React.FC = () => {
     navigate('/channel/13'); // 自己紹介チャンネル（正しいID）
   };
 
-  const handleAnnouncementsNavigation = (e: React.MouseEvent) => {
-    console.log('=== お知らせボタンクリック開始 ===');
-    console.log('イベント:', e);
-    console.log('現在のチェックリスト:', checklist);
-    
-    e.stopPropagation(); // イベントの伝播を停止
-    console.log('イベント伝播停止完了');
-    
-    console.log('お知らせボタンがクリックされました');
-    
-    // お知らせボタンを押した時にチェックを入れる
-    setChecklist(prev => {
-      console.log('setChecklist実行前の状態:', prev);
-      const updated = prev.map(item => {
-        if (item.id === 'announcements') {
-          console.log('announcements項目を更新:', { ...item, completed: true });
-          return { ...item, completed: true };
-        }
-        return item;
-      });
-      console.log('setChecklist実行後の状態:', updated);
-      return updated;
-    });
-    
-    console.log('チェックリスト更新完了、遷移開始');
-    navigate('/channel/11'); // お知らせチャンネル（正しいID）
-    console.log('=== お知らせボタンクリック終了 ===');
-  };
-
   const handleContactInstructorNavigation = () => {
     // InstagramやDiscordへの案内ページまたは外部リンク
     // とりあえずお知らせチャンネルに遷移
@@ -328,11 +299,7 @@ const SetupGuide: React.FC = () => {
 
               // お知らせ項目のデバッグ
               if (item.id === 'announcements') {
-                console.log('=== お知らせ項目レンダリング ===');
-                console.log('item:', item);
-                console.log('item.completed:', item.completed);
-                console.log('!item.completed:', !item.completed);
-                console.log('ボタン表示条件:', item.id === 'announcements' && !item.completed);
+                console.log('お知らせ項目:', item.completed ? '完了済み' : '未完了');
               }
 
               return (
@@ -432,38 +399,37 @@ const SetupGuide: React.FC = () => {
                           </Button>
                         )}
                         {item.id === 'announcements' && !item.completed && (
-                          (() => {
-                            console.log('=== お知らせボタンレンダリング開始 ===');
-                            return (
-                              <Button
-                                variant="outlined"
-                                size="small"
-                                startIcon={<CampaignIcon />}
-                                onClick={(e) => {
-                                  console.log('=== お知らせボタンonClick直接実行 ===');
-                                  console.log('ボタンクリックイベント:', e);
-                                  console.log('item.id:', item.id);
-                                  console.log('item.completed:', item.completed);
-                                  handleAnnouncementsNavigation(e);
-                                }}
-                                sx={{
-                                  borderRadius: 2,
-                                  textTransform: 'none',
-                                  fontWeight: 500,
-                                  fontSize: { xs: '0.7rem', sm: '0.75rem' },
-                                  py: { xs: 0.25, sm: 0.5 },
-                                  px: { xs: 1, sm: 1.5 },
-                                  minWidth: { xs: 'auto', sm: 'auto' },
-                                  flexShrink: 0,
-                                  '& .MuiButton-startIcon': {
-                                    marginRight: { xs: 0.5, sm: 0.5 },
-                                  },
-                                }}
-                              >
-                                {t('setupGuideAnnouncements')}
-                              </Button>
-                            );
-                          })()
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<CampaignIcon />}
+                            onClick={() => {
+                              console.log('お知らせボタンクリック！');
+                              setChecklist(prev => 
+                                prev.map(item => 
+                                  item.id === 'announcements' 
+                                    ? { ...item, completed: true }
+                                    : item
+                                )
+                              );
+                              navigate('/channel/11');
+                            }}
+                            sx={{
+                              borderRadius: 2,
+                              textTransform: 'none',
+                              fontWeight: 500,
+                              fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                              py: { xs: 0.25, sm: 0.5 },
+                              px: { xs: 1, sm: 1.5 },
+                              minWidth: { xs: 'auto', sm: 'auto' },
+                              flexShrink: 0,
+                              '& .MuiButton-startIcon': {
+                                marginRight: { xs: 0.5, sm: 0.5 },
+                              },
+                            }}
+                          >
+                            {t('setupGuideAnnouncements')}
+                          </Button>
                         )}
                       </Box>
                     }
@@ -598,7 +564,17 @@ const SetupGuide: React.FC = () => {
                                   variant="outlined"
                                   size="small"
                                   startIcon={<CampaignIcon />}
-                                  onClick={handleAnnouncementsNavigation}
+                                  onClick={() => {
+                                    console.log('お知らせボタンクリック！');
+                                    setChecklist(prev => 
+                                      prev.map(item => 
+                                        item.id === 'announcements' 
+                                          ? { ...item, completed: true }
+                                          : item
+                                      )
+                                    );
+                                    navigate('/channel/11');
+                                  }}
                                   sx={{
                                     borderRadius: 2,
                                     textTransform: 'none',
