@@ -182,68 +182,20 @@ const SetupGuide: React.FC = () => {
     });
   };
 
-  // 現在のURLをチェックして、お知らせチャンネルを開いているか確認
-  const checkCurrentPageForAnnouncements = () => {
-    const currentPath = window.location.pathname;
-    const currentHash = window.location.hash;
-    console.log('URLチェック:', { currentPath, currentHash, fullUrl: window.location.href });
-    
-    // ハッシュルーティングを使用しているため、hashもチェック
-    if (currentPath === '/channel/11' || currentHash.includes('/channel/11')) {
-      console.log('お知らせチャンネルを開いているため、チェックを入れます');
-      checkAnnouncementsCompletion();
-    }
-  };
-
   // プロフィール完了状態を定期的にチェック
   useEffect(() => {
     if (user?.id) {
       checkProfileCompletion();
       checkIntroduceCompletion();
-      checkCurrentPageForAnnouncements();
       // 10秒ごとにチェック（より頻繁に）
       const interval = setInterval(() => {
         console.log('定期チェック実行');
         checkProfileCompletion();
         checkIntroduceCompletion();
-        checkCurrentPageForAnnouncements();
       }, 10000);
       return () => clearInterval(interval);
     }
   }, [user?.id]);
-
-  // お知らせチャンネルページを開いた時のチェック
-  useEffect(() => {
-    checkCurrentPageForAnnouncements();
-  }, []);
-
-  // URL変更時のチェック
-  useEffect(() => {
-    const handleUrlChange = () => {
-      setTimeout(() => {
-        checkCurrentPageForAnnouncements();
-      }, 100);
-    };
-
-    // ページ読み込み時とURL変更時にチェック
-    window.addEventListener('popstate', handleUrlChange);
-    
-    // ハッシュ変更の監視
-    const handleHashChange = () => {
-      setTimeout(() => {
-        checkCurrentPageForAnnouncements();
-      }, 100);
-    };
-    window.addEventListener('hashchange', handleHashChange);
-    
-    // 初期チェック
-    handleUrlChange();
-
-    return () => {
-      window.removeEventListener('popstate', handleUrlChange);
-      window.removeEventListener('hashchange', handleHashChange);
-    };
-  }, []);
 
   // チェックリストの状態をローカルストレージに保存
   useEffect(() => {
@@ -279,12 +231,9 @@ const SetupGuide: React.FC = () => {
 
   const handleAnnouncementsNavigation = () => {
     console.log('お知らせボタンがクリックされました');
-    navigate('/channel/11'); // お知らせチャンネル（正しいID）
     // お知らせチャンネルを開いた時に自動でチェック
-    setTimeout(() => {
-      console.log('お知らせチャンネルへの遷移後にチェックを実行');
-      checkAnnouncementsCompletion();
-    }, 500); // 遷移完了を待つため、少し長めの遅延
+    checkAnnouncementsCompletion();
+    navigate('/channel/11'); // お知らせチャンネル（正しいID）
   };
 
   const handleContactInstructorNavigation = () => {
