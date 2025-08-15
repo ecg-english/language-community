@@ -401,14 +401,13 @@ const SetupGuide: React.FC = () => {
                         {item.id === 'announcements' && !item.completed && (
                                 <button
                                   onClick={() => {
-                                    alert('お知らせボタンがクリックされました！');
-                                    setChecklist(prev => 
-                                      prev.map(item => 
-                                        item.id === 'announcements' 
-                                          ? { ...item, completed: true }
-                                          : item
-                                      )
+                                    // 強制的にチェックリストを更新
+                                    const updatedChecklist = checklist.map(item => 
+                                      item.id === 'announcements' 
+                                        ? { ...item, completed: true }
+                                        : item
                                     );
+                                    setChecklist(updatedChecklist);
                                     navigate('/channel/11');
                                   }}
                                   style={{
