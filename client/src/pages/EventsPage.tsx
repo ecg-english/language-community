@@ -440,12 +440,14 @@ const EventsPage: React.FC = () => {
             {days.map((day, index) => {
               const dayEvents = day ? getEventsForDate(day) : [];
               
-              // ビジター専用: 平日のECGレッスンを追加（月水金）
+              // ビジター専用: 平日のECG営業日と土曜日のJCG営業日を追加
               const isVisitor = user?.role === 'ビジター';
               const weekdayLessons = [];
               
               if (isVisitor && day) {
                 const dayOfWeek = day.getDay(); // 0:日曜, 1:月曜, 2:火曜, 3:水曜, 4:木曜, 5:金曜, 6:土曜
+                
+                // 月水金のECG営業日
                 if (dayOfWeek === 1 || dayOfWeek === 3 || dayOfWeek === 5) { // 月水金
                   weekdayLessons.push({
                     id: day.getTime(),
@@ -462,6 +464,27 @@ const EventsPage: React.FC = () => {
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
                     isEcgLesson: true,
+                    event_date: day.toISOString().split('T')[0]
+                  });
+                }
+                
+                // 土曜日のJCG営業日
+                if (dayOfWeek === 6) { // 土曜日
+                  weekdayLessons.push({
+                    id: day.getTime() + 1, // 同じ日の場合はIDを分ける
+                    title: 'JCG 神戸三宮',
+                    description: 'JCG営業日',
+                    target_audience: 'ビジター',
+                    start_time: '18:00',
+                    end_time: '21:00',
+                    participation_method: '現地参加',
+                    created_by: 0,
+                    created_by_name: 'JCG Japanese',
+                    created_by_role: 'JCG講師',
+                    cover_image: '',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                    isEcgLesson: true, // 同じフラグを使用（営業日予約として）
                     event_date: day.toISOString().split('T')[0]
                   });
                 }
