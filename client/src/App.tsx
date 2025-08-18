@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { CommunityProvider } from './contexts/CommunityContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { FavoriteChannelProvider } from './contexts/FavoriteChannelContext';
 import Layout from './components/Layout/Layout';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -25,7 +26,8 @@ const App: React.FC = () => {
       <LanguageProvider>
         <AuthProvider>
           <CommunityProvider>
-            <Router>
+            <FavoriteChannelProvider>
+              <Router>
               <Layout>
                 <Routes>
                   <Route path="/login" element={<LoginPage />} />
@@ -79,6 +81,7 @@ const App: React.FC = () => {
                 </Routes>
               </Layout>
             </Router>
+            </FavoriteChannelProvider>
           </CommunityProvider>
         </AuthProvider>
       </LanguageProvider>

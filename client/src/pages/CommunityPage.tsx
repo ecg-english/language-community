@@ -27,12 +27,15 @@ import {
   Search as SearchIcon,
   Add as AddIcon,
   Info as InfoIcon,
+  Star as StarIcon,
 } from '@mui/icons-material';
 import { useCommunity } from '../contexts/CommunityContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useFavoriteChannel } from '../contexts/FavoriteChannelContext';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import SetupGuide from '../components/SetupGuide/SetupGuide';
+import FavoriteChannelDialog from '../components/FavoriteChannelDialog/FavoriteChannelDialog';
 
 const CommunityPage: React.FC = () => {
   const { user } = useAuth();
@@ -43,8 +46,10 @@ const CommunityPage: React.FC = () => {
     loadChannels,
     toggleCategory,
   } = useCommunity();
+  const { favoriteChannel, setFavoriteChannel } = useFavoriteChannel();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [favoriteChannelDialogOpen, setFavoriteChannelDialogOpen] = useState(false);
   const hasLoaded = useRef(false);
   const [expandedCategories, setExpandedCategories] = useState<number[]>([]);
   const { t } = useTranslation();
@@ -100,8 +105,14 @@ const CommunityPage: React.FC = () => {
     }
   };
 
-  const handleMemberList = () => {
-    navigate('/members');
+  const handleFavoriteChannel = () => {
+    if (favoriteChannel) {
+      // お気に入りチャンネルが設定されている場合は直接遷移
+      navigate(`/channel/${favoriteChannel.id}`);
+    } else {
+      // お気に入りチャンネルが設定されていない場合はダイアログを開く
+      setFavoriteChannelDialogOpen(true);
+    }
   };
 
   const handleFeatures = () => {
@@ -218,7 +229,7 @@ const CommunityPage: React.FC = () => {
                   }}
                 >
                   <InputBase
-                    placeholder={t('community.searchPlaceholder')}
+                    placeholder={t('communitySearchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     sx={{
@@ -247,7 +258,7 @@ const CommunityPage: React.FC = () => {
                 </Box>
               </Paper>
 
-              {/* メンバーリストボタン */}
+              {/* お気に入りチャンネルボタン */}
               <Box sx={{ textAlign: 'center', mb: { xs: 3, sm: 4 } }}>
                 <Card
                   elevation={0}
@@ -262,17 +273,17 @@ const CommunityPage: React.FC = () => {
                       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                     },
                   }}
-                  onClick={handleMemberList}
+                  onClick={handleFavoriteChannel}
                 >
                   <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
-                      <PeopleIcon sx={{ fontSize: { xs: 24, sm: 28 }, color: 'primary.main' }} />
+                      <StarIcon sx={{ fontSize: { xs: 24, sm: 28 }, color: 'primary.main' }} />
                       <Typography variant="h6" fontWeight={600}>
-                        {t('memberList')}
+                        {favoriteChannel ? favoriteChannel.name : t('favoriteChannel')}
                       </Typography>
                     </Box>
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                      {t('memberListDescription')}
+                      {favoriteChannel ? t('favoriteChannelDescription') : t('noFavoriteChannel')}
                     </Typography>
                   </CardContent>
                 </Card>
@@ -365,7 +376,7 @@ const CommunityPage: React.FC = () => {
                             {category.name}
                           </Typography>
                           <Chip
-                            label={`${channels[category.id]?.length || 0} ${t('community.channels')}`}
+                            label={`${channels[category.id]?.length || 0} ${t('communityChannels')}`}
                             size="small"
                             sx={{
                               ml: 'auto',
@@ -445,10 +456,10 @@ const CommunityPage: React.FC = () => {
                   <CardContent sx={{ textAlign: 'center', py: 8 }}>
                     <Language sx={{ fontSize: 72, color: 'text.disabled', mb: 3 }} />
                     <Typography variant="h4" color="text.secondary" gutterBottom fontWeight={600}>
-                      {t('community.noCategories')}
+                      {t('noCategories')}
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
-                      {t('community.waitAdmin')}
+                      {t('waitAdmin')}
                     </Typography>
                   </CardContent>
                 </Card>
@@ -457,6 +468,12 @@ const CommunityPage: React.FC = () => {
           </Box>
         </Fade>
       </Container>
+
+      {/* お気に入りチャンネル選択ダイアログ */}
+      <FavoriteChannelDialog
+        open={favoriteChannelDialogOpen}
+        onClose={() => setFavoriteChannelDialogOpen(false)}
+      />
     </Box>
   );
 };
