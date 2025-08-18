@@ -18,6 +18,7 @@ import {
   InputBase,
   IconButton,
   Grid,
+  Tooltip,
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
@@ -28,6 +29,7 @@ import {
   Add as AddIcon,
   Info as InfoIcon,
   Star as StarIcon,
+  Edit as EditIcon,
 } from '@mui/icons-material';
 import { useCommunity } from '../contexts/CommunityContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -113,6 +115,11 @@ const CommunityPage: React.FC = () => {
       // お気に入りチャンネルが設定されていない場合はダイアログを開く
       setFavoriteChannelDialogOpen(true);
     }
+  };
+
+  const handleEditFavoriteChannel = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 親要素のクリックイベントを防ぐ
+    setFavoriteChannelDialogOpen(true);
   };
 
   const handleFeatures = () => {
@@ -267,6 +274,7 @@ const CommunityPage: React.FC = () => {
                     borderRadius: 3,
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
+                    position: 'relative',
                     '&:hover': {
                       backgroundColor: 'rgba(30, 64, 175, 0.04)',
                       transform: 'translateY(-2px)',
@@ -285,6 +293,38 @@ const CommunityPage: React.FC = () => {
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                       {favoriteChannel ? t('favoriteChannelDescription') : t('noFavoriteChannel')}
                     </Typography>
+                    
+                    {/* 編集ボタン（お気に入りチャンネルが設定されている場合のみ表示） */}
+                    {favoriteChannel && (
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          top: 8,
+                          right: 8,
+                          zIndex: 1,
+                        }}
+                      >
+                        <Tooltip title={t('editFavoriteChannel')} arrow>
+                          <IconButton
+                            size="small"
+                            onClick={handleEditFavoriteChannel}
+                            sx={{
+                              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                              color: 'primary.main',
+                              '&:hover': {
+                                backgroundColor: 'rgba(255, 255, 255, 1)',
+                                transform: 'scale(1.1)',
+                              },
+                              transition: 'all 0.2s ease',
+                              width: 32,
+                              height: 32,
+                            }}
+                          >
+                            <EditIcon sx={{ fontSize: 16 }} />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    )}
                   </CardContent>
                 </Card>
               </Box>
