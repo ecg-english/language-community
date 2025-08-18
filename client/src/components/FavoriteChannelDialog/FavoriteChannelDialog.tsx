@@ -105,22 +105,14 @@ const FavoriteChannelDialog: React.FC<FavoriteChannelDialogProps> = ({ open, onC
                           )}
                         </ListItemIcon>
                         <ListItemText
-                          primary={
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <ChatIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                              <Typography variant="body1" sx={{ fontWeight: isSelected ? 600 : 400 }}>
-                                {channel.name}
-                              </Typography>
-                              {isCurrentFavorite && (
-                                <Chip
-                                  label={t('favoriteChannel')}
-                                  size="small"
-                                  color="primary"
-                                  variant="outlined"
-                                />
-                              )}
-                            </Box>
-                          }
+                                                     primary={
+                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                               <ChatIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                               <Typography variant="body1" sx={{ fontWeight: isSelected ? 600 : 400 }}>
+                                 {channel.name}
+                               </Typography>
+                             </Box>
+                           }
                           secondary={
                             <Typography variant="body2" color="text.secondary">
                               {channel.description || t('noDescription')}
