@@ -309,10 +309,24 @@ const CommunityPage: React.FC = () => {
                             size="small"
                             onClick={handleEditFavoriteChannel}
                             sx={{
-                              backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                              color: 'primary.main',
+                              backgroundColor: (theme) => 
+                                theme.palette.mode === 'dark' 
+                                  ? 'rgba(255, 255, 255, 0.1)' 
+                                  : 'rgba(0, 0, 0, 0.04)',
+                              color: 'text.primary',
+                              border: (theme) => 
+                                theme.palette.mode === 'dark' 
+                                  ? '1px solid rgba(255, 255, 255, 0.2)' 
+                                  : '1px solid rgba(0, 0, 0, 0.12)',
                               '&:hover': {
-                                backgroundColor: 'rgba(255, 255, 255, 1)',
+                                backgroundColor: (theme) => 
+                                  theme.palette.mode === 'dark' 
+                                    ? 'rgba(255, 255, 255, 0.2)' 
+                                    : 'rgba(0, 0, 0, 0.08)',
+                                border: (theme) => 
+                                  theme.palette.mode === 'dark' 
+                                    ? '1px solid rgba(255, 255, 255, 0.3)' 
+                                    : '1px solid rgba(0, 0, 0, 0.2)',
                                 transform: 'scale(1.1)',
                               },
                               transition: 'all 0.2s ease',
