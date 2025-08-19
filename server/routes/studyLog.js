@@ -630,4 +630,26 @@ router.post('/paste-vocabulary', authenticateToken, async (req, res) => {
   }
 });
 
+// 学習内容を更新
+router.put('/posts/:postId/learning-content', authenticateToken, async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const { content } = req.body;
+    const userId = req.user.userId || req.user.id;
+
+    console.log('Updating learning content for post:', postId);
+    console.log('New content:', content);
+    console.log('User ID:', userId);
+
+    // 投稿の学習内容を更新
+    db.prepare('UPDATE posts SET content = ? WHERE id = ?').run(content, postId);
+    console.log('Learning content updated successfully');
+
+    res.json({ success: true, message: '学習内容を更新しました' });
+  } catch (error) {
+    console.error('Learning content update error:', error);
+    res.status(500).json({ success: false, message: '学習内容の更新に失敗しました' });
+  }
+});
+
 module.exports = router; 

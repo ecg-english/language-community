@@ -81,6 +81,7 @@ const VocabularyPage: React.FC = () => {
   const [showPasteDialog, setShowPasteDialog] = useState(false);
   const [pastedContent, setPastedContent] = useState('');
   const [pastedWord, setPastedWord] = useState('');
+  const [editingLearningContent, setEditingLearningContent] = useState<{ postId: number; content: string } | null>(null);
 
   // 保存済み投稿を取得
   const fetchSavedPosts = async () => {
@@ -484,6 +485,46 @@ const VocabularyPage: React.FC = () => {
     } catch (error: any) {
       console.error('例文更新エラー:', error);
       alert('❌ 例文の更新に失敗しました');
+    }
+  };
+
+  // 学習内容の編集
+  const handleEditLearningContent = (postId: number, currentContent: string) => {
+    setEditingLearningContent({ postId, content: currentContent });
+  };
+
+  const handleSaveLearningContent = async () => {
+    if (!editingLearningContent) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/study-log/posts/${editingLearningContent.postId}/learning-content`,
+        { content: editingLearningContent.content },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      // ローカル状態を更新
+      setSavedPosts(prev => prev.map(post => 
+        post.id === editingLearningContent.postId 
+          ? { ...post, content: editingLearningContent.content }
+          : post
+      ));
+      setFilteredPosts(prev => prev.map(post => 
+        post.id === editingLearningContent.postId 
+          ? { ...post, content: editingLearningContent.content }
+          : post
+      ));
+      
+      setEditingLearningContent(null);
+      alert('✅ 学習内容を更新しました');
+    } catch (error: any) {
+      console.error('学習内容更新エラー:', error);
+      alert('❌ 学習内容の更新に失敗しました');
     }
   };
 
@@ -926,18 +967,45 @@ const VocabularyPage: React.FC = () => {
                 {/* 学習内容の表示（フリースペース） */}
                 {post.is_study_log && (
                   <Box sx={{ mb: 2 }}>
-                    <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-                      📝 学習内容:
-                    </Typography>
-                    <Typography variant="body2" sx={{ 
-                      whiteSpace: 'pre-line',
-                      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
-                      padding: 2,
-                      borderRadius: 1,
-                      border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`
-                    }}>
-                      {post.content}
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        📝 学習内容:
+                      </Typography>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleEditLearningContent(post.id, post.content)}
+                        sx={{ p: 0.5 }}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                    {editingLearningContent?.postId === post.id ? (
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        <TextField
+                          multiline
+                          rows={6}
+                          value={editingLearningContent.content}
+                          onChange={(e) => setEditingLearningContent({ ...editingLearningContent, content: e.target.value })}
+                          size="small"
+                          placeholder="Study BoardのAI学習サポートをコピペしたり、自分で自由に記入してください"
+                        />
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <Button size="small" onClick={handleSaveLearningContent}>保存</Button>
+                          <Button size="small" onClick={() => setEditingLearningContent(null)}>キャンセル</Button>
+                        </Box>
+                      </Box>
+                    ) : (
+                      <Typography variant="body2" sx={{ 
+                        whiteSpace: 'pre-line',
+                        backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                        padding: 2,
+                        borderRadius: 1,
+                        border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                        minHeight: '60px'
+                      }}>
+                        {post.content || '学習内容を記入してください'}
+                      </Typography>
+                    )}
                   </Box>
                 )}
 
