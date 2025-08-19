@@ -46,6 +46,7 @@ import axios from 'axios';
 import ChannelSidebar from '../components/ChannelSidebar/ChannelSidebar';
 import EventPost from '../components/EventPost/EventPost';
 import EventPostForm from '../components/EventPostForm/EventPostForm';
+import StudyLogPost from '../components/StudyLogPost/StudyLogPost';
 
 interface Post {
   id: number;
@@ -131,6 +132,7 @@ const ChannelPage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [eventFormOpen, setEventFormOpen] = useState(false);
+  const [studyLogFormOpen, setStudyLogFormOpen] = useState(false);
 
   useEffect(() => {
     const numChannelId = parseInt(channelId || '0');
@@ -649,6 +651,7 @@ const ChannelPage: React.FC = () => {
   const isEventsChannel = channel?.name === '🗓️ Events';
   const isQaChannel = channel?.name === '💬 Q&A / Help Desk';
   const isQaStaffChannel = channel?.name === '【要確認】みんなからの質問など';
+  const isStudyLogChannel = channel?.name === 'ECG × JCG Study Board';
 
   const loadPosts = async (channelId: number) => {
     try {
@@ -993,7 +996,7 @@ const ChannelPage: React.FC = () => {
       </Box>
 
       {/* 特殊チャンネル用投稿フォーム */}
-      {(canPost || isQaChannel || isQaStaffChannel) && (isEventsChannel || channel?.name === '🙋 Introduce Yourself' || isQaChannel || isQaStaffChannel) && (
+      {(canPost || isQaChannel || isQaStaffChannel || isStudyLogChannel) && (isEventsChannel || isStudyLogChannel || channel?.name === '🙋 Introduce Yourself' || isQaChannel || isQaStaffChannel) && (
         <Card sx={{ mb: 4 }}>
           <CardContent>
             {isEventsChannel ? (
@@ -1013,6 +1016,34 @@ const ChannelPage: React.FC = () => {
                   }}
                 >
                   {t('createEvent')}
+                </Button>
+              </Box>
+            ) : isStudyLogChannel ? (
+              // 学習ログチャンネルの場合、学習ログ投稿フォームを表示
+              <Box>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                  <AutoAwesomeIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                  学習ログを投稿
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  今日学んだ表現や新しい発見を共有しましょう！AI返信機能で学習をサポートします。
+                </Typography>
+                <Button
+                  variant="contained"
+                  startIcon={<AutoAwesomeIcon />}
+                  onClick={() => setStudyLogFormOpen(true)}
+                  sx={{
+                    py: 1.5,
+                    px: 3,
+                    borderRadius: 2,
+                    fontWeight: 600,
+                    background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                    '&:hover': {
+                      background: 'linear-gradient(45deg, #1976D2 30%, #0097A7 90%)',
+                    },
+                  }}
+                >
+                  学習ログを投稿
                 </Button>
               </Box>
             ) : channel?.name === '🙋 Introduce Yourself' ? (
@@ -1844,6 +1875,21 @@ const ChannelPage: React.FC = () => {
           open={eventFormOpen}
           onClose={() => setEventFormOpen(false)}
           onSuccess={handleEventFormSuccess}
+          channelId={parseInt(channelId || '0')}
+        />
+      )}
+
+      {/* 学習ログ投稿フォーム */}
+      {isStudyLogChannel && (
+        <StudyLogPost
+          open={studyLogFormOpen}
+          onClose={() => setStudyLogFormOpen(false)}
+          onSuccess={() => {
+            setStudyLogFormOpen(false);
+            if (channelId) {
+              loadPosts(parseInt(channelId));
+            }
+          }}
           channelId={parseInt(channelId || '0')}
         />
       )}

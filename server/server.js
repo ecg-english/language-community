@@ -119,6 +119,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/channels', require('./routes/channels'));
 app.use('/api/posts', require('./routes/posts'));
 app.use('/api/events', require('./routes/events'));
+app.use('/api/study-log', require('./routes/studyLog'));
 
 // ファイルアップロード用ルート
 app.post('/api/upload/avatar', upload.single('avatar'), (req, res) => {
