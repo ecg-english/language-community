@@ -75,8 +75,10 @@ async function generateStudyLogResponse(content, userLanguage = 'English') {
 - 実際の会話で使える場面を含む
 
 📚 **関連表現**
-- 類義語や関連する表現
-- 使い分けのポイント
+- 類義語や関連する表現のみを箇条書きで記載
+- 説明文は含めないでください
+- 例：- Let's head out
+- 例：- Time to go
 
 日本語で温かく、分かりやすく返信してください。` :
       
@@ -98,8 +100,10 @@ First, praise their effort in continuing to learn.
 - Include situations where they can be used in real conversations
 
 📚 **Related Expressions**
-- Synonyms and related expressions
-- Points on how to use them differently
+- List only synonyms and related expressions in bullet points
+- Do not include explanatory text
+- Example: - おしゃべり
+- Example: - 雑談
 
 Please respond warmly and clearly in English.`;
 
@@ -240,7 +244,73 @@ async function extractLearningTags(content, userLanguage = 'English') {
   }
 }
 
+/**
+ * 投稿内容の意味を抽出
+ * @param {string} content - 投稿内容
+ * @param {string} userLanguage - ユーザーの学習言語 ('English' or 'Japanese')
+ * @returns {Promise<string>} 意味の説明
+ */
+async function extractMeaning(content, userLanguage = 'English') {
+  console.log('=== extractMeaning Start ===');
+  console.log('OpenAI client exists:', !!openai);
+  console.log('Content:', content);
+  console.log('User Language:', userLanguage);
+  
+  try {
+    if (!openai) {
+      console.warn('OpenAI client not initialized, skipping meaning extraction');
+      return '';
+    }
+
+    const isEnglishLearner = userLanguage === 'English';
+    
+    // 学習者言語での意味抽出プロンプト
+    const prompt = isEnglishLearner ? 
+      `この日本語の表現の意味を簡潔に英語で説明してください: "${content}". 1行で簡潔に答えてください。` :
+      `この英語の表現の意味を簡潔に日本語で説明してください: "${content}". 1行で簡潔に答えてください。`;
+
+    console.log('Extracting meaning with OpenAI API...');
+    console.log('Prompt:', prompt);
+    
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      max_tokens: 50,
+      temperature: 0.3,
+    });
+
+    console.log('Meaning extraction response received');
+    console.log('Response usage:', response.usage);
+    
+    const meaning = response.choices[0].message.content.trim();
+    console.log('Extracted meaning:', meaning);
+    console.log('=== extractMeaning Success ===');
+    
+    return meaning;
+
+  } catch (error) {
+    console.error('=== extractMeaning Error ===');
+    console.error('Error type:', error.constructor.name);
+    console.error('Error message:', error.message);
+    console.error('Error status:', error.status);
+    console.error('Full error object:', error);
+    
+    // 意味抽出エラーは投稿を止めないため、ログのみ出力
+    if (error.status === 429) {
+      console.log('OpenAI API rate limit reached for meaning extraction, returning empty meaning');
+    }
+    
+    return ''; // エラー時は空文字を返す
+  }
+}
+
 module.exports = {
   generateStudyLogResponse,
-  extractLearningTags
+  extractLearningTags,
+  extractMeaning
 }; 

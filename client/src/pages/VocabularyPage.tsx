@@ -25,6 +25,7 @@ import {
   Bookmark as BookmarkIcon,
   AutoAwesome as AutoAwesomeIcon,
   Clear as ClearIcon,
+  Edit as EditIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -67,6 +68,8 @@ const VocabularyPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredPosts, setFilteredPosts] = useState<SavedPost[]>([]);
+  const [editingMeaning, setEditingMeaning] = useState<{ postId: number; meaning: string } | null>(null);
+  const [editingRelatedExpressions, setEditingRelatedExpressions] = useState<{ postId: number; expressions: string[] } | null>(null);
 
   // 保存済み投稿を取得
   const fetchSavedPosts = async () => {
@@ -238,18 +241,18 @@ const VocabularyPage: React.FC = () => {
             .replace(/\(.*?\)/g, '') // 括弧内の説明を削除
             .trim();
           
-          if (expression && !expression.includes('**') && !expression.includes('関連表現')) {
+          if (expression && !expression.includes('**') && !expression.includes('関連表現') && !expression.includes('Related Expressions')) {
             sections.relatedExpressions.push(expression);
             console.log('Found related expression:', expression);
           }
-        } else if (!trimmedLine.includes('**') && !trimmedLine.includes('関連表現') && !trimmedLine.includes('Related Expressions') && trimmedLine.length > 0) {
-          // 通常のテキスト形式の関連表現を抽出
+        } else if (!trimmedLine.includes('**') && !trimmedLine.includes('関連表現') && !trimmedLine.includes('Related Expressions') && !trimmedLine.includes('これらの表現') && !trimmedLine.includes('These expressions') && trimmedLine.length > 0) {
+          // 通常のテキスト形式の関連表現を抽出（説明文を除外）
           const expression = trimmedLine
             .replace(/\*\*(.*?)\*\*/g, '$1') // マークダウンの太字を削除
             .replace(/\(.*?\)/g, '') // 括弧内の説明を削除
             .trim();
           
-          if (expression && expression.length > 0) {
+          if (expression && expression.length > 0 && !expression.includes('使い分け') && !expression.includes('使い方')) {
             sections.relatedExpressions.push(expression);
             console.log('Found related expression (text):', expression);
           }
@@ -259,6 +262,86 @@ const VocabularyPage: React.FC = () => {
 
     console.log('Parsed sections:', sections);
     return sections;
+  };
+
+  // 意味の編集
+  const handleEditMeaning = (postId: number, currentMeaning: string) => {
+    setEditingMeaning({ postId, meaning: currentMeaning });
+  };
+
+  const handleSaveMeaning = async () => {
+    if (!editingMeaning) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/study-log/posts/${editingMeaning.postId}/meaning`,
+        { meaning: editingMeaning.meaning },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      // ローカル状態を更新
+      setSavedPosts(prev => prev.map(post => 
+        post.id === editingMeaning.postId 
+          ? { ...post, study_meaning: editingMeaning.meaning }
+          : post
+      ));
+      setFilteredPosts(prev => prev.map(post => 
+        post.id === editingMeaning.postId 
+          ? { ...post, study_meaning: editingMeaning.meaning }
+          : post
+      ));
+      
+      setEditingMeaning(null);
+      alert('✅ 意味を更新しました');
+    } catch (error: any) {
+      console.error('意味更新エラー:', error);
+      alert('❌ 意味の更新に失敗しました');
+    }
+  };
+
+  // 関連表現の編集
+  const handleEditRelatedExpressions = (postId: number, currentExpressions: string[]) => {
+    setEditingRelatedExpressions({ postId, expressions: currentExpressions });
+  };
+
+  const handleSaveRelatedExpressions = async () => {
+    if (!editingRelatedExpressions) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/study-log/posts/${editingRelatedExpressions.postId}/related-expressions`,
+        { expressions: editingRelatedExpressions.expressions },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      // ローカル状態を更新
+      setSavedPosts(prev => prev.map(post => 
+        post.id === editingRelatedExpressions.postId 
+          ? { ...post, related_expressions: editingRelatedExpressions.expressions }
+          : post
+      ));
+      setFilteredPosts(prev => prev.map(post => 
+        post.id === editingRelatedExpressions.postId 
+          ? { ...post, related_expressions: editingRelatedExpressions.expressions }
+          : post
+      ));
+      
+      setEditingRelatedExpressions(null);
+      alert('✅ 関連表現を更新しました');
+    } catch (error: any) {
+      console.error('関連表現更新エラー:', error);
+      alert('❌ 関連表現の更新に失敗しました');
+    }
   };
 
   // AIコメント表示コンポーネント
@@ -519,6 +602,47 @@ const VocabularyPage: React.FC = () => {
                   }}
                   dangerouslySetInnerHTML={{ __html: convertUrlsToLinks(post.content) }}
                 />
+
+                {/* Study Board用の意味表示 */}
+                {(post as any).is_study_log && (post as any).study_meaning && (
+                  <Box sx={{ mb: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        📖 意味:
+                      </Typography>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleEditMeaning(post.id, (post as any).study_meaning)}
+                        sx={{ p: 0.5 }}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                    {editingMeaning?.postId === post.id ? (
+                      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                        <TextField
+                          size="small"
+                          value={editingMeaning.meaning}
+                          onChange={(e) => setEditingMeaning({ ...editingMeaning, meaning: e.target.value })}
+                          sx={{ flex: 1 }}
+                        />
+                        <Button size="small" onClick={handleSaveMeaning}>保存</Button>
+                        <Button size="small" onClick={() => setEditingMeaning(null)}>キャンセル</Button>
+                      </Box>
+                    ) : (
+                      <Typography variant="body2" sx={{ 
+                        fontWeight: 600,
+                        color: 'primary.main',
+                        backgroundColor: isDarkMode ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.1)',
+                        padding: 1,
+                        borderRadius: 1,
+                        border: `1px solid ${isDarkMode ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.2)'}`
+                      }}>
+                        {(post as any).study_meaning}
+                      </Typography>
+                    )}
+                  </Box>
+                )}
 
                 {/* Study Board用のタグ表示 */}
                 {(post as any).is_study_log && (post as any).study_tags && (

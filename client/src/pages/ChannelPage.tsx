@@ -72,6 +72,7 @@ interface Post {
   study_tags?: string; // Study Board用のタグ（JSON文字列）
   target_language?: string; // Study Board用の学習言語
   ai_response_enabled?: boolean; // AI返信有効フラグ
+  study_meaning?: string; // Study Board用の意味
 }
 
 interface Comment {
@@ -1506,34 +1507,22 @@ const ChannelPage: React.FC = () => {
                     {convertUrlsToLinks(post.content)}
                   </Typography>
 
-                  {/* Study Board用のタグ表示 */}
-                  {(post as any).is_study_log && (post as any).study_tags && (
+                  {/* Study Board用の意味表示 */}
+                  {(post as any).is_study_log && (post as any).study_meaning && (
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
                         📖 意味:
                       </Typography>
-                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        {(() => {
-                          try {
-                            const tags = JSON.parse((post as any).study_tags);
-                            return tags.map((tag: string, index: number) => (
-                              <Chip 
-                                key={index} 
-                                label={tag} 
-                                size="small" 
-                                variant="outlined"
-                                sx={{ 
-                                  backgroundColor: isDarkMode ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.1)',
-                                  borderColor: 'primary.main',
-                                  color: 'primary.main'
-                                }}
-                              />
-                            ));
-                          } catch {
-                            return null;
-                          }
-                        })()}
-                      </Box>
+                      <Typography variant="body2" sx={{ 
+                        fontWeight: 600,
+                        color: 'primary.main',
+                        backgroundColor: isDarkMode ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.1)',
+                        padding: 1,
+                        borderRadius: 1,
+                        border: `1px solid ${isDarkMode ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.2)'}`
+                      }}>
+                        {(post as any).study_meaning}
+                      </Typography>
                     </Box>
                   )}
 

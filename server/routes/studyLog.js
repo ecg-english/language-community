@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
-const { generateStudyLogResponse, extractLearningTags } = require('../services/openaiService');
+const { generateStudyLogResponse, extractLearningTags, extractMeaning } = require('../services/openaiService');
 
 // データベース接続（SQLiteを使用）
 const db = require('../database');
@@ -83,19 +83,25 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
 
     // タグの自動抽出（OpenAI APIエラーを完全に処理）
     let tags = [];
+    let meaning = '';
     if (aiResponseEnabled) {
       try {
         if (process.env.OPENAI_API_KEY) {
-          console.log('Attempting to extract tags...');
-          tags = await extractLearningTags(content, targetLanguage);
+          console.log('Attempting to extract tags and meaning...');
+          [tags, meaning] = await Promise.all([
+            extractLearningTags(content, targetLanguage),
+            extractMeaning(content, targetLanguage)
+          ]);
           console.log('Extracted tags:', tags);
+          console.log('Extracted meaning:', meaning);
         } else {
-          console.log('Skipping tag extraction - API key not set');
+          console.log('Skipping tag and meaning extraction - API key not set');
         }
       } catch (tagError) {
-        console.error('Tag extraction failed, continuing without tags:', tagError.message);
+        console.error('Tag/meaning extraction failed, continuing without them:', tagError.message);
         // OpenAI APIエラーでも投稿は続行
         tags = [];
+        meaning = '';
       }
     }
 
@@ -108,13 +114,14 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
       is_study_log: 1,
       ai_response_enabled: aiResponseEnabled ? 1 : 0,
       study_tags: JSON.stringify(tags),
+      study_meaning: meaning,
       target_language: targetLanguage,
       image_url: image_url || null
     });
     
     const result = db.prepare(`
-      INSERT INTO posts (content, user_id, channel_id, is_study_log, ai_response_enabled, study_tags, target_language, image_url, created_at) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      INSERT INTO posts (content, user_id, channel_id, is_study_log, ai_response_enabled, study_tags, study_meaning, target_language, image_url, created_at) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
     `).run(
       content, 
       actualUserId, 
@@ -122,6 +129,7 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
       1, // is_study_log = TRUE
       aiResponseEnabled ? 1 : 0, // ai_response_enabled
       JSON.stringify(tags), 
+      meaning,
       targetLanguage, 
       image_url || null
     );

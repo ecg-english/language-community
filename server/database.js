@@ -346,24 +346,39 @@ const initializeDatabase = () => {
     console.log('Applying Study Board schema...');
     
     // postsテーブルにStudy Board用のカラムを追加
-    if (!postsColumnNames.includes('is_study_log')) {
-      console.log('Adding is_study_log column to posts table...');
+    try {
       db.prepare('ALTER TABLE posts ADD COLUMN is_study_log BOOLEAN DEFAULT 0').run();
+      console.log('Added is_study_log column to posts table');
+    } catch (error) {
+      console.log('is_study_log column already exists or error:', error.message);
     }
-    
-    if (!postsColumnNames.includes('ai_response_enabled')) {
-      console.log('Adding ai_response_enabled column to posts table...');
+
+    try {
       db.prepare('ALTER TABLE posts ADD COLUMN ai_response_enabled BOOLEAN DEFAULT 0').run();
+      console.log('Added ai_response_enabled column to posts table');
+    } catch (error) {
+      console.log('ai_response_enabled column already exists or error:', error.message);
     }
-    
-    if (!postsColumnNames.includes('study_tags')) {
-      console.log('Adding study_tags column to posts table...');
+
+    try {
       db.prepare('ALTER TABLE posts ADD COLUMN study_tags TEXT').run();
+      console.log('Added study_tags column to posts table');
+    } catch (error) {
+      console.log('study_tags column already exists or error:', error.message);
     }
-    
-    if (!postsColumnNames.includes('target_language')) {
-      console.log('Adding target_language column to posts table...');
-      db.prepare('ALTER TABLE posts ADD COLUMN target_language TEXT').run();
+
+    try {
+      db.prepare('ALTER TABLE posts ADD COLUMN study_meaning TEXT').run();
+      console.log('Added study_meaning column to posts table');
+    } catch (error) {
+      console.log('study_meaning column already exists or error:', error.message);
+    }
+
+    try {
+      db.prepare('ALTER TABLE posts ADD COLUMN target_language TEXT DEFAULT "English"').run();
+      console.log('Added target_language column to posts table');
+    } catch (error) {
+      console.log('target_language column already exists or error:', error.message);
     }
     
     // Study Board用の新しいテーブルを作成
