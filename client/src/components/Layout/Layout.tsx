@@ -25,6 +25,7 @@ import {
   LightMode as LightModeIcon,
   DarkMode as DarkModeIcon,
   Menu as MenuIcon,
+  Bookmark as BookmarkIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -339,6 +340,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <EventIcon sx={{ mr: 2, color: 'primary.main' }} />
           <Typography variant="body2" fontWeight={500}>
             {t('events')}
+          </Typography>
+        </MenuItem>
+
+        <MenuItem
+          onClick={() => navigate('/vocabulary')}
+          sx={{
+            py: 1.5,
+            '&:hover': {
+              backgroundColor: 'rgba(30, 64, 175, 0.04)',
+            },
+          }}
+        >
+          <BookmarkIcon sx={{ mr: 2, color: 'secondary.main' }} />
+          <Typography variant="body2" fontWeight={500}>
+            マイ単語帳
           </Typography>
         </MenuItem>
 

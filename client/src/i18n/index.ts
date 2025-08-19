@@ -271,6 +271,57 @@ const en = {
     unauthorized: 'Unauthorized access',
     forbidden: 'Access forbidden',
     notFound: 'Resource not found',
+  },
+  // マイ単語帳関連
+  vocabulary: {
+    en: 'My Vocabulary Book',
+    ja: 'マイ単語帳',
+    jaSimple: 'マイ単語帳'
+  },
+  vocabularyEmpty: {
+    en: 'My Vocabulary Book is empty',
+    ja: 'マイ単語帳は空です',
+    jaSimple: 'マイ単語帳は空です'
+  },
+  vocabularyEmptyMessage: {
+    en: 'Save interesting posts from Study Board!',
+    ja: 'Study Boardで気になる投稿を保存してみましょう！',
+    jaSimple: 'Study Boardで気になる投稿を保存してみましょう！'
+  },
+  savedPosts: {
+    en: 'Saved Posts',
+    ja: '保存済み投稿',
+    jaSimple: '保存済み投稿'
+  },
+  searchResults: {
+    en: 'Search Results',
+    ja: '検索結果',
+    jaSimple: '検索結果'
+  },
+  searchPlaceholder: {
+    en: 'Search by content, username, or tags...',
+    ja: '投稿内容、ユーザー名、タグで検索...',
+    jaSimple: '投稿内容、ユーザー名、タグで検索...'
+  },
+  noSearchResults: {
+    en: 'No search results found',
+    ja: '検索結果が見つかりません',
+    jaSimple: '検索結果が見つかりません'
+  },
+  tryDifferentKeyword: {
+    en: 'Try searching with different keywords',
+    ja: '別のキーワードで検索してみてください',
+    jaSimple: '別のキーワードで検索してみてください'
+  },
+  removeFromVocabulary: {
+    en: 'Remove from Vocabulary Book',
+    ja: 'マイ単語帳から削除',
+    jaSimple: 'マイ単語帳から削除'
+  },
+  backToStudyBoard: {
+    en: 'Back to Study Board',
+    ja: 'Study Boardに戻る',
+    jaSimple: 'Study Boardに戻る'
   }
 };
 
@@ -542,6 +593,57 @@ const ja = {
     unauthorized: '認証が必要です',
     forbidden: 'アクセスが拒否されました',
     notFound: 'リソースが見つかりません',
+  },
+  // マイ単語帳関連
+  vocabulary: {
+    en: 'My Vocabulary Book',
+    ja: 'マイ単語帳',
+    jaSimple: 'マイ単語帳'
+  },
+  vocabularyEmpty: {
+    en: 'My Vocabulary Book is empty',
+    ja: 'マイ単語帳は空です',
+    jaSimple: 'マイ単語帳は空です'
+  },
+  vocabularyEmptyMessage: {
+    en: 'Save interesting posts from Study Board!',
+    ja: 'Study Boardで気になる投稿を保存してみましょう！',
+    jaSimple: 'Study Boardで気になる投稿を保存してみましょう！'
+  },
+  savedPosts: {
+    en: 'Saved Posts',
+    ja: '保存済み投稿',
+    jaSimple: '保存済み投稿'
+  },
+  searchResults: {
+    en: 'Search Results',
+    ja: '検索結果',
+    jaSimple: '検索結果'
+  },
+  searchPlaceholder: {
+    en: 'Search by content, username, or tags...',
+    ja: '投稿内容、ユーザー名、タグで検索...',
+    jaSimple: '投稿内容、ユーザー名、タグで検索...'
+  },
+  noSearchResults: {
+    en: 'No search results found',
+    ja: '検索結果が見つかりません',
+    jaSimple: '検索結果が見つかりません'
+  },
+  tryDifferentKeyword: {
+    en: 'Try searching with different keywords',
+    ja: '別のキーワードで検索してみてください',
+    jaSimple: '別のキーワードで検索してみてください'
+  },
+  removeFromVocabulary: {
+    en: 'Remove from Vocabulary Book',
+    ja: 'マイ単語帳から削除',
+    jaSimple: 'マイ単語帳から削除'
+  },
+  backToStudyBoard: {
+    en: 'Back to Study Board',
+    ja: 'Study Boardに戻る',
+    jaSimple: 'Study Boardに戻る'
   }
 };
 
@@ -813,6 +915,57 @@ const jaSimple = {
     unauthorized: 'にんしょうがひつようです',
     forbidden: 'アクセスがきょひされました',
     notFound: 'リソースが見つかりません',
+  },
+  // マイ単語帳関連
+  vocabulary: {
+    en: 'My Vocabulary Book',
+    ja: 'マイ単語帳',
+    jaSimple: 'マイ単語帳'
+  },
+  vocabularyEmpty: {
+    en: 'My Vocabulary Book is empty',
+    ja: 'マイ単語帳は空です',
+    jaSimple: 'マイ単語帳は空です'
+  },
+  vocabularyEmptyMessage: {
+    en: 'Save interesting posts from Study Board!',
+    ja: 'Study Boardで気になる投稿を保存してみましょう！',
+    jaSimple: 'Study Boardで気になる投稿を保存してみましょう！'
+  },
+  savedPosts: {
+    en: 'Saved Posts',
+    ja: '保存済み投稿',
+    jaSimple: '保存済み投稿'
+  },
+  searchResults: {
+    en: 'Search Results',
+    ja: '検索結果',
+    jaSimple: '検索結果'
+  },
+  searchPlaceholder: {
+    en: 'Search by content, username, or tags...',
+    ja: '投稿内容、ユーザー名、タグで検索...',
+    jaSimple: '投稿内容、ユーザー名、タグで検索...'
+  },
+  noSearchResults: {
+    en: 'No search results found',
+    ja: '検索結果が見つかりません',
+    jaSimple: '検索結果が見つかりません'
+  },
+  tryDifferentKeyword: {
+    en: 'Try searching with different keywords',
+    ja: '別のキーワードで検索してみてください',
+    jaSimple: '別のキーワードで検索してみてください'
+  },
+  removeFromVocabulary: {
+    en: 'Remove from Vocabulary Book',
+    ja: 'マイ単語帳から削除',
+    jaSimple: 'マイ単語帳から削除'
+  },
+  backToStudyBoard: {
+    en: 'Back to Study Board',
+    ja: 'Study Boardに戻る',
+    jaSimple: 'Study Boardに戻る'
   }
 };
 

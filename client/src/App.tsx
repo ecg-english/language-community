@@ -17,6 +17,7 @@ import FeaturesPage from './pages/FeaturesPage';
 import EventsPage from './pages/EventsPage';
 import EventDetailPage from './pages/EventDetailPage';
 import MonthlyHistoryPage from './pages/MonthlyHistoryPage';
+import VocabularyPage from './pages/VocabularyPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 
@@ -75,6 +76,11 @@ const App: React.FC = () => {
                   <Route path="/monthly-history" element={
                     <ProtectedRoute>
                       <MonthlyHistoryPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/vocabulary" element={
+                    <ProtectedRoute>
+                      <VocabularyPage />
                     </ProtectedRoute>
                   } />
                   <Route path="/" element={<Navigate to="/community" replace />} />
