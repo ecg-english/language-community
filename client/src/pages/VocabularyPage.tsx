@@ -88,8 +88,9 @@ const VocabularyPage: React.FC = () => {
         const postsWithComments = await Promise.all(
           response.data.savedPosts.map(async (post: SavedPost) => {
             try {
+              console.log(`Fetching comments for post ${post.id}...`);
               const commentsResponse = await axios.get(
-                `${process.env.REACT_APP_API_URL}/api/posts/${post.id}/comments`,
+                `${process.env.REACT_APP_API_URL}/api/posts/posts/${post.id}/comments`,
                 {
                   headers: {
                     Authorization: `Bearer ${token}`,
@@ -97,7 +98,9 @@ const VocabularyPage: React.FC = () => {
                 }
               );
               
-              if (commentsResponse.data.success) {
+              console.log(`Comments response for post ${post.id}:`, commentsResponse.data);
+              
+              if (commentsResponse.data.comments) {
                 return { ...post, comments: commentsResponse.data.comments };
               }
             } catch (error) {
@@ -107,6 +110,7 @@ const VocabularyPage: React.FC = () => {
           })
         );
         
+        console.log('Posts with comments:', postsWithComments);
         setSavedPosts(postsWithComments);
         setFilteredPosts(postsWithComments);
       } else {
@@ -197,31 +201,39 @@ const VocabularyPage: React.FC = () => {
       relatedExpressions: [] as string[]
     };
 
+    console.log('Parsing AI comment:', commentContent);
+
     // セクション別に解析
     const lines = commentContent.split('\n');
     let currentSection = '';
 
-    lines.forEach(line => {
+    lines.forEach((line, index) => {
       const trimmedLine = line.trim();
+      console.log(`Line ${index}: "${trimmedLine}" (current section: ${currentSection})`);
       
-      if (trimmedLine.includes('🎉') || trimmedLine.includes('**励まし**')) {
+      if (trimmedLine.includes('🎉') || trimmedLine.includes('**励まし**') || trimmedLine.includes('**Encouragement**')) {
         currentSection = 'encouragement';
         sections.encouragement = trimmedLine.replace(/^🎉\s*\*\*励ましの言葉\*\*/, '').replace(/^🎉\s*\*\*Encouragement\*\*/, '').trim();
+        console.log('Found encouragement section:', sections.encouragement);
       } else if (trimmedLine.includes('📝') || trimmedLine.includes('**表現の解説**') || trimmedLine.includes('**Expression Analysis**')) {
         currentSection = 'expressionAnalysis';
+        console.log('Found expression analysis section');
       } else if (trimmedLine.includes('💡') || trimmedLine.includes('**例文**') || trimmedLine.includes('**Example Sentences**')) {
         currentSection = 'examples';
+        console.log('Found examples section');
       } else if (trimmedLine.includes('📚') || trimmedLine.includes('**関連表現**') || trimmedLine.includes('**Related Expressions**')) {
         currentSection = 'relatedExpressions';
+        console.log('Found related expressions section');
       } else if (trimmedLine && currentSection === 'expressionAnalysis') {
         sections.expressionAnalysis += (sections.expressionAnalysis ? '\n' : '') + trimmedLine;
-      } else if (trimmedLine && currentSection === 'examples' && !trimmedLine.startsWith('-') && !trimmedLine.startsWith('•')) {
+      } else if (trimmedLine && currentSection === 'examples' && !trimmedLine.startsWith('-') && !trimmedLine.startsWith('•') && !trimmedLine.includes('**')) {
         sections.examples.push(trimmedLine);
-      } else if (trimmedLine && currentSection === 'relatedExpressions' && !trimmedLine.startsWith('-') && !trimmedLine.startsWith('•')) {
+      } else if (trimmedLine && currentSection === 'relatedExpressions' && !trimmedLine.startsWith('-') && !trimmedLine.startsWith('•') && !trimmedLine.includes('**')) {
         sections.relatedExpressions.push(trimmedLine);
       }
     });
 
+    console.log('Parsed sections:', sections);
     return sections;
   };
 
@@ -512,39 +524,42 @@ const VocabularyPage: React.FC = () => {
                 {/* AIコメントの詳細表示 */}
                 {post.comments && post.comments.length > 0 && (
                   <Box sx={{ mt: 2 }}>
-                    {post.comments.map((comment) => (
-                      <Box key={comment.id}>
-                        {comment.username === 'AI学習サポート' ? (
-                          <AILearningSection comment={comment} />
-                        ) : (
-                          <Box sx={{ 
-                            mt: 1, 
-                            p: 1.5, 
-                            backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
-                            borderRadius: 1,
-                            border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`
-                          }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                              <Avatar 
-                                sx={{ width: 20, height: 20, fontSize: '0.75rem', mr: 1 }}
-                                src={comment.avatar_url}
-                              >
-                                {comment.username.charAt(0).toUpperCase()}
-                              </Avatar>
-                              <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                                {comment.username}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                                {formatDate(comment.created_at)}
+                    {post.comments.map((comment) => {
+                      console.log(`Rendering comment: ${comment.username} - ${comment.content.substring(0, 50)}...`);
+                      return (
+                        <Box key={comment.id}>
+                          {comment.username === 'AI学習サポート' ? (
+                            <AILearningSection comment={comment} />
+                          ) : (
+                            <Box sx={{ 
+                              mt: 1, 
+                              p: 1.5, 
+                              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                              borderRadius: 1,
+                              border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`
+                            }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                <Avatar 
+                                  sx={{ width: 20, height: 20, fontSize: '0.75rem', mr: 1 }}
+                                  src={comment.avatar_url}
+                                >
+                                  {comment.username.charAt(0).toUpperCase()}
+                                </Avatar>
+                                <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                                  {comment.username}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                                  {formatDate(comment.created_at)}
+                                </Typography>
+                              </Box>
+                              <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>
+                                {comment.content}
                               </Typography>
                             </Box>
-                            <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>
-                              {comment.content}
-                            </Typography>
-                          </Box>
-                        )}
-                      </Box>
-                    ))}
+                          )}
+                        </Box>
+                      );
+                    })}
                   </Box>
                 )}
 
