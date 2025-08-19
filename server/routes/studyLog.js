@@ -116,32 +116,68 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
       console.log('AI response requested but OpenAI API key not set');
     }
 
-    // 投稿情報を取得して返す
+    // 投稿情報を取得して返す（テーブル不足に対応）
     console.log('Retrieving post data...');
+    
+    // まず基本的な投稿情報を取得
     const posts = db.prepare(`
-      SELECT p.*, u.username, u.avatar_url, 
-             (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) as like_count,
-             (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count,
-             (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id AND user_id = ?) as user_liked
+      SELECT p.*, u.username, u.avatar_url
       FROM posts p 
       JOIN users u ON p.user_id = u.id 
       WHERE p.id = ?
-    `).all(userIdNum, postId);
+    `).all(postId);
 
     if (posts.length === 0) {
       throw new Error('投稿の取得に失敗しました');
     }
 
+    // いいね数とコメント数を安全に取得（テーブルが存在しない場合は0）
+    let likeCount = 0;
+    let commentCount = 0;
+    let userLiked = 0;
+
+    try {
+      const likeResult = db.prepare(`SELECT COUNT(*) as count FROM post_likes WHERE post_id = ?`).get(postId);
+      likeCount = likeResult ? likeResult.count : 0;
+    } catch (error) {
+      console.log('post_likes table not found, setting like_count to 0');
+      likeCount = 0;
+    }
+
+    try {
+      const commentResult = db.prepare(`SELECT COUNT(*) as count FROM comments WHERE post_id = ?`).get(postId);
+      commentCount = commentResult ? commentResult.count : 0;
+    } catch (error) {
+      console.log('comments table not found, setting comment_count to 0');
+      commentCount = 0;
+    }
+
+    try {
+      const userLikeResult = db.prepare(`SELECT COUNT(*) as count FROM post_likes WHERE post_id = ? AND user_id = ?`).get(postId, userIdNum);
+      userLiked = userLikeResult ? userLikeResult.count : 0;
+    } catch (error) {
+      console.log('post_likes table not found, setting user_liked to 0');
+      userLiked = 0;
+    }
+
+    // 投稿オブジェクトにカウントを追加
+    const post = {
+      ...posts[0],
+      like_count: likeCount,
+      comment_count: commentCount,
+      user_liked: userLiked
+    };
+
     console.log('Post retrieved successfully');
     console.log('=== Study Log Post Response ===');
     console.log('Success:', true);
-    console.log('Post ID:', posts[0].id);
+    console.log('Post ID:', post.id);
     console.log('Tags:', tags);
     console.log('================================');
 
     res.json({
       success: true,
-      post: posts[0],
+      post: post,
       tags: tags,
       aiEnabled: aiResponseEnabled && !!process.env.OPENAI_API_KEY,
       message: 'Study log posted successfully!'

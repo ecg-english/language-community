@@ -425,6 +425,42 @@ const initializeDatabase = () => {
     
     console.log('Study Board schema applied successfully');
 
+    // 不足しているテーブルの確認と作成
+    console.log('Checking for missing tables...');
+    
+    try {
+      // post_likesテーブルの作成（likesテーブルのエイリアス）
+      db.prepare(`
+        CREATE TABLE IF NOT EXISTS post_likes (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          post_id INTEGER NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+          FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+          UNIQUE(user_id, post_id)
+        )
+      `).run();
+      console.log('Created/verified post_likes table');
+    } catch (error) {
+      console.log('post_likes table creation error:', error.message);
+    }
+
+    // 既存のlikesテーブルからpost_likesへのデータ移行（存在する場合）
+    try {
+      const likesExists = db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='likes'`).get();
+      if (likesExists) {
+        console.log('Migrating data from likes to post_likes...');
+        db.prepare(`
+          INSERT OR IGNORE INTO post_likes (user_id, post_id, created_at)
+          SELECT user_id, post_id, created_at FROM likes
+        `).run();
+        console.log('Data migration completed');
+      }
+    } catch (error) {
+      console.log('Data migration error (this is usually okay):', error.message);
+    }
+
     // 注意: 新規ユーザーのデフォルトロールを「ビジター」に変更
     // 既存ユーザーのロールは変更されません
     console.log('New users will be assigned "ビジター" role by default');

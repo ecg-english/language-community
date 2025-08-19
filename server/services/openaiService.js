@@ -61,11 +61,12 @@ async function generateStudyLogResponse(content, userLanguage = 'English') {
       `Please give a short encouraging message for this learning log: "${content}"`;
 
     console.log('Sending request to OpenAI API...');
-    console.log('Using model: gpt-3.5-turbo');
+    console.log('Using model: gpt-4o-mini');
     console.log('Prompt:', prompt);
+    console.log('API Key last 10 chars:', process.env.OPENAI_API_KEY ? '...' + process.env.OPENAI_API_KEY.slice(-10) : 'not set');
     
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "user", 
@@ -143,9 +144,10 @@ async function extractLearningTags(content) {
 
     console.log('Extracting tags with OpenAI API...');
     console.log('Prompt:', prompt);
+    console.log('Using model: gpt-4o-mini for tag extraction');
     
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "user",
