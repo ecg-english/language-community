@@ -68,6 +68,7 @@ async function generateStudyLogResponse(content, userLanguage = 'English') {
 📝 **表現の解説**
 - 投稿された表現の意味や使い方を説明
 - より自然な表現があれば提案
+- 発音記号も含めて説明（例：/həˈloʊ/）
 
 💡 **例文**
 - 学習した表現を使った2-3個の例文
@@ -90,6 +91,7 @@ First, praise their effort in continuing to learn.
 📝 **Expression Analysis**
 - Explain the meaning and usage of the expressions posted
 - Suggest more natural expressions if applicable
+- Include pronunciation guide if applicable
 
 💡 **Example Sentences**
 - 2-3 example sentences using the learned expressions
@@ -173,12 +175,14 @@ Please respond warmly and clearly in English.`;
 /**
  * 投稿内容から学習タグを自動抽出
  * @param {string} content - 投稿内容
+ * @param {string} userLanguage - ユーザーの学習言語 ('English' or 'Japanese')
  * @returns {Promise<Array>} 抽出されたタグ
  */
-async function extractLearningTags(content) {
+async function extractLearningTags(content, userLanguage = 'English') {
   console.log('=== extractLearningTags Start ===');
   console.log('OpenAI client exists:', !!openai);
   console.log('Content:', content);
+  console.log('User Language:', userLanguage);
   
   try {
     if (!openai) {
@@ -186,12 +190,15 @@ async function extractLearningTags(content) {
       return [];
     }
 
-    // 最もシンプルなプロンプトでテスト
-    const prompt = `この文から3つのキーワードを抽出: "${content}". JSON形式: {"tags": ["キーワード1", "キーワード2", "キーワード3"]}`;
+    const isEnglishLearner = userLanguage === 'English';
+    
+    // 学習者言語でのタグ抽出プロンプト
+    const prompt = isEnglishLearner ? 
+      `この日本語の文から3つのキーワードを英語で抽出: "${content}". JSON形式: {"tags": ["キーワード1", "キーワード2", "キーワード3"]}` :
+      `この英語の文から3つのキーワードを日本語で抽出: "${content}". JSON形式: {"tags": ["キーワード1", "キーワード2", "キーワード3"]}`;
 
     console.log('Extracting tags with OpenAI API...');
     console.log('Prompt:', prompt);
-    console.log('Using model: gpt-4o-mini for tag extraction');
     
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",

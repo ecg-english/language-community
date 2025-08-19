@@ -47,6 +47,7 @@ const StudyLogPost: React.FC<StudyLogPostProps> = ({ open, onClose, onSuccess, c
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [generatedTags, setGeneratedTags] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isAnonymous, setIsAnonymous] = useState(false);
 
   // ユーザーのロールから学習言語を推測
   useEffect(() => {
@@ -92,7 +93,8 @@ const StudyLogPost: React.FC<StudyLogPostProps> = ({ open, onClose, onSuccess, c
         content,
         aiResponseEnabled,
         targetLanguage,
-        image_url: selectedImage
+        image_url: selectedImage,
+        is_anonymous: isAnonymous
       });
 
       if (response.data.success) {
@@ -249,6 +251,27 @@ const StudyLogPost: React.FC<StudyLogPostProps> = ({ open, onClose, onSuccess, c
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
                   投稿に対してAIが学習サポートのコメントを自動生成します
+                </Typography>
+              </Box>
+            }
+          />
+
+          {/* 匿名投稿の設定 */}
+          <FormControlLabel
+            control={
+              <Switch
+                checked={isAnonymous}
+                onChange={(e) => setIsAnonymous(e.target.checked)}
+                color="secondary"
+              />
+            }
+            label={
+              <Box>
+                <Typography variant="body2" fontWeight={500}>
+                  匿名で投稿する
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  投稿時に「Anonymous」として表示されます
                 </Typography>
               </Box>
             }

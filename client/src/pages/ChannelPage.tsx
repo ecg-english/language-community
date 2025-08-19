@@ -1510,7 +1510,7 @@ const ChannelPage: React.FC = () => {
                   {(post as any).is_study_log && (post as any).study_tags && (
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-                        🏷️ 学習タグ:
+                        📖 意味:
                       </Typography>
                       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                         {(() => {

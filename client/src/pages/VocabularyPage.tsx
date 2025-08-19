@@ -521,15 +521,15 @@ const VocabularyPage: React.FC = () => {
                 />
 
                 {/* Study Board用のタグ表示 */}
-                {post.is_study_log && post.study_tags && (
+                {(post as any).is_study_log && (post as any).study_tags && (
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-                      🏷️ 学習タグ:
+                      📖 意味:
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                       {(() => {
                         try {
-                          const tags = JSON.parse(post.study_tags);
+                          const tags = JSON.parse((post as any).study_tags);
                           return tags.map((tag: string, index: number) => (
                             <Chip 
                               key={index} 

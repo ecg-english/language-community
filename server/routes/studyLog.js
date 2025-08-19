@@ -10,7 +10,7 @@ const db = require('../database');
 router.post('/channels/:channelId/study-posts', authenticateToken, async (req, res) => {
   try {
     const { channelId } = req.params;
-    const { content, aiResponseEnabled = false, targetLanguage = 'English', image_url } = req.body;
+    const { content, aiResponseEnabled = false, targetLanguage = 'English', image_url, is_anonymous = false } = req.body;
     
     console.log('=== Study Log Post Request ===');
     console.log('Channel ID:', channelId);
@@ -56,13 +56,38 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
     const userIdNum = parseInt(userId);
     console.log('Converted User ID to number:', userIdNum);
 
+    // 匿名投稿の処理
+    let actualUserId = userIdNum;
+    if (is_anonymous) {
+      console.log('Anonymous post requested, creating Anonymous user...');
+      
+      // Anonymousユーザーを取得または作成
+      let anonymousUser = db.prepare('SELECT id FROM users WHERE username = ?').get('Anonymous');
+      
+      if (!anonymousUser) {
+        console.log('Anonymous user not found, creating new Anonymous user...');
+        const anonymousUserResult = db.prepare(`
+          INSERT INTO users (username, email, password, role, bio, created_at) 
+          VALUES (?, ?, ?, ?, ?, datetime('now'))
+        `).run('Anonymous', 'anonymous@study-board.local', 'no-password', 'Anonymous', 'Anonymous Study Board User');
+        
+        anonymousUser = { id: anonymousUserResult.lastInsertRowid };
+        console.log('Created Anonymous user with ID:', anonymousUser.id);
+      } else {
+        console.log('Anonymous user found with ID:', anonymousUser.id);
+      }
+      
+      actualUserId = anonymousUser.id;
+      console.log('Using Anonymous user ID for post:', actualUserId);
+    }
+
     // タグの自動抽出（OpenAI APIエラーを完全に処理）
     let tags = [];
     if (aiResponseEnabled) {
       try {
         if (process.env.OPENAI_API_KEY) {
           console.log('Attempting to extract tags...');
-          tags = await extractLearningTags(content);
+          tags = await extractLearningTags(content, targetLanguage);
           console.log('Extracted tags:', tags);
         } else {
           console.log('Skipping tag extraction - API key not set');
@@ -78,7 +103,7 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
     console.log('Creating post in database...');
     console.log('Database parameters:', {
       content: content,
-      user_id: userIdNum,
+      user_id: actualUserId,
       channel_id: parseInt(channelId),
       is_study_log: 1,
       ai_response_enabled: aiResponseEnabled ? 1 : 0,
@@ -92,7 +117,7 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
     `).run(
       content, 
-      userIdNum, 
+      actualUserId, 
       parseInt(channelId), 
       1, // is_study_log = TRUE
       aiResponseEnabled ? 1 : 0, // ai_response_enabled
