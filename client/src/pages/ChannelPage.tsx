@@ -1610,13 +1610,22 @@ const ChannelPage: React.FC = () => {
                       <Divider sx={{ mb: 2 }} />
                       
                       {/* コメント入力 */}
-                      <Box sx={{ mb: 2, display: 'flex', gap: 1 }}>
+                      <Box sx={{ mb: 2 }}>
                         <TextField
                           fullWidth
                           size="small"
                           placeholder={t('writeComment')}
                           value={newComment[post.id] || ''}
                           onChange={(e) => setNewComment(prev => ({ ...prev, [post.id]: e.target.value }))}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSubmitComment(post.id);
+                            }
+                          }}
+                          multiline
+                          minRows={1}
+                          maxRows={4}
                           variant="outlined"
                           sx={{
                             '& .MuiOutlinedInput-root': {
@@ -1632,14 +1641,19 @@ const ChannelPage: React.FC = () => {
                             },
                           }}
                         />
-                        <Button
-                          variant="contained"
-                          size="small"
-                          onClick={() => handleSubmitComment(post.id)}
-                          disabled={!newComment[post.id]?.trim()}
-                        >
-                          {t('sendComment')}
-                        </Button>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+                          <Typography variant="caption" color="text.secondary">
+                            {t('commentHelp')}
+                          </Typography>
+                          <Button
+                            variant="contained"
+                            size="small"
+                            onClick={() => handleSubmitComment(post.id)}
+                            disabled={!newComment[post.id]?.trim()}
+                          >
+                            {t('sendComment')}
+                          </Button>
+                        </Box>
                       </Box>
 
                       {/* コメント一覧 */}

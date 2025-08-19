@@ -44,6 +44,16 @@ interface SavedPost {
   study_tags?: string;
   target_language?: string;
   ai_response_enabled?: boolean;
+  comments?: Comment[];
+}
+
+interface Comment {
+  id: number;
+  content: string;
+  user_id: number;
+  username: string;
+  created_at: string;
+  avatar_url?: string;
 }
 
 const VocabularyPage: React.FC = () => {
@@ -74,8 +84,31 @@ const VocabularyPage: React.FC = () => {
       );
 
       if (response.data.success) {
-        setSavedPosts(response.data.savedPosts);
-        setFilteredPosts(response.data.savedPosts);
+        // 各投稿のコメントを取得
+        const postsWithComments = await Promise.all(
+          response.data.savedPosts.map(async (post: SavedPost) => {
+            try {
+              const commentsResponse = await axios.get(
+                `${process.env.REACT_APP_API_URL}/api/posts/${post.id}/comments`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                }
+              );
+              
+              if (commentsResponse.data.success) {
+                return { ...post, comments: commentsResponse.data.comments };
+              }
+            } catch (error) {
+              console.log(`Comments fetch failed for post ${post.id}:`, error);
+            }
+            return { ...post, comments: [] };
+          })
+        );
+        
+        setSavedPosts(postsWithComments);
+        setFilteredPosts(postsWithComments);
       } else {
         setError('保存済み投稿の取得に失敗しました');
       }
@@ -153,6 +186,139 @@ const VocabularyPage: React.FC = () => {
     return text.replace(urlRegex, (url) => {
       return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #1976d2; text-decoration: underline;">${url}</a>`;
     });
+  };
+
+  // AIコメントを学習用に解析・整理
+  const parseAIComment = (commentContent: string) => {
+    const sections = {
+      encouragement: '',
+      expressionAnalysis: '',
+      examples: [] as string[],
+      relatedExpressions: [] as string[]
+    };
+
+    // セクション別に解析
+    const lines = commentContent.split('\n');
+    let currentSection = '';
+
+    lines.forEach(line => {
+      const trimmedLine = line.trim();
+      
+      if (trimmedLine.includes('🎉') || trimmedLine.includes('**励まし**')) {
+        currentSection = 'encouragement';
+        sections.encouragement = trimmedLine.replace(/^🎉\s*\*\*励ましの言葉\*\*/, '').replace(/^🎉\s*\*\*Encouragement\*\*/, '').trim();
+      } else if (trimmedLine.includes('📝') || trimmedLine.includes('**表現の解説**') || trimmedLine.includes('**Expression Analysis**')) {
+        currentSection = 'expressionAnalysis';
+      } else if (trimmedLine.includes('💡') || trimmedLine.includes('**例文**') || trimmedLine.includes('**Example Sentences**')) {
+        currentSection = 'examples';
+      } else if (trimmedLine.includes('📚') || trimmedLine.includes('**関連表現**') || trimmedLine.includes('**Related Expressions**')) {
+        currentSection = 'relatedExpressions';
+      } else if (trimmedLine && currentSection === 'expressionAnalysis') {
+        sections.expressionAnalysis += (sections.expressionAnalysis ? '\n' : '') + trimmedLine;
+      } else if (trimmedLine && currentSection === 'examples' && !trimmedLine.startsWith('-') && !trimmedLine.startsWith('•')) {
+        sections.examples.push(trimmedLine);
+      } else if (trimmedLine && currentSection === 'relatedExpressions' && !trimmedLine.startsWith('-') && !trimmedLine.startsWith('•')) {
+        sections.relatedExpressions.push(trimmedLine);
+      }
+    });
+
+    return sections;
+  };
+
+  // AIコメント表示コンポーネント
+  const AILearningSection = ({ comment }: { comment: Comment }) => {
+    const aiContent = parseAIComment(comment.content);
+    
+    return (
+      <Box sx={{ 
+        mt: 2, 
+        p: 2, 
+        backgroundColor: isDarkMode ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.05)',
+        borderRadius: 2,
+        border: `1px solid ${isDarkMode ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.2)'}`
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <AutoAwesomeIcon sx={{ color: 'secondary.main', mr: 1 }} />
+          <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'secondary.main' }}>
+            🤖 AI学習サポート
+          </Typography>
+        </Box>
+
+        {/* 励ましの言葉 */}
+        {aiContent.encouragement && (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+              💪 励まし
+            </Typography>
+            <Typography variant="body2" sx={{ mt: 0.5, fontStyle: 'italic' }}>
+              {aiContent.encouragement}
+            </Typography>
+          </Box>
+        )}
+
+        {/* 表現の解説 */}
+        {aiContent.expressionAnalysis && (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+              📖 表現の解説
+            </Typography>
+            <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: 'pre-line' }}>
+              {aiContent.expressionAnalysis}
+            </Typography>
+          </Box>
+        )}
+
+        {/* 例文 */}
+        {aiContent.examples.length > 0 && (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+              💡 例文
+            </Typography>
+            <Box sx={{ mt: 0.5 }}>
+              {aiContent.examples.map((example, index) => (
+                <Box key={index} sx={{ 
+                  mb: 1, 
+                  p: 1, 
+                  backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                  borderRadius: 1,
+                  borderLeft: '3px solid #1976d2'
+                }}>
+                  <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                    {example}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
+
+        {/* 関連表現 */}
+        {aiContent.relatedExpressions.length > 0 && (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+              📚 関連表現
+            </Typography>
+            <Box sx={{ mt: 0.5 }}>
+              {aiContent.relatedExpressions.map((expression, index) => (
+                <Chip 
+                  key={index} 
+                  label={expression} 
+                  size="small" 
+                  variant="outlined"
+                  sx={{ 
+                    mr: 0.5, 
+                    mb: 0.5,
+                    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                    borderColor: 'primary.main',
+                    color: 'primary.main'
+                  }}
+                />
+              ))}
+            </Box>
+          </Box>
+        )}
+      </Box>
+    );
   };
 
   useEffect(() => {
@@ -340,6 +506,45 @@ const VocabularyPage: React.FC = () => {
                       color="secondary"
                       variant="outlined"
                     />
+                  </Box>
+                )}
+
+                {/* AIコメントの詳細表示 */}
+                {post.comments && post.comments.length > 0 && (
+                  <Box sx={{ mt: 2 }}>
+                    {post.comments.map((comment) => (
+                      <Box key={comment.id}>
+                        {comment.username === 'AI学習サポート' ? (
+                          <AILearningSection comment={comment} />
+                        ) : (
+                          <Box sx={{ 
+                            mt: 1, 
+                            p: 1.5, 
+                            backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                            borderRadius: 1,
+                            border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`
+                          }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                              <Avatar 
+                                sx={{ width: 20, height: 20, fontSize: '0.75rem', mr: 1 }}
+                                src={comment.avatar_url}
+                              >
+                                {comment.username.charAt(0).toUpperCase()}
+                              </Avatar>
+                              <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                                {comment.username}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                                {formatDate(comment.created_at)}
+                              </Typography>
+                            </Box>
+                            <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>
+                              {comment.content}
+                            </Typography>
+                          </Box>
+                        )}
+                      </Box>
+                    ))}
                   </Box>
                 )}
 

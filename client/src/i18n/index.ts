@@ -322,6 +322,11 @@ const en = {
     en: 'Back to Study Board',
     ja: 'Study Boardに戻る',
     jaSimple: 'Study Boardに戻る'
+  },
+  commentHelp: {
+    en: 'Press Enter to send, Shift+Enter for new line',
+    ja: 'Enterで送信、Shift+Enterで改行',
+    jaSimple: 'Enterで送信、Shift+Enterで改行'
   }
 };
 
@@ -644,6 +649,11 @@ const ja = {
     en: 'Back to Study Board',
     ja: 'Study Boardに戻る',
     jaSimple: 'Study Boardに戻る'
+  },
+  commentHelp: {
+    en: 'Press Enter to send, Shift+Enter for new line',
+    ja: 'Enterで送信、Shift+Enterで改行',
+    jaSimple: 'Enterで送信、Shift+Enterで改行'
   }
 };
 
@@ -966,6 +976,11 @@ const jaSimple = {
     en: 'Back to Study Board',
     ja: 'Study Boardに戻る',
     jaSimple: 'Study Boardに戻る'
+  },
+  commentHelp: {
+    en: 'Press Enter to send, Shift+Enter for new line',
+    ja: 'Enterで送信、Shift+Enterで改行',
+    jaSimple: 'Enterで送信、Shift+Enterで改行'
   }
 };
 
