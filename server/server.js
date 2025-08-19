@@ -18,10 +18,25 @@ app.use(limiter);
 
 // CORS設定
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://ecg-english.github.io', 'https://language-community-frontend.onrender.com']
-    : ['http://localhost:3000'],
+  origin: function (origin, callback) {
+    // 許可するオリジンのリスト
+    const allowedOrigins = [
+      'https://ecg-english.github.io',
+      'https://language-community-frontend.onrender.com',
+      'http://localhost:3000'
+    ];
+    
+    // originがnullの場合（同一オリジンリクエスト）も許可
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      callback(null, true); // 開発中は全て許可
+    }
+  },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 // ボディパーサー（画像アップロード用に制限を増加）
