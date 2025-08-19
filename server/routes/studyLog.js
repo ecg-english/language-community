@@ -13,7 +13,14 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
     const { content, aiResponseEnabled = false, targetLanguage = 'English', image_url } = req.body;
     const userId = req.user.id;
 
-    console.log('Study log post request:', { channelId, content, aiResponseEnabled, targetLanguage, userId });
+    console.log('=== Study Log Post Request ===');
+    console.log('Channel ID:', channelId);
+    console.log('Content:', content);
+    console.log('AI Response Enabled:', aiResponseEnabled);
+    console.log('Target Language:', targetLanguage);
+    console.log('User ID:', userId);
+    console.log('OPENAI_API_KEY exists:', !!process.env.OPENAI_API_KEY);
+    console.log('================================');
 
     // タグの自動抽出（エラーが発生しても投稿は続行）
     let tags = [];
@@ -40,6 +47,7 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
 
     // AI返信が有効な場合で、OpenAI APIキーが設定されている場合のみAI返信を生成
     if (aiResponseEnabled && process.env.OPENAI_API_KEY) {
+      console.log('Generating AI response...');
       // 非同期でAI返信を生成（レスポンスを待たない）
       generateAIResponse(postId, content, targetLanguage).catch(error => {
         console.error('AI返信生成エラー:', error);
@@ -49,6 +57,7 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
     }
 
     // 投稿情報を取得して返す
+    console.log('Retrieving post data...');
     const posts = db.prepare(`
       SELECT p.*, u.username, u.avatar_url, 
              (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) as like_count,
@@ -59,7 +68,12 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
       WHERE p.id = ?
     `).all(userId, postId);
 
-    console.log('Post retrieved:', posts[0]);
+    console.log('Post retrieved successfully');
+    console.log('=== Study Log Post Response ===');
+    console.log('Success:', true);
+    console.log('Post ID:', posts[0]?.id);
+    console.log('Tags:', tags);
+    console.log('================================');
 
     res.json({
       success: true,
