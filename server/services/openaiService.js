@@ -29,47 +29,35 @@ async function generateStudyLogResponse(content, userLanguage = 'English') {
     }
 
     const isEnglishLearner = userLanguage === 'English';
+    
+    // フリーティア制限を考慮した短縮プロンプト
     const prompt = isEnglishLearner ? 
-      `あなたは温かく親しみやすい英語学習サポートAIです。以下の学習ログに対して、励ましの言葉と共に以下の項目で返信してください：
+      `以下の日本語学習ログに温かい励ましと簡単なアドバイスをください：
+"${content}"
 
-投稿内容: "${content}"
-
-返信形式：
-1. 励ましの言葉（親しみやすく温かい口調で）
-2. 表現チェック（誤りがあれば優しく訂正）
-3. 追加例文（投稿された表現を使った別の例文）
-4. 関連表現（類義語や関連フレーズ、例文付き）
-
-※機械的にならず、まるで友達のような温かい返信をしてください。日本語で返信してください。` :
+簡潔に日本語で返信してください。` :
       
-      `You are a warm and friendly Japanese learning support AI. Please respond to the following study log with encouragement and the following items:
+      `Please provide warm encouragement and simple advice for this Japanese learning log:
+"${content}"
 
-Post content: "${content}"
-
-Response format:
-1. Encouraging words (in a friendly and warm tone)
-2. Expression check (gently correct if there are errors)
-3. Additional examples (other example sentences using the posted expressions)
-4. Related expressions (synonyms or related phrases with examples)
-
-※Please make your response warm and friendly, like a friend. Please respond in English.`;
+Please respond briefly in English.`;
 
     console.log('Sending request to OpenAI API...');
     const response = await openai.chat.completions.create({
-      model: "gpt-5-nano",
+      model: "gpt-3.5-turbo", // フリーティア対応モデルに変更
       messages: [
         {
           role: "system",
           content: isEnglishLearner ? 
-            "あなたは英語学習者をサポートする優しく親しみやすいAIアシスタントです。学習者のモチベーションを高め、温かくサポートしてください。" :
-            "You are a kind and friendly AI assistant supporting Japanese learners. Please boost learners' motivation and provide warm support."
+            "あなたは親しみやすい学習サポートAIです。簡潔に返信してください。" :
+            "You are a friendly learning support AI. Please respond briefly."
         },
         {
           role: "user", 
           content: prompt
         }
       ],
-      max_tokens: 800,
+      max_tokens: 200, // トークン数を大幅に削減
       temperature: 0.7,
     });
 
@@ -86,6 +74,12 @@ Response format:
 
   } catch (error) {
     console.error('OpenAI API Error:', error);
+    
+    // フリーティア制限エラーの場合の特別処理
+    if (error.status === 429) {
+      throw new Error('OpenAI APIの利用制限に達しました。しばらく待ってから再試行してください。');
+    }
+    
     throw new Error('AI返信の生成に失敗しました: ' + error.message);
   }
 }
@@ -102,29 +96,26 @@ async function extractLearningTags(content) {
       return [];
     }
 
-    const prompt = `以下の学習ログから適切なタグを3-5個抽出してください。タグは学習内容を表すキーワードにしてください。
+    // フリーティア制限を考慮した短縮プロンプト
+    const prompt = `学習ログから3個のタグを抽出してください：
+"${content}"
 
-投稿内容: "${content}"
-
-以下の形式で返してください（JSON形式）：
-{
-  "tags": ["タグ1", "タグ2", "タグ3"]
-}`;
+JSON形式で返してください: {"tags": ["タグ1", "タグ2", "タグ3"]}`;
 
     console.log('Extracting tags with OpenAI API...');
     const response = await openai.chat.completions.create({
-      model: "gpt-5-nano",
+      model: "gpt-3.5-turbo", // フリーティア対応モデルに変更
       messages: [
         {
           role: "system",
-          content: "あなたは学習ログからタグを抽出する専門AIです。学習内容に関連する適切なタグを抽出してください。"
+          content: "学習タグを抽出するAIです。簡潔に返してください。"
         },
         {
           role: "user",
           content: prompt
         }
       ],
-      max_tokens: 200,
+      max_tokens: 100, // トークン数を大幅に削減
       temperature: 0.3,
     });
 
@@ -134,6 +125,13 @@ async function extractLearningTags(content) {
 
   } catch (error) {
     console.error('Tag extraction error:', error);
+    
+    // フリーティア制限エラーの場合の特別処理
+    if (error.status === 429) {
+      console.log('OpenAI API rate limit reached for tag extraction, returning empty tags');
+      return [];
+    }
+    
     return []; // エラー時は空配列を返す
   }
 }

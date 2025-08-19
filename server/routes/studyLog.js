@@ -11,18 +11,26 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
   try {
     const { channelId } = req.params;
     const { content, aiResponseEnabled = false, targetLanguage = 'English', image_url } = req.body;
-    const userId = req.user.id;
-
+    
+    // ユーザーIDの正しい取得（JWTトークンの構造に合わせる）
+    const userId = req.user.userId || req.user.id;
+    
     console.log('=== Study Log Post Request ===');
     console.log('Channel ID:', channelId);
     console.log('Content:', content);
     console.log('AI Response Enabled:', aiResponseEnabled);
     console.log('Target Language:', targetLanguage);
-    console.log('User ID:', userId);
+    console.log('User object:', req.user);
+    console.log('User ID (resolved):', userId);
     console.log('OPENAI_API_KEY exists:', !!process.env.OPENAI_API_KEY);
     console.log('================================');
 
-    // タグの自動抽出（エラーが発生しても投稿は続行）
+    // ユーザーIDの検証
+    if (!userId) {
+      throw new Error('ユーザーIDが取得できませんでした');
+    }
+
+    // タグの自動抽出（OpenAI APIエラーを完全に処理）
     let tags = [];
     try {
       if (process.env.OPENAI_API_KEY && aiResponseEnabled) {
@@ -33,8 +41,8 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
         console.log('Skipping tag extraction - API key not set or AI response disabled');
       }
     } catch (tagError) {
-      console.error('Tag extraction failed, continuing without tags:', tagError);
-      console.log('Tag error details:', tagError.message);
+      console.error('Tag extraction failed, continuing without tags:', tagError.message);
+      // OpenAI APIエラーでも投稿は続行
       tags = [];
     }
 
@@ -58,9 +66,9 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
     // AI返信が有効な場合で、OpenAI APIキーが設定されている場合のみAI返信を生成
     if (aiResponseEnabled && process.env.OPENAI_API_KEY) {
       console.log('Generating AI response...');
-      // 非同期でAI返信を生成（レスポンスを待たない）
+      // 非同期でAI返信を生成（エラーが発生しても投稿は成功扱い）
       generateAIResponse(postId, content, targetLanguage).catch(error => {
-        console.error('AI返信生成エラー:', error);
+        console.error('AI返信生成エラー:', error.message);
         console.log('AI response generation failed, but post was created successfully');
       });
     } else if (aiResponseEnabled && !process.env.OPENAI_API_KEY) {
@@ -94,7 +102,8 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
       success: true,
       post: posts[0],
       tags: tags,
-      aiEnabled: aiResponseEnabled && !!process.env.OPENAI_API_KEY
+      aiEnabled: aiResponseEnabled && !!process.env.OPENAI_API_KEY,
+      message: 'Study log posted successfully!'
     });
 
   } catch (error) {
