@@ -207,21 +207,32 @@ async function generateAIResponse(postId, content, targetLanguage) {
       return;
     }
 
-    console.log(`Generating AI response for post ${postId}...`);
+    console.log(`=== AI Response Generation Start ===`);
+    console.log(`Post ID: ${postId}`);
+    console.log(`Content: ${content}`);
+    console.log(`Target Language: ${targetLanguage}`);
+    console.log(`API Key exists: ${!!process.env.OPENAI_API_KEY}`);
+
     const aiResponse = await generateStudyLogResponse(content, targetLanguage);
+    console.log(`AI response received:`, aiResponse);
     
     // AI返信をデータベースに保存
-    db.prepare(`
+    console.log('Saving AI response to ai_responses table...');
+    const aiResponseResult = db.prepare(`
       INSERT INTO ai_responses (post_id, content, response_type, target_language, generated_at) 
       VALUES (?, ?, 'study_support', ?, datetime('now'))
     `).run(postId, aiResponse.content, targetLanguage);
+    console.log('AI response saved to ai_responses table:', aiResponseResult);
 
     // AI返信をコメントとしても投稿に追加
     try {
+      console.log('Creating AI user for comment...');
+      
       // AIユーザーを取得または作成
       let aiUser = db.prepare('SELECT id FROM users WHERE username = ?').get('AI学習サポート');
       
       if (!aiUser) {
+        console.log('AI user not found, creating new AI user...');
         // AIユーザーを作成
         const aiUserResult = db.prepare(`
           INSERT INTO users (username, email, password, role, bio, created_at) 
@@ -230,151 +241,191 @@ async function generateAIResponse(postId, content, targetLanguage) {
         
         aiUser = { id: aiUserResult.lastInsertRowid };
         console.log('Created AI user with ID:', aiUser.id);
+      } else {
+        console.log('AI user found with ID:', aiUser.id);
       }
 
       // AI返信をコメントとして追加
-      db.prepare(`
+      console.log('Adding AI response as comment...');
+      console.log('Comment parameters:', {
+        content: aiResponse.content,
+        user_id: aiUser.id,
+        post_id: postId
+      });
+      
+      const commentResult = db.prepare(`
         INSERT INTO comments (content, user_id, post_id, created_at) 
         VALUES (?, ?, ?, datetime('now'))
       `).run(aiResponse.content, aiUser.id, postId);
-
-      console.log(`AI返信をコメントとして追加しました - Post ID: ${postId}`);
+      
+      console.log('AI comment created with result:', commentResult);
+      console.log(`AI返信をコメントとして追加しました - Post ID: ${postId}, Comment ID: ${commentResult.lastInsertRowid}`);
       
     } catch (commentError) {
-      console.error('AI返信のコメント追加エラー:', commentError);
+      console.error('=== AI Comment Creation Error ===');
+      console.error('Error type:', commentError.constructor.name);
+      console.error('Error message:', commentError.message);
+      console.error('Error stack:', commentError.stack);
+      console.error('Comment error details:', {
+        postId: postId,
+        aiResponseContent: aiResponse.content,
+        aiResponseLength: aiResponse.content?.length
+      });
     }
 
-    console.log(`AI返信が生成されました - Post ID: ${postId}`);
+    console.log(`=== AI Response Generation Complete ===`);
+    console.log(`Post ID: ${postId} - AI response and comment successfully created`);
   } catch (error) {
-    console.error('AI返信生成エラー:', error);
-    console.log('AI response generation failed for post:', postId);
+    console.error('=== AI Response Generation Error ===');
+    console.error('Error type:', error.constructor.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('Generation error details:', {
+      postId: postId,
+      content: content,
+      targetLanguage: targetLanguage
+    });
   }
 }
 
-// 投稿のAI返信を取得
-router.get('/posts/:postId/ai-response', authenticateToken, async (req, res) => {
-  try {
-    const { postId } = req.params;
-
-    const responses = db.prepare(`
-      SELECT * FROM ai_responses WHERE post_id = ? ORDER BY generated_at DESC LIMIT 1
-    `).all(postId);
-
-    if (responses.length > 0) {
-      res.json({
-        success: true,
-        aiResponse: responses[0]
-      });
-    } else {
-      res.json({
-        success: true,
-        aiResponse: null
-      });
-    }
-
-  } catch (error) {
-    console.error('AI返信取得エラー:', error);
-    res.status(500).json({ error: 'AI返信の取得に失敗しました' });
-  }
-});
-
-// 投稿を保存（マイ単語帳に追加）
+// 投稿をマイ単語帳に保存
 router.post('/posts/:postId/save', authenticateToken, async (req, res) => {
   try {
     const { postId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user.userId || req.user.id;
 
-    // postIdとuserIdを数値に変換
-    const postIdNum = parseInt(postId);
-    const userIdNum = parseInt(userId);
+    console.log('=== Save to Vocabulary Request ===');
+    console.log('Post ID:', postId);
+    console.log('User ID:', userId);
 
-    // 既に保存済みかチェック
-    const existing = db.prepare(`
-      SELECT id FROM saved_posts WHERE user_id = ? AND post_id = ?
-    `).get(userIdNum, postIdNum);
-
-    if (existing) {
-      return res.status(400).json({ error: '既に保存済みです' });
+    if (!userId || isNaN(parseInt(userId))) {
+      throw new Error('有効なユーザーIDが取得できませんでした');
     }
 
-    // 投稿を保存
-    db.prepare(`
-      INSERT INTO saved_posts (user_id, post_id, saved_at) VALUES (?, ?, datetime('now'))
-    `).run(userIdNum, postIdNum);
+    // 既に保存済みかチェック
+    const existingSave = db.prepare('SELECT id FROM saved_posts WHERE user_id = ? AND post_id = ?').get(parseInt(userId), parseInt(postId));
+    
+    if (existingSave) {
+      return res.json({ 
+        success: true, 
+        message: '既にマイ単語帳に保存済みです',
+        alreadySaved: true 
+      });
+    }
 
-    res.json({
-      success: true,
-      message: '投稿を保存しました'
+    // マイ単語帳に保存
+    db.prepare(`
+      INSERT INTO saved_posts (user_id, post_id, saved_at) 
+      VALUES (?, ?, datetime('now'))
+    `).run(parseInt(userId), parseInt(postId));
+
+    console.log('Post saved to vocabulary successfully');
+    res.json({ 
+      success: true, 
+      message: 'マイ単語帳に保存しました！' 
     });
 
   } catch (error) {
-    console.error('投稿保存エラー:', error);
-    res.status(500).json({ error: '投稿の保存に失敗しました' });
+    console.error('マイ単語帳保存エラー:', error);
+    res.status(500).json({ 
+      error: 'マイ単語帳への保存に失敗しました',
+      details: error.message 
+    });
   }
 });
 
-// 投稿の保存を解除
+// マイ単語帳から削除
 router.delete('/posts/:postId/save', authenticateToken, async (req, res) => {
   try {
     const { postId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user.userId || req.user.id;
 
-    // postIdとuserIdを数値に変換
-    const postIdNum = parseInt(postId);
-    const userIdNum = parseInt(userId);
+    if (!userId || isNaN(parseInt(userId))) {
+      throw new Error('有効なユーザーIDが取得できませんでした');
+    }
 
-    db.prepare(`
-      DELETE FROM saved_posts WHERE user_id = ? AND post_id = ?
-    `).run(userIdNum, postIdNum);
+    db.prepare('DELETE FROM saved_posts WHERE user_id = ? AND post_id = ?').run(parseInt(userId), parseInt(postId));
 
-    res.json({
-      success: true,
-      message: '保存を解除しました'
+    res.json({ 
+      success: true, 
+      message: 'マイ単語帳から削除しました' 
     });
 
   } catch (error) {
-    console.error('保存解除エラー:', error);
-    res.status(500).json({ error: '保存の解除に失敗しました' });
+    console.error('マイ単語帳削除エラー:', error);
+    res.status(500).json({ 
+      error: 'マイ単語帳からの削除に失敗しました',
+      details: error.message 
+    });
   }
 });
 
-// ユーザーの保存済み投稿を取得
+// 保存済み投稿一覧取得
 router.get('/saved-posts', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.id;
-    const { page = 1, limit = 20 } = req.query;
-    
-    // 数値に変換
-    const userIdNum = parseInt(userId);
-    const limitNum = parseInt(limit);
-    const offset = (parseInt(page) - 1) * limitNum;
+    const userId = req.user.userId || req.user.id;
 
-    const posts = db.prepare(`
-      SELECT p.*, u.username, u.avatar_url, sp.saved_at,
-             (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) as like_count,
-             (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count,
-             (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id AND user_id = ?) as user_liked
+    if (!userId || isNaN(parseInt(userId))) {
+      throw new Error('有効なユーザーIDが取得できませんでした');
+    }
+
+    const savedPosts = db.prepare(`
+      SELECT p.*, u.username, u.avatar_url, sp.saved_at
       FROM saved_posts sp
-      JOIN posts p ON sp.post_id = p.id
+      JOIN posts p ON sp.post_id = p.id  
       JOIN users u ON p.user_id = u.id
       WHERE sp.user_id = ?
       ORDER BY sp.saved_at DESC
-      LIMIT ? OFFSET ?
-    `).all(userIdNum, userIdNum, limitNum, offset);
+    `).all(parseInt(userId));
 
-    res.json({
-      success: true,
-      posts: posts,
-      pagination: {
-        page: parseInt(page),
-        limit: limitNum,
-        total: posts.length
-      }
+    res.json({ 
+      success: true, 
+      savedPosts: savedPosts 
     });
 
   } catch (error) {
     console.error('保存済み投稿取得エラー:', error);
-    res.status(500).json({ error: '保存済み投稿の取得に失敗しました' });
+    res.status(500).json({ 
+      error: '保存済み投稿の取得に失敗しました',
+      details: error.message 
+    });
+  }
+});
+
+// AI返信取得
+router.get('/posts/:postId/ai-response', authenticateToken, async (req, res) => {
+  try {
+    const { postId } = req.params;
+
+    console.log('=== AI Response Request ===');
+    console.log('Post ID:', postId);
+
+    const aiResponse = db.prepare(`
+      SELECT * FROM ai_responses 
+      WHERE post_id = ? 
+      ORDER BY generated_at DESC 
+      LIMIT 1
+    `).get(parseInt(postId));
+
+    if (!aiResponse) {
+      return res.json({ 
+        success: true, 
+        aiResponse: null,
+        message: 'AI返信が見つかりません' 
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      aiResponse: aiResponse 
+    });
+
+  } catch (error) {
+    console.error('AI返信取得エラー:', error);
+    res.status(500).json({ 
+      error: 'AI返信の取得に失敗しました',
+      details: error.message 
+    });
   }
 });
 

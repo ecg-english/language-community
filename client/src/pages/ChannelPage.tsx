@@ -456,22 +456,48 @@ const ChannelPage: React.FC = () => {
   // マイ単語帳保存機能
   const handleSaveToVocabulary = async (postId: number) => {
     try {
+      console.log('=== Save to Vocabulary Request ===');
+      console.log('Post ID:', postId);
+      console.log('API URL:', `${process.env.REACT_APP_API_URL}/api/study-log/posts/${postId}/save`);
+      
       const token = localStorage.getItem('token');
-      await axios.post(
+      console.log('Token exists:', !!token);
+      
+      const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/study-log/posts/${postId}/save`,
         {},
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
           },
         }
       );
       
-      // 成功通知（簡易版）
-      alert('マイ単語帳に保存しました！');
-    } catch (error) {
-      console.error('マイ単語帳保存エラー:', error);
-      alert('保存に失敗しました。');
+      console.log('Save response:', response.data);
+      
+      if (response.data.success) {
+        if (response.data.alreadySaved) {
+          alert('✅ ' + response.data.message);
+        } else {
+          alert('🎉 ' + response.data.message);
+        }
+      } else {
+        alert('❌ 保存に失敗しました');
+      }
+    } catch (error: any) {
+      console.error('=== Save to Vocabulary Error ===');
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      console.error('Error message:', error.message);
+      
+      if (error.response?.status === 401) {
+        alert('❌ 認証が必要です。再ログインしてください。');
+      } else if (error.response?.status === 500) {
+        alert('❌ サーバーエラーが発生しました: ' + (error.response?.data?.details || error.message));
+      } else {
+        alert('❌ マイ単語帳への保存に失敗しました: ' + (error.response?.data?.error || error.message));
+      }
     }
   };
 
