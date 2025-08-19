@@ -8,9 +8,7 @@ const fs = require('fs');
 // 環境変数の確認ログ
 console.log('=== Environment Variables Check ===');
 console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('OPENAI_API_KEY exists:', !!process.env.OPENAI_API_KEY);
-console.log('OPENAI_API_KEY length:', process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.length : 0);
-console.log('OPENAI_API_KEY prefix:', process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 10) + '...' : 'not set');
+console.log('OpenAI API features temporarily disabled due to quota issues');
 console.log('==================================');
 
 const app = express();

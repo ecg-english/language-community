@@ -19,46 +19,31 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
     console.log('AI Response Enabled:', aiResponseEnabled);
     console.log('Target Language:', targetLanguage);
     console.log('User ID:', userId);
-    console.log('OPENAI_API_KEY exists:', !!process.env.OPENAI_API_KEY);
     console.log('================================');
 
-    // タグの自動抽出（エラーが発生しても投稿は続行）
+    // OpenAI APIを一時的に無効化（課金問題のため）
     let tags = [];
-    try {
-      if (process.env.OPENAI_API_KEY) {
-        console.log('Attempting to extract tags...');
-        tags = await extractLearningTags(content);
-        console.log('Extracted tags:', tags);
-      } else {
-        console.log('OpenAI API key not set, skipping tag extraction');
-      }
-    } catch (tagError) {
-      console.error('Tag extraction failed, continuing without tags:', tagError);
-      console.log('Tag error details:', tagError.message);
-      tags = [];
-    }
+    console.log('OpenAI API is temporarily disabled due to quota issues. Skipping tag extraction.');
 
-    // 学習ログ投稿を作成
+    // 学習ログ投稿を作成（SQLite型エラーを修正）
     console.log('Creating post in database...');
+    
+    // Boolean値を数値に変換してSQLiteエラーを回避
+    const isStudyLog = 1; // TRUE
+    const aiResponseEnabledValue = aiResponseEnabled ? 1 : 0;
+    const tagsJson = JSON.stringify(tags);
+    const imageUrlValue = image_url || null;
+    
     const result = db.prepare(`
       INSERT INTO posts (content, user_id, channel_id, is_study_log, ai_response_enabled, study_tags, target_language, image_url, created_at) 
-      VALUES (?, ?, ?, TRUE, ?, ?, ?, ?, datetime('now'))
-    `).run(content, userId, channelId, aiResponseEnabled, JSON.stringify(tags), targetLanguage, image_url);
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    `).run(content, userId, channelId, isStudyLog, aiResponseEnabledValue, tagsJson, targetLanguage, imageUrlValue);
 
     const postId = result.lastInsertRowid;
     console.log('Post created with ID:', postId);
 
-    // AI返信が有効な場合で、OpenAI APIキーが設定されている場合のみAI返信を生成
-    if (aiResponseEnabled && process.env.OPENAI_API_KEY) {
-      console.log('Generating AI response...');
-      // 非同期でAI返信を生成（レスポンスを待たない）
-      generateAIResponse(postId, content, targetLanguage).catch(error => {
-        console.error('AI返信生成エラー:', error);
-        console.log('AI response generation failed, but post was created successfully');
-      });
-    } else if (aiResponseEnabled && !process.env.OPENAI_API_KEY) {
-      console.log('AI response requested but OpenAI API key not set');
-    }
+    // AI返信は一時的に無効化
+    console.log('AI response generation is temporarily disabled due to OpenAI quota issues');
 
     // 投稿情報を取得して返す
     console.log('Retrieving post data...');
@@ -72,17 +57,22 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
       WHERE p.id = ?
     `).all(userId, postId);
 
+    if (posts.length === 0) {
+      throw new Error('投稿の取得に失敗しました');
+    }
+
     console.log('Post retrieved successfully');
     console.log('=== Study Log Post Response ===');
     console.log('Success:', true);
-    console.log('Post ID:', posts[0]?.id);
+    console.log('Post ID:', posts[0].id);
     console.log('Tags:', tags);
     console.log('================================');
 
     res.json({
       success: true,
       post: posts[0],
-      tags: tags
+      tags: tags,
+      message: 'Study log posted successfully (AI features temporarily disabled)'
     });
 
   } catch (error) {
@@ -95,21 +85,10 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
   }
 });
 
-// AI返信を非同期で生成する関数
+// AI返信を非同期で生成する関数（一時的に無効化）
 async function generateAIResponse(postId, content, targetLanguage) {
-  try {
-    const aiResponse = await generateStudyLogResponse(content, targetLanguage);
-    
-    // AI返信をデータベースに保存
-    db.prepare(`
-      INSERT INTO ai_responses (post_id, content, response_type, target_language, generated_at) 
-      VALUES (?, ?, 'study_support', ?, datetime('now'))
-    `).run(postId, aiResponse.content, targetLanguage);
-
-    console.log(`AI返信が生成されました - Post ID: ${postId}`);
-  } catch (error) {
-    console.error('AI返信生成エラー:', error);
-  }
+  console.log('AI response generation is temporarily disabled due to OpenAI quota issues');
+  return;
 }
 
 // 投稿のAI返信を取得
@@ -129,7 +108,8 @@ router.get('/posts/:postId/ai-response', authenticateToken, async (req, res) => 
     } else {
       res.json({
         success: true,
-        aiResponse: null
+        aiResponse: null,
+        message: 'AI responses are temporarily disabled'
       });
     }
 
@@ -145,10 +125,14 @@ router.post('/posts/:postId/save', authenticateToken, async (req, res) => {
     const { postId } = req.params;
     const userId = req.user.id;
 
+    // postIdとuserIdを数値に変換
+    const postIdNum = parseInt(postId);
+    const userIdNum = parseInt(userId);
+
     // 既に保存済みかチェック
     const existing = db.prepare(`
       SELECT id FROM saved_posts WHERE user_id = ? AND post_id = ?
-    `).get(userId, postId);
+    `).get(userIdNum, postIdNum);
 
     if (existing) {
       return res.status(400).json({ error: '既に保存済みです' });
@@ -157,7 +141,7 @@ router.post('/posts/:postId/save', authenticateToken, async (req, res) => {
     // 投稿を保存
     db.prepare(`
       INSERT INTO saved_posts (user_id, post_id, saved_at) VALUES (?, ?, datetime('now'))
-    `).run(userId, postId);
+    `).run(userIdNum, postIdNum);
 
     res.json({
       success: true,
@@ -176,9 +160,13 @@ router.delete('/posts/:postId/save', authenticateToken, async (req, res) => {
     const { postId } = req.params;
     const userId = req.user.id;
 
+    // postIdとuserIdを数値に変換
+    const postIdNum = parseInt(postId);
+    const userIdNum = parseInt(userId);
+
     db.prepare(`
       DELETE FROM saved_posts WHERE user_id = ? AND post_id = ?
-    `).run(userId, postId);
+    `).run(userIdNum, postIdNum);
 
     res.json({
       success: true,
@@ -196,7 +184,11 @@ router.get('/saved-posts', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
     const { page = 1, limit = 20 } = req.query;
-    const offset = (page - 1) * limit;
+    
+    // 数値に変換
+    const userIdNum = parseInt(userId);
+    const limitNum = parseInt(limit);
+    const offset = (parseInt(page) - 1) * limitNum;
 
     const posts = db.prepare(`
       SELECT p.*, u.username, u.avatar_url, sp.saved_at,
@@ -209,14 +201,14 @@ router.get('/saved-posts', authenticateToken, async (req, res) => {
       WHERE sp.user_id = ?
       ORDER BY sp.saved_at DESC
       LIMIT ? OFFSET ?
-    `).all(userId, userId, parseInt(limit), offset);
+    `).all(userIdNum, userIdNum, limitNum, offset);
 
     res.json({
       success: true,
       posts: posts,
       pagination: {
         page: parseInt(page),
-        limit: parseInt(limit),
+        limit: limitNum,
         total: posts.length
       }
     });
