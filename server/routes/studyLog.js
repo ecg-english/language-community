@@ -216,6 +216,34 @@ async function generateAIResponse(postId, content, targetLanguage) {
       VALUES (?, ?, 'study_support', ?, datetime('now'))
     `).run(postId, aiResponse.content, targetLanguage);
 
+    // AI返信をコメントとしても投稿に追加
+    try {
+      // AIユーザーを取得または作成
+      let aiUser = db.prepare('SELECT id FROM users WHERE username = ?').get('AI学習サポート');
+      
+      if (!aiUser) {
+        // AIユーザーを作成
+        const aiUserResult = db.prepare(`
+          INSERT INTO users (username, email, password, role, bio, created_at) 
+          VALUES (?, ?, ?, ?, ?, datetime('now'))
+        `).run('AI学習サポート', 'ai@study-support.local', 'no-password', 'AI', 'AI学習サポートBot');
+        
+        aiUser = { id: aiUserResult.lastInsertRowid };
+        console.log('Created AI user with ID:', aiUser.id);
+      }
+
+      // AI返信をコメントとして追加
+      db.prepare(`
+        INSERT INTO comments (content, user_id, post_id, created_at) 
+        VALUES (?, ?, ?, datetime('now'))
+      `).run(aiResponse.content, aiUser.id, postId);
+
+      console.log(`AI返信をコメントとして追加しました - Post ID: ${postId}`);
+      
+    } catch (commentError) {
+      console.error('AI返信のコメント追加エラー:', commentError);
+    }
+
     console.log(`AI返信が生成されました - Post ID: ${postId}`);
   } catch (error) {
     console.error('AI返信生成エラー:', error);

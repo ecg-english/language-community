@@ -37,6 +37,8 @@ import {
   Menu as MenuIcon,
   Add as AddIcon,
   Edit as EditIcon,
+  BookmarkAdd as BookmarkAddIcon,
+  Bookmark as BookmarkIcon,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -66,6 +68,10 @@ interface Post {
   location?: string;
   is_anonymous?: boolean; // Q&Aチャンネル用の匿名フラグ
   is_answered?: boolean; // Q&Aチャンネル用の回答済みフラグ
+  is_study_log?: boolean; // Study Board用のフラグ
+  study_tags?: string; // Study Board用のタグ（JSON文字列）
+  target_language?: string; // Study Board用の学習言語
+  ai_response_enabled?: boolean; // AI返信有効フラグ
 }
 
 interface Comment {
@@ -445,6 +451,28 @@ const ChannelPage: React.FC = () => {
   const handleRemoveImage = () => {
     setSelectedImage(null);
     setImagePreview(null);
+  };
+
+  // マイ単語帳保存機能
+  const handleSaveToVocabulary = async (postId: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/study-log/posts/${postId}/save`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      // 成功通知（簡易版）
+      alert('マイ単語帳に保存しました！');
+    } catch (error) {
+      console.error('マイ単語帳保存エラー:', error);
+      alert('保存に失敗しました。');
+    }
   };
 
   const handleTemplatePost = async () => {
@@ -1451,6 +1479,50 @@ const ChannelPage: React.FC = () => {
                   >
                     {convertUrlsToLinks(post.content)}
                   </Typography>
+
+                  {/* Study Board用のタグ表示 */}
+                  {(post as any).is_study_log && (post as any).study_tags && (
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+                        🏷️ 学習タグ:
+                      </Typography>
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        {(() => {
+                          try {
+                            const tags = JSON.parse((post as any).study_tags);
+                            return tags.map((tag: string, index: number) => (
+                              <Chip 
+                                key={index} 
+                                label={tag} 
+                                size="small" 
+                                variant="outlined"
+                                sx={{ 
+                                  backgroundColor: isDarkMode ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.1)',
+                                  borderColor: 'primary.main',
+                                  color: 'primary.main'
+                                }}
+                              />
+                            ));
+                          } catch {
+                            return null;
+                          }
+                        })()}
+                      </Box>
+                    </Box>
+                  )}
+
+                  {/* Study Board用のAI返信表示 */}
+                  {(post as any).is_study_log && (post as any).ai_response_enabled && (
+                    <Box sx={{ mb: 2 }}>
+                      <Chip 
+                        icon={<AutoAwesomeIcon />}
+                        label={`🤖 AI学習サポート有効 | 学習言語: ${(post as any).target_language === 'English' ? '英語' : '日本語'}`}
+                        size="small"
+                        color="secondary"
+                        variant="outlined"
+                      />
+                    </Box>
+                  )}
                   
                   {/* 画像表示 */}
                   {post.image_url && (
@@ -1486,6 +1558,24 @@ const ChannelPage: React.FC = () => {
                     >
                       {post.comment_count} {t('comments')}
                     </Button>
+
+                    {/* Study Board用のマイ単語帳保存ボタン */}
+                    {(post as any).is_study_log && (
+                      <Button
+                        size="small"
+                        startIcon={<BookmarkAddIcon />}
+                        onClick={() => handleSaveToVocabulary(post.id)}
+                        sx={{ 
+                          color: 'secondary.main',
+                          '&:hover': {
+                            backgroundColor: 'secondary.light',
+                            color: 'secondary.dark'
+                          }
+                        }}
+                      >
+                        マイ単語帳に保存
+                      </Button>
+                    )}
                   </Box>
 
                   {/* コメントセクション */}

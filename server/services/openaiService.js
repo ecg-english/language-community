@@ -55,10 +55,51 @@ async function generateStudyLogResponse(content, userLanguage = 'English') {
 
     const isEnglishLearner = userLanguage === 'English';
     
-    // 最もシンプルなプロンプトでテスト
+    // 学習サポート用の詳細プロンプト
     const prompt = isEnglishLearner ? 
-      `この学習ログに短い励ましの言葉をください: "${content}"` :
-      `Please give a short encouraging message for this learning log: "${content}"`;
+      `以下の英語学習ログに対して、温かい学習サポートを提供してください：
+
+学習内容: "${content}"
+
+以下の形式で返信してください：
+🎉 **励ましの言葉**
+まずは学習を続けている努力を褒めてください。
+
+📝 **表現の解説**
+- 投稿された表現の意味や使い方を説明
+- より自然な表現があれば提案
+
+💡 **例文**
+- 学習した表現を使った2-3個の例文
+- 実際の会話で使える場面を含む
+
+📚 **関連表現**
+- 類義語や関連する表現
+- 使い分けのポイント
+
+日本語で温かく、分かりやすく返信してください。` :
+      
+      `Please provide comprehensive learning support for this Japanese learning log:
+
+Learning content: "${content}"
+
+Please respond in the following format:
+🎉 **Encouragement**
+First, praise their effort in continuing to learn.
+
+📝 **Expression Analysis**
+- Explain the meaning and usage of the expressions posted
+- Suggest more natural expressions if applicable
+
+💡 **Example Sentences**
+- 2-3 example sentences using the learned expressions
+- Include situations where they can be used in real conversations
+
+📚 **Related Expressions**
+- Synonyms and related expressions
+- Points on how to use them differently
+
+Please respond warmly and clearly in English.`;
 
     console.log('Sending request to OpenAI API...');
     console.log('Using model: gpt-4o-mini');
@@ -69,11 +110,17 @@ async function generateStudyLogResponse(content, userLanguage = 'English') {
       model: "gpt-4o-mini",
       messages: [
         {
+          role: "system",
+          content: isEnglishLearner ? 
+            "あなたは温かく親しみやすい英語学習サポートAIです。学習者のモチベーションを高め、実践的で詳しい学習アドバイスを提供してください。" :
+            "You are a warm and friendly Japanese learning support AI. Please boost learners' motivation and provide practical, detailed learning advice."
+        },
+        {
           role: "user", 
           content: prompt
         }
       ],
-      max_tokens: 150,
+      max_tokens: 600, // より詳細な返信のためにトークン数を増加
       temperature: 0.7,
     });
 
