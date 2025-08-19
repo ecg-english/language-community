@@ -907,36 +907,8 @@ const VocabularyPage: React.FC = () => {
                   </Box>
                 )}
 
-                {/* Study Board用のタグ表示 */}
-                {(post as any).is_study_log && (post as any).study_tags && (
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-                      📖 意味:
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                      {(() => {
-                        try {
-                          const tags = JSON.parse((post as any).study_tags);
-                          return tags.map((tag: string, index: number) => (
-                            <Chip 
-                              key={index} 
-                              label={tag} 
-                              size="small" 
-                              variant="outlined"
-                              sx={{ 
-                                backgroundColor: isDarkMode ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.1)',
-                                borderColor: 'primary.main',
-                                color: 'primary.main'
-                              }}
-                            />
-                          ));
-                        } catch {
-                          return null;
-                        }
-                      })()}
-                    </Box>
-                  </Box>
-                )}
+                {/* Study Board用のタグ表示（削除） */}
+                {/* タグはマイ単語帳では不要 */}
 
                 {/* Study Board用のAI返信表示 */}
                 {post.is_study_log && post.ai_response_enabled && (
@@ -951,47 +923,26 @@ const VocabularyPage: React.FC = () => {
                   </Box>
                 )}
 
-                {/* AIコメントの詳細表示 */}
-                {post.comments && post.comments.length > 0 && (
-                  <Box sx={{ mt: 2 }}>
-                    {post.comments.map((comment) => {
-                      console.log(`Rendering comment: ${comment.username} - ${comment.content.substring(0, 50)}...`);
-                      return (
-                        <Box key={comment.id}>
-                          {comment.username === 'AI学習サポート' ? (
-                            <AILearningSection comment={comment} />
-                          ) : (
-                            <Box sx={{ 
-                              mt: 1, 
-                              p: 1.5, 
-                              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
-                              borderRadius: 1,
-                              border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`
-                            }}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                <Avatar 
-                                  sx={{ width: 20, height: 20, fontSize: '0.75rem', mr: 1 }}
-                                  src={comment.avatar_url}
-                                >
-                                  {comment.username.charAt(0).toUpperCase()}
-                                </Avatar>
-                                <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                                  {comment.username}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                                  {formatDate(comment.created_at)}
-                                </Typography>
-                              </Box>
-                              <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>
-                                {comment.content}
-                              </Typography>
-                            </Box>
-                          )}
-                        </Box>
-                      );
-                    })}
+                {/* 学習内容の表示（フリースペース） */}
+                {post.is_study_log && (
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+                      📝 学習内容:
+                    </Typography>
+                    <Typography variant="body2" sx={{ 
+                      whiteSpace: 'pre-line',
+                      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                      padding: 2,
+                      borderRadius: 1,
+                      border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`
+                    }}>
+                      {post.content}
+                    </Typography>
                   </Box>
                 )}
+
+                {/* AIコメントの詳細表示 */}
+                {/* マイ単語帳ではAI学習サポートを表示しない（フリースペースとして使用） */}
 
                 <Divider sx={{ my: 2 }} />
 

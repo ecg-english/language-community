@@ -606,7 +606,7 @@ router.post('/paste-vocabulary', authenticateToken, async (req, res) => {
       INSERT INTO posts (content, user_id, channel_id, is_study_log, ai_response_enabled, created_at) 
       VALUES (?, ?, ?, ?, ?, datetime('now'))
     `).run(
-      word, 
+      content, // 学習内容を投稿のcontentに保存
       userId, 
       19, // Study BoardチャンネルID
       1, // is_study_log = TRUE
