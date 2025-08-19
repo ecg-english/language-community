@@ -44,7 +44,7 @@ Response format:
 ※Please make your response warm and friendly, like a friend. Please respond in English.`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-5-nano",
       messages: [
         {
           role: "system",
@@ -99,7 +99,7 @@ async function extractLearningTags(content) {
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-5-nano",
       messages: [
         {
           role: "system",
