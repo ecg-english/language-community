@@ -228,8 +228,32 @@ const VocabularyPage: React.FC = () => {
         sections.expressionAnalysis += (sections.expressionAnalysis ? '\n' : '') + trimmedLine;
       } else if (trimmedLine && currentSection === 'examples' && !trimmedLine.startsWith('-') && !trimmedLine.startsWith('•') && !trimmedLine.includes('**')) {
         sections.examples.push(trimmedLine);
-      } else if (trimmedLine && currentSection === 'relatedExpressions' && !trimmedLine.startsWith('-') && !trimmedLine.startsWith('•') && !trimmedLine.includes('**')) {
-        sections.relatedExpressions.push(trimmedLine);
+      } else if (trimmedLine && currentSection === 'relatedExpressions') {
+        // 関連表現の抽出を改善
+        if (trimmedLine.startsWith('-') || trimmedLine.startsWith('•') || trimmedLine.startsWith('*')) {
+          // 箇条書き形式の関連表現を抽出
+          const expression = trimmedLine
+            .replace(/^[-•*]\s*/, '') // 箇条書き記号を削除
+            .replace(/\*\*(.*?)\*\*/g, '$1') // マークダウンの太字を削除
+            .replace(/\(.*?\)/g, '') // 括弧内の説明を削除
+            .trim();
+          
+          if (expression && !expression.includes('**') && !expression.includes('関連表現')) {
+            sections.relatedExpressions.push(expression);
+            console.log('Found related expression:', expression);
+          }
+        } else if (!trimmedLine.includes('**') && !trimmedLine.includes('関連表現') && !trimmedLine.includes('Related Expressions') && trimmedLine.length > 0) {
+          // 通常のテキスト形式の関連表現を抽出
+          const expression = trimmedLine
+            .replace(/\*\*(.*?)\*\*/g, '$1') // マークダウンの太字を削除
+            .replace(/\(.*?\)/g, '') // 括弧内の説明を削除
+            .trim();
+          
+          if (expression && expression.length > 0) {
+            sections.relatedExpressions.push(expression);
+            console.log('Found related expression (text):', expression);
+          }
+        }
       }
     });
 
@@ -311,21 +335,40 @@ const VocabularyPage: React.FC = () => {
               📚 関連表現
             </Typography>
             <Box sx={{ mt: 0.5 }}>
-              {aiContent.relatedExpressions.map((expression, index) => (
-                <Chip 
-                  key={index} 
-                  label={expression} 
-                  size="small" 
-                  variant="outlined"
-                  sx={{ 
-                    mr: 0.5, 
-                    mb: 0.5,
-                    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-                    borderColor: 'primary.main',
-                    color: 'primary.main'
-                  }}
-                />
-              ))}
+              {aiContent.relatedExpressions.map((expression, index) => {
+                // 関連表現をキーワードと説明に分離
+                const parts = expression.split(':');
+                const keyword = parts[0]?.trim();
+                const description = parts[1]?.trim();
+                
+                return (
+                  <Box key={index} sx={{ 
+                    mb: 1, 
+                    p: 1, 
+                    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                    borderRadius: 1,
+                    borderLeft: '3px solid #4caf50'
+                  }}>
+                    {keyword && (
+                      <Typography variant="body2" sx={{ 
+                        fontWeight: 600, 
+                        color: 'primary.main',
+                        mb: description ? 0.5 : 0
+                      }}>
+                        {keyword}
+                      </Typography>
+                    )}
+                    {description && (
+                      <Typography variant="body2" sx={{ 
+                        fontSize: '0.875rem',
+                        color: 'text.secondary'
+                      }}>
+                        {description}
+                      </Typography>
+                    )}
+                  </Box>
+                );
+              })}
             </Box>
           </Box>
         )}
