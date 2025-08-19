@@ -601,7 +601,7 @@ router.post('/paste-vocabulary', authenticateToken, async (req, res) => {
       return res.status(400).json({ success: false, message: '単語と内容が必要です' });
     }
 
-    // 新しい投稿を作成
+    // 新しい投稿を作成（AI学習サポートコメントは作成しない）
     const result = db.prepare(`
       INSERT INTO posts (content, user_id, channel_id, is_study_log, ai_response_enabled, created_at) 
       VALUES (?, ?, ?, ?, ?, datetime('now'))
@@ -614,15 +614,6 @@ router.post('/paste-vocabulary', authenticateToken, async (req, res) => {
     );
 
     const postId = result.lastInsertRowid;
-
-    // AI学習サポートコメントを作成
-    const aiUser = db.prepare('SELECT id FROM users WHERE username = ?').get('AI学習サポート');
-    if (aiUser) {
-      db.prepare(`
-        INSERT INTO comments (content, user_id, post_id, created_at)
-        VALUES (?, ?, ?, datetime('now'))
-      `).run(content, aiUser.id, postId);
-    }
 
     // マイ単語帳に保存
     db.prepare(`

@@ -1025,13 +1025,13 @@ const VocabularyPage: React.FC = () => {
               fullWidth
             />
             <TextField
-              label="AI学習サポートの内容"
+              label="学習内容"
               value={pastedContent}
               onChange={(e) => setPastedContent(e.target.value)}
               multiline
               rows={8}
               fullWidth
-              placeholder="AI学習サポートの内容をここにペーストしてください"
+              placeholder="学習した内容やメモをここに入力してください"
             />
           </Box>
         </DialogContent>
