@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const mysql = require('mysql2/promise');
-const authenticateToken = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const { generateStudyLogResponse, extractLearningTags } = require('../services/openaiService');
 
 // データベース接続設定
