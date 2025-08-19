@@ -54,6 +54,7 @@ Response format:
 
 ※Please make your response warm and friendly, like a friend. Please respond in English.`;
 
+    console.log('Sending request to OpenAI API...');
     const response = await openai.chat.completions.create({
       model: "gpt-5-nano",
       messages: [
@@ -73,6 +74,7 @@ Response format:
     });
 
     const aiResponse = response.choices[0].message.content;
+    console.log('OpenAI API response received successfully');
 
     // レスポンスを構造化して返す
     return {
@@ -109,6 +111,7 @@ async function extractLearningTags(content) {
   "tags": ["タグ1", "タグ2", "タグ3"]
 }`;
 
+    console.log('Extracting tags with OpenAI API...');
     const response = await openai.chat.completions.create({
       model: "gpt-5-nano",
       messages: [
@@ -126,6 +129,7 @@ async function extractLearningTags(content) {
     });
 
     const result = JSON.parse(response.choices[0].message.content);
+    console.log('Tags extracted successfully:', result.tags);
     return result.tags || [];
 
   } catch (error) {

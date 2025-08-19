@@ -19,11 +19,24 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
     console.log('AI Response Enabled:', aiResponseEnabled);
     console.log('Target Language:', targetLanguage);
     console.log('User ID:', userId);
+    console.log('OPENAI_API_KEY exists:', !!process.env.OPENAI_API_KEY);
     console.log('================================');
 
-    // OpenAI APIを一時的に無効化（課金問題のため）
+    // タグの自動抽出（エラーが発生しても投稿は続行）
     let tags = [];
-    console.log('OpenAI API is temporarily disabled due to quota issues. Skipping tag extraction.');
+    try {
+      if (process.env.OPENAI_API_KEY && aiResponseEnabled) {
+        console.log('Attempting to extract tags...');
+        tags = await extractLearningTags(content);
+        console.log('Extracted tags:', tags);
+      } else {
+        console.log('Skipping tag extraction - API key not set or AI response disabled');
+      }
+    } catch (tagError) {
+      console.error('Tag extraction failed, continuing without tags:', tagError);
+      console.log('Tag error details:', tagError.message);
+      tags = [];
+    }
 
     // 学習ログ投稿を作成（SQLite型エラーを修正）
     console.log('Creating post in database...');
@@ -42,8 +55,17 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
     const postId = result.lastInsertRowid;
     console.log('Post created with ID:', postId);
 
-    // AI返信は一時的に無効化
-    console.log('AI response generation is temporarily disabled due to OpenAI quota issues');
+    // AI返信が有効な場合で、OpenAI APIキーが設定されている場合のみAI返信を生成
+    if (aiResponseEnabled && process.env.OPENAI_API_KEY) {
+      console.log('Generating AI response...');
+      // 非同期でAI返信を生成（レスポンスを待たない）
+      generateAIResponse(postId, content, targetLanguage).catch(error => {
+        console.error('AI返信生成エラー:', error);
+        console.log('AI response generation failed, but post was created successfully');
+      });
+    } else if (aiResponseEnabled && !process.env.OPENAI_API_KEY) {
+      console.log('AI response requested but OpenAI API key not set');
+    }
 
     // 投稿情報を取得して返す
     console.log('Retrieving post data...');
@@ -72,7 +94,7 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
       success: true,
       post: posts[0],
       tags: tags,
-      message: 'Study log posted successfully (AI features temporarily disabled)'
+      aiEnabled: aiResponseEnabled && !!process.env.OPENAI_API_KEY
     });
 
   } catch (error) {
@@ -85,10 +107,28 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
   }
 });
 
-// AI返信を非同期で生成する関数（一時的に無効化）
+// AI返信を非同期で生成する関数
 async function generateAIResponse(postId, content, targetLanguage) {
-  console.log('AI response generation is temporarily disabled due to OpenAI quota issues');
-  return;
+  try {
+    if (!process.env.OPENAI_API_KEY) {
+      console.log('OpenAI API key not set, skipping AI response generation');
+      return;
+    }
+
+    console.log(`Generating AI response for post ${postId}...`);
+    const aiResponse = await generateStudyLogResponse(content, targetLanguage);
+    
+    // AI返信をデータベースに保存
+    db.prepare(`
+      INSERT INTO ai_responses (post_id, content, response_type, target_language, generated_at) 
+      VALUES (?, ?, 'study_support', ?, datetime('now'))
+    `).run(postId, aiResponse.content, targetLanguage);
+
+    console.log(`AI返信が生成されました - Post ID: ${postId}`);
+  } catch (error) {
+    console.error('AI返信生成エラー:', error);
+    console.log('AI response generation failed for post:', postId);
+  }
 }
 
 // 投稿のAI返信を取得
@@ -108,8 +148,7 @@ router.get('/posts/:postId/ai-response', authenticateToken, async (req, res) => 
     } else {
       res.json({
         success: true,
-        aiResponse: null,
-        message: 'AI responses are temporarily disabled'
+        aiResponse: null
       });
     }
 
