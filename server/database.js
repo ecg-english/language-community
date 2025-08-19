@@ -342,6 +342,89 @@ const initializeDatabase = () => {
 
     console.log('Categories migration completed: all categories set to expanded state');
 
+    // Study Board用のスキーマを強制適用
+    console.log('Applying Study Board schema...');
+    
+    // postsテーブルにStudy Board用のカラムを追加
+    if (!postsColumnNames.includes('is_study_log')) {
+      console.log('Adding is_study_log column to posts table...');
+      db.prepare('ALTER TABLE posts ADD COLUMN is_study_log BOOLEAN DEFAULT 0').run();
+    }
+    
+    if (!postsColumnNames.includes('ai_response_enabled')) {
+      console.log('Adding ai_response_enabled column to posts table...');
+      db.prepare('ALTER TABLE posts ADD COLUMN ai_response_enabled BOOLEAN DEFAULT 0').run();
+    }
+    
+    if (!postsColumnNames.includes('study_tags')) {
+      console.log('Adding study_tags column to posts table...');
+      db.prepare('ALTER TABLE posts ADD COLUMN study_tags TEXT').run();
+    }
+    
+    if (!postsColumnNames.includes('target_language')) {
+      console.log('Adding target_language column to posts table...');
+      db.prepare('ALTER TABLE posts ADD COLUMN target_language TEXT').run();
+    }
+    
+    // Study Board用の新しいテーブルを作成
+    try {
+      db.prepare(`
+        CREATE TABLE IF NOT EXISTS ai_responses (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          post_id INTEGER NOT NULL,
+          content TEXT NOT NULL,
+          response_type TEXT DEFAULT 'study_support',
+          target_language TEXT,
+          generated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+        )
+      `).run();
+      console.log('Created ai_responses table');
+    } catch (error) {
+      console.log('ai_responses table creation error:', error.message);
+    }
+    
+    try {
+      db.prepare(`
+        CREATE TABLE IF NOT EXISTS user_vocabulary (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          post_id INTEGER NOT NULL,
+          word_or_phrase TEXT NOT NULL,
+          meaning TEXT,
+          example_sentence TEXT,
+          tags TEXT,
+          saved_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+          FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+          UNIQUE(user_id, post_id)
+        )
+      `).run();
+      console.log('Created user_vocabulary table');
+    } catch (error) {
+      console.log('user_vocabulary table creation error:', error.message);
+    }
+    
+    try {
+      db.prepare(`
+        CREATE TABLE IF NOT EXISTS saved_posts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          post_id INTEGER NOT NULL,
+          saved_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+          FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+          UNIQUE(user_id, post_id)
+        )
+      `).run();
+      console.log('Created saved_posts table');
+    } catch (error) {
+      console.log('saved_posts table creation error:', error.message);
+    }
+    
+    console.log('Study Board schema applied successfully');
+
     // 注意: 新規ユーザーのデフォルトロールを「ビジター」に変更
     // 既存ユーザーのロールは変更されません
     console.log('New users will be assigned "ビジター" role by default');

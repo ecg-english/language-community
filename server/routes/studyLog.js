@@ -26,6 +26,7 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
     let tags = [];
     try {
       if (process.env.OPENAI_API_KEY) {
+        console.log('Attempting to extract tags...');
         tags = await extractLearningTags(content);
         console.log('Extracted tags:', tags);
       } else {
@@ -33,10 +34,12 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
       }
     } catch (tagError) {
       console.error('Tag extraction failed, continuing without tags:', tagError);
+      console.log('Tag error details:', tagError.message);
       tags = [];
     }
 
     // 学習ログ投稿を作成
+    console.log('Creating post in database...');
     const result = db.prepare(`
       INSERT INTO posts (content, user_id, channel_id, is_study_log, ai_response_enabled, study_tags, target_language, image_url, created_at) 
       VALUES (?, ?, ?, TRUE, ?, ?, ?, ?, datetime('now'))
@@ -51,6 +54,7 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
       // 非同期でAI返信を生成（レスポンスを待たない）
       generateAIResponse(postId, content, targetLanguage).catch(error => {
         console.error('AI返信生成エラー:', error);
+        console.log('AI response generation failed, but post was created successfully');
       });
     } else if (aiResponseEnabled && !process.env.OPENAI_API_KEY) {
       console.log('AI response requested but OpenAI API key not set');
