@@ -17,6 +17,10 @@ import {
   Paper,
   Stack,
   Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -26,6 +30,7 @@ import {
   AutoAwesome as AutoAwesomeIcon,
   Clear as ClearIcon,
   Edit as EditIcon,
+  ContentPaste as ContentPasteIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -73,6 +78,9 @@ const VocabularyPage: React.FC = () => {
   const [editingRelatedExpressions, setEditingRelatedExpressions] = useState<{ postId: number; expressions: string[] } | null>(null);
   const [editingExpressionAnalysis, setEditingExpressionAnalysis] = useState<{ postId: number; analysis: string } | null>(null);
   const [editingExamples, setEditingExamples] = useState<{ postId: number; examples: string } | null>(null);
+  const [showPasteDialog, setShowPasteDialog] = useState(false);
+  const [pastedContent, setPastedContent] = useState('');
+  const [pastedWord, setPastedWord] = useState('');
 
   // 保存済み投稿を取得
   const fetchSavedPosts = async () => {
@@ -479,6 +487,52 @@ const VocabularyPage: React.FC = () => {
     }
   };
 
+  // ペースト機能のハンドラー
+  const handlePasteFromClipboard = async () => {
+    try {
+      const clipboardText = await navigator.clipboard.readText();
+      setPastedContent(clipboardText);
+      setShowPasteDialog(true);
+    } catch (error) {
+      console.error('クリップボード読み取りエラー:', error);
+      alert('❌ クリップボードの読み取りに失敗しました');
+    }
+  };
+
+  const handleSavePastedContent = async () => {
+    if (!pastedWord.trim() || !pastedContent.trim()) {
+      alert('❌ 単語と内容を入力してください');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/study-log/paste-vocabulary`,
+        {
+          word: pastedWord,
+          content: pastedContent
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        alert('✅ マイ単語帳に保存しました！');
+        setShowPasteDialog(false);
+        setPastedContent('');
+        setPastedWord('');
+        fetchSavedPosts(); // 投稿一覧を再取得
+      }
+    } catch (error: any) {
+      console.error('ペースト保存エラー:', error);
+      alert('❌ 保存に失敗しました');
+    }
+  };
+
   // AIコメント表示コンポーネント
   const AILearningSection = ({ comment }: { comment: Comment }) => {
     const aiContent = parseAIComment(comment.content);
@@ -692,29 +746,40 @@ const VocabularyPage: React.FC = () => {
         </Typography>
       </Paper>
 
-      {/* 検索バー */}
+      {/* 検索バーとペーストボタン */}
       <Box sx={{ mb: 3 }}>
-        <TextField
-          fullWidth
-          placeholder={t('searchPlaceholder')}
-          value={searchTerm}
-          onChange={(e) => handleSearch(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-            endAdornment: searchTerm && (
-              <InputAdornment position="end">
-                <IconButton onClick={() => handleSearch('')} size="small">
-                  <ClearIcon />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-          sx={{ mb: 2 }}
-        />
+        <Typography variant="h4" sx={{ mb: 2, fontWeight: 600 }}>
+          📖 マイ単語帳
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
+          <TextField
+            placeholder={t('searchPlaceholder')}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            size="small"
+            sx={{ flex: 1 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Button
+            variant="contained"
+            startIcon={<ContentPasteIcon />}
+            onClick={handlePasteFromClipboard}
+            sx={{ 
+              backgroundColor: 'secondary.main',
+              '&:hover': {
+                backgroundColor: 'secondary.dark'
+              }
+            }}
+          >
+            ペースト
+          </Button>
+        </Box>
       </Box>
 
       {/* エラー表示 */}
@@ -932,20 +997,51 @@ const VocabularyPage: React.FC = () => {
 
                 {/* アクションボタン */}
                 <Box sx={{ display: 'flex', gap: 1 }}>
-                                     <Button
-                     size="small"
-                     variant="outlined"
-                     onClick={() => navigate(`/channel/19`)}
-                     sx={{ fontSize: '0.75rem' }}
-                   >
-                     {t('backToStudyBoard')}
-                   </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => navigate(`/channel/19`)}
+                    sx={{ fontSize: '0.75rem' }}
+                  >
+                    {t('backToStudyBoard')}
+                  </Button>
                 </Box>
               </CardContent>
             </Card>
           ))}
         </Stack>
       )}
+
+      {/* ペーストダイアログ */}
+      <Dialog open={showPasteDialog} onClose={() => setShowPasteDialog(false)} maxWidth="md" fullWidth>
+        <DialogTitle>マイ単語帳にペースト</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+            <TextField
+              label="単語・表現"
+              value={pastedWord}
+              onChange={(e) => setPastedWord(e.target.value)}
+              placeholder="例: fish, Let's go, こんにちは"
+              fullWidth
+            />
+            <TextField
+              label="AI学習サポートの内容"
+              value={pastedContent}
+              onChange={(e) => setPastedContent(e.target.value)}
+              multiline
+              rows={8}
+              fullWidth
+              placeholder="AI学習サポートの内容をここにペーストしてください"
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowPasteDialog(false)}>キャンセル</Button>
+          <Button onClick={handleSavePastedContent} variant="contained" color="primary">
+            保存
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

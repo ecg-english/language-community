@@ -39,6 +39,7 @@ import {
   Edit as EditIcon,
   BookmarkAdd as BookmarkAddIcon,
   Bookmark as BookmarkIcon,
+  ContentCopy as CopyIcon,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -937,7 +938,16 @@ const ChannelPage: React.FC = () => {
     }
   };
 
-
+  // AIコメントをコピーする関数
+  const handleCopyAIContent = async (commentContent: string) => {
+    try {
+      await navigator.clipboard.writeText(commentContent);
+      alert('✅ AI学習サポートの内容をコピーしました！マイ単語帳にペーストできます。');
+    } catch (error) {
+      console.error('コピーエラー:', error);
+      alert('❌ コピーに失敗しました');
+    }
+  };
 
   console.log('ChannelPage レンダリング状態:', { 
     loading, 
@@ -1669,15 +1679,55 @@ const ChannelPage: React.FC = () => {
                                   {formatDate(comment.created_at)}
                                 </Typography>
                               </Stack>
-                              <Typography 
-                                variant="body2"
-                                sx={{
-                                  whiteSpace: 'pre-wrap',
-                                  wordBreak: 'break-word'
-                                }}
-                              >
-                                {convertUrlsToLinks(comment.content)}
-                              </Typography>
+                              {comment.username === 'AI学習サポート' ? (
+                                <Box sx={{ 
+                                  p: 2, 
+                                  backgroundColor: isDarkMode ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.05)',
+                                  borderRadius: 2,
+                                  border: `1px solid ${isDarkMode ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.2)'}`
+                                }}>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                      <AutoAwesomeIcon sx={{ color: 'secondary.main', mr: 1 }} />
+                                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'secondary.main' }}>
+                                        🤖 AI学習サポート
+                                      </Typography>
+                                    </Box>
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => handleCopyAIContent(comment.content)}
+                                      sx={{ 
+                                        color: 'primary.main',
+                                        '&:hover': {
+                                          backgroundColor: 'rgba(99, 102, 241, 0.1)'
+                                        }
+                                      }}
+                                      title="AI学習サポートの内容をコピー"
+                                    >
+                                      <CopyIcon fontSize="small" />
+                                    </IconButton>
+                                  </Box>
+                                  <Typography 
+                                    variant="body2"
+                                    sx={{
+                                      whiteSpace: 'pre-line',
+                                      wordBreak: 'break-word'
+                                    }}
+                                  >
+                                    {comment.content}
+                                  </Typography>
+                                </Box>
+                              ) : (
+                                <Typography 
+                                  variant="body2"
+                                  sx={{
+                                    whiteSpace: 'pre-wrap',
+                                    wordBreak: 'break-word'
+                                  }}
+                                >
+                                  {convertUrlsToLinks(comment.content)}
+                                </Typography>
+                              )}
                             </Box>
                             {(user?.id === comment.user_id || user?.role === 'サーバー管理者') && (
                               <IconButton

@@ -586,4 +586,57 @@ router.put('/posts/:postId/related-expressions', authenticateToken, async (req, 
   }
 });
 
+// ペーストした内容をマイ単語帳に保存
+router.post('/paste-vocabulary', authenticateToken, async (req, res) => {
+  try {
+    const { word, content } = req.body;
+    const userId = req.user.userId || req.user.id;
+
+    console.log('Pasting vocabulary content...');
+    console.log('Word:', word);
+    console.log('Content:', content);
+    console.log('User ID:', userId);
+
+    if (!word || !content) {
+      return res.status(400).json({ success: false, message: '単語と内容が必要です' });
+    }
+
+    // 新しい投稿を作成
+    const result = db.prepare(`
+      INSERT INTO posts (content, user_id, channel_id, is_study_log, ai_response_enabled, created_at) 
+      VALUES (?, ?, ?, ?, ?, datetime('now'))
+    `).run(
+      word, 
+      userId, 
+      19, // Study BoardチャンネルID
+      1, // is_study_log = TRUE
+      0  // ai_response_enabled = FALSE（ペーストした内容なので）
+    );
+
+    const postId = result.lastInsertRowid;
+
+    // AI学習サポートコメントを作成
+    const aiUser = db.prepare('SELECT id FROM users WHERE username = ?').get('AI学習サポート');
+    if (aiUser) {
+      db.prepare(`
+        INSERT INTO comments (content, user_id, post_id, created_at)
+        VALUES (?, ?, ?, datetime('now'))
+      `).run(content, aiUser.id, postId);
+    }
+
+    // マイ単語帳に保存
+    db.prepare(`
+      INSERT INTO saved_posts (user_id, post_id, saved_at)
+      VALUES (?, ?, datetime('now'))
+    `).run(userId, postId);
+
+    console.log('Vocabulary content pasted successfully');
+    res.json({ success: true, message: 'マイ単語帳に保存しました' });
+
+  } catch (error) {
+    console.error('Paste vocabulary error:', error);
+    res.status(500).json({ success: false, message: '保存に失敗しました' });
+  }
+});
+
 module.exports = router; 
