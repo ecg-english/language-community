@@ -319,19 +319,51 @@ const VocabularyPage: React.FC = () => {
         }
       );
       
-      // ローカル状態を更新
+      // ローカル状態を更新（AIコメントも更新）
       setSavedPosts(prev => prev.map(post => 
         post.id === editingRelatedExpressions.postId 
-          ? { ...post, related_expressions: editingRelatedExpressions.expressions }
+          ? {
+              ...post,
+              comments: post.comments?.map(comment => 
+                comment.username === 'AI学習サポート' 
+                  ? { 
+                      ...comment, 
+                      content: comment.content.replace(
+                        /📚 \*\*関連表現\*\*\n([\s\S]*?)(?=\n\n|$)/,
+                        `📚 **関連表現**\n${editingRelatedExpressions.expressions.map(exp => `- ${exp}`).join('\n')}\n`
+                      )
+                    }
+                  : comment
+              )
+            }
           : post
       ));
       setFilteredPosts(prev => prev.map(post => 
         post.id === editingRelatedExpressions.postId 
-          ? { ...post, related_expressions: editingRelatedExpressions.expressions }
+          ? {
+              ...post,
+              comments: post.comments?.map(comment => 
+                comment.username === 'AI学習サポート' 
+                  ? { 
+                      ...comment, 
+                      content: comment.content.replace(
+                        /📚 \*\*関連表現\*\*\n([\s\S]*?)(?=\n\n|$)/,
+                        `📚 **関連表現**\n${editingRelatedExpressions.expressions.map(exp => `- ${exp}`).join('\n')}\n`
+                      )
+                    }
+                  : comment
+              )
+            }
           : post
       ));
       
       setEditingRelatedExpressions(null);
+      
+      // 強制的に再レンダリング
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+      
       alert('✅ 関連表現を更新しました');
     } catch (error: any) {
       console.error('関連表現更新エラー:', error);
@@ -798,7 +830,13 @@ const VocabularyPage: React.FC = () => {
                         borderRadius: 1,
                         border: `1px solid ${isDarkMode ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.2)'}`
                       }}>
-                        {(post as any).study_meaning}
+                        {/* 冗長な説明を削除して簡潔な意味のみを表示 */}
+                        {(post as any).study_meaning
+                          .replace(/^["「].*?["」]\s*means?\s*["「]/, '') // "Let's go" means " を削除
+                          .replace(/["「].*?["」]\s*です?。?$/, '') // " です。" を削除
+                          .replace(/^.*?を指す英単語です?。?$/, '') // "「魚」を指す英単語です。" を削除
+                          .trim() || (post as any).study_meaning
+                        }
                       </Typography>
                     )}
                   </Box>
