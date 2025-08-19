@@ -462,4 +462,72 @@ router.get('/posts/:postId/ai-response', authenticateToken, async (req, res) => 
   }
 });
 
+// 表現の解説を更新
+router.put('/posts/:postId/expression-analysis', authenticateToken, async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const { analysis } = req.body;
+    const userId = req.user.userId || req.user.id;
+
+    console.log('Updating expression analysis for post:', postId);
+    console.log('New analysis:', analysis);
+    console.log('User ID:', userId);
+
+    // AIコメントを更新
+    const aiUser = db.prepare('SELECT id FROM users WHERE username = ?').get('AI学習サポート');
+    if (aiUser) {
+      const comment = db.prepare('SELECT * FROM comments WHERE post_id = ? AND user_id = ?').get(postId, aiUser.id);
+      if (comment) {
+        // 既存のコメント内容を取得して表現の解説部分のみを更新
+        const updatedContent = comment.content.replace(
+          /📝 \*\*表現の解説\*\*\n([\s\S]*?)(?=💡 \*\*例文\*\*|📚 \*\*関連表現\*\*|$)/,
+          `📝 **表現の解説**\n${analysis}\n`
+        );
+        
+        db.prepare('UPDATE comments SET content = ? WHERE id = ?').run(updatedContent, comment.id);
+        console.log('Expression analysis updated successfully');
+      }
+    }
+
+    res.json({ success: true, message: '表現の解説を更新しました' });
+  } catch (error) {
+    console.error('Expression analysis update error:', error);
+    res.status(500).json({ success: false, message: '表現の解説の更新に失敗しました' });
+  }
+});
+
+// 例文を更新
+router.put('/posts/:postId/examples', authenticateToken, async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const { examples } = req.body;
+    const userId = req.user.userId || req.user.id;
+
+    console.log('Updating examples for post:', postId);
+    console.log('New examples:', examples);
+    console.log('User ID:', userId);
+
+    // AIコメントを更新
+    const aiUser = db.prepare('SELECT id FROM users WHERE username = ?').get('AI学習サポート');
+    if (aiUser) {
+      const comment = db.prepare('SELECT * FROM comments WHERE post_id = ? AND user_id = ?').get(postId, aiUser.id);
+      if (comment) {
+        // 既存のコメント内容を取得して例文部分のみを更新
+        const updatedContent = comment.content.replace(
+          /💡 \*\*例文\*\*\n([\s\S]*?)(?=📚 \*\*関連表現\*\*|$)/,
+          `💡 **例文**\n${examples}\n`
+        );
+        
+        db.prepare('UPDATE comments SET content = ? WHERE id = ?').run(updatedContent, comment.id);
+        console.log('Examples updated successfully');
+      }
+    }
+
+    res.json({ success: true, message: '例文を更新しました' });
+  } catch (error) {
+    console.error('Examples update error:', error);
+    res.status(500).json({ success: false, message: '例文の更新に失敗しました' });
+  }
+});
+
 module.exports = router; 

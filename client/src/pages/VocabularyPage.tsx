@@ -55,6 +55,7 @@ interface Comment {
   username: string;
   created_at: string;
   avatar_url?: string;
+  post_id: number; // Added post_id to Comment interface
 }
 
 const VocabularyPage: React.FC = () => {
@@ -70,6 +71,8 @@ const VocabularyPage: React.FC = () => {
   const [filteredPosts, setFilteredPosts] = useState<SavedPost[]>([]);
   const [editingMeaning, setEditingMeaning] = useState<{ postId: number; meaning: string } | null>(null);
   const [editingRelatedExpressions, setEditingRelatedExpressions] = useState<{ postId: number; expressions: string[] } | null>(null);
+  const [editingExpressionAnalysis, setEditingExpressionAnalysis] = useState<{ postId: number; analysis: string } | null>(null);
+  const [editingExamples, setEditingExamples] = useState<{ postId: number; examples: string } | null>(null);
 
   // 保存済み投稿を取得
   const fetchSavedPosts = async () => {
@@ -344,6 +347,114 @@ const VocabularyPage: React.FC = () => {
     }
   };
 
+  // 表現の解説の編集
+  const handleEditExpressionAnalysis = (postId: number, currentAnalysis: string) => {
+    setEditingExpressionAnalysis({ postId, analysis: currentAnalysis });
+  };
+
+  const handleSaveExpressionAnalysis = async () => {
+    if (!editingExpressionAnalysis) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/study-log/posts/${editingExpressionAnalysis.postId}/expression-analysis`,
+        { analysis: editingExpressionAnalysis.analysis },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      // ローカル状態を更新（AIコメントを更新）
+      setSavedPosts(prev => prev.map(post => 
+        post.id === editingExpressionAnalysis.postId 
+          ? {
+              ...post,
+              comments: post.comments?.map(comment => 
+                comment.username === 'AI学習サポート' 
+                  ? { ...comment, content: comment.content.replace(/📝 \*\*表現の解説\*\*\n([\s\S]*?)(?=💡 \*\*例文\*\*|📚 \*\*関連表現\*\*|$)/, `📝 **表現の解説**\n${editingExpressionAnalysis.analysis}\n`) }
+                  : comment
+              )
+            }
+          : post
+      ));
+      setFilteredPosts(prev => prev.map(post => 
+        post.id === editingExpressionAnalysis.postId 
+          ? {
+              ...post,
+              comments: post.comments?.map(comment => 
+                comment.username === 'AI学習サポート' 
+                  ? { ...comment, content: comment.content.replace(/📝 \*\*表現の解説\*\*\n([\s\S]*?)(?=💡 \*\*例文\*\*|📚 \*\*関連表現\*\*|$)/, `📝 **表現の解説**\n${editingExpressionAnalysis.analysis}\n`) }
+                  : comment
+              )
+            }
+          : post
+      ));
+      
+      setEditingExpressionAnalysis(null);
+      alert('✅ 表現の解説を更新しました');
+    } catch (error: any) {
+      console.error('表現の解説更新エラー:', error);
+      alert('❌ 表現の解説の更新に失敗しました');
+    }
+  };
+
+  // 例文の編集
+  const handleEditExamples = (postId: number, currentExamples: string) => {
+    setEditingExamples({ postId, examples: currentExamples });
+  };
+
+  const handleSaveExamples = async () => {
+    if (!editingExamples) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/study-log/posts/${editingExamples.postId}/examples`,
+        { examples: editingExamples.examples },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      // ローカル状態を更新（AIコメントを更新）
+      setSavedPosts(prev => prev.map(post => 
+        post.id === editingExamples.postId 
+          ? {
+              ...post,
+              comments: post.comments?.map(comment => 
+                comment.username === 'AI学習サポート' 
+                  ? { ...comment, content: comment.content.replace(/💡 \*\*例文\*\*\n([\s\S]*?)(?=📚 \*\*関連表現\*\*|$)/, `💡 **例文**\n${editingExamples.examples}\n`) }
+                  : comment
+              )
+            }
+          : post
+      ));
+      setFilteredPosts(prev => prev.map(post => 
+        post.id === editingExamples.postId 
+          ? {
+              ...post,
+              comments: post.comments?.map(comment => 
+                comment.username === 'AI学習サポート' 
+                  ? { ...comment, content: comment.content.replace(/💡 \*\*例文\*\*\n([\s\S]*?)(?=📚 \*\*関連表現\*\*|$)/, `💡 **例文**\n${editingExamples.examples}\n`) }
+                  : comment
+              )
+            }
+          : post
+      ));
+      
+      setEditingExamples(null);
+      alert('✅ 例文を更新しました');
+    } catch (error: any) {
+      console.error('例文更新エラー:', error);
+      alert('❌ 例文の更新に失敗しました');
+    }
+  };
+
   // AIコメント表示コンポーネント
   const AILearningSection = ({ comment }: { comment: Comment }) => {
     const aiContent = parseAIComment(comment.content);
@@ -357,9 +468,9 @@ const VocabularyPage: React.FC = () => {
         border: `1px solid ${isDarkMode ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.2)'}`
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <AutoAwesomeIcon sx={{ color: 'secondary.main', mr: 1 }} />
-          <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'secondary.main' }}>
-            🤖 AI学習サポート
+          <AutoAwesomeIcon sx={{ mr: 1, color: 'secondary.main' }} />
+          <Typography variant="subtitle2" fontWeight={600} color="secondary.main">
+            AI学習サポート
           </Typography>
         </Box>
 
@@ -367,9 +478,9 @@ const VocabularyPage: React.FC = () => {
         {aiContent.encouragement && (
           <Box sx={{ mb: 2 }}>
             <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-              💪 励まし
+              🎉 励ましの言葉
             </Typography>
-            <Typography variant="body2" sx={{ mt: 0.5, fontStyle: 'italic' }}>
+            <Typography variant="body2" sx={{ mt: 0.5 }}>
               {aiContent.encouragement}
             </Typography>
           </Box>
@@ -378,81 +489,138 @@ const VocabularyPage: React.FC = () => {
         {/* 表現の解説 */}
         {aiContent.expressionAnalysis && (
           <Box sx={{ mb: 2 }}>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-              📖 表現の解説
-            </Typography>
-            <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: 'pre-line' }}>
-              {aiContent.expressionAnalysis}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                📝 表現の解説
+              </Typography>
+              <IconButton
+                size="small"
+                onClick={() => handleEditExpressionAnalysis(comment.post_id, aiContent.expressionAnalysis)}
+                sx={{ p: 0.5 }}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Box>
+            {editingExpressionAnalysis?.postId === comment.post_id ? (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <TextField
+                  multiline
+                  rows={3}
+                  value={editingExpressionAnalysis.analysis}
+                  onChange={(e) => setEditingExpressionAnalysis({ ...editingExpressionAnalysis, analysis: e.target.value })}
+                  size="small"
+                />
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button size="small" onClick={handleSaveExpressionAnalysis}>保存</Button>
+                  <Button size="small" onClick={() => setEditingExpressionAnalysis(null)}>キャンセル</Button>
+                </Box>
+              </Box>
+            ) : (
+              <Typography variant="body2" sx={{ mt: 0.5 }}>
+                {aiContent.expressionAnalysis}
+              </Typography>
+            )}
           </Box>
         )}
 
         {/* 例文 */}
-        {aiContent.examples.length > 0 && (
+        {aiContent.examples && (
           <Box sx={{ mb: 2 }}>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-              💡 例文
-            </Typography>
-            <Box sx={{ mt: 0.5 }}>
-              {aiContent.examples.map((example, index) => (
-                <Box key={index} sx={{ 
-                  mb: 1, 
-                  p: 1, 
-                  backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
-                  borderRadius: 1,
-                  borderLeft: '3px solid #1976d2'
-                }}>
-                  <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                    {example}
-                  </Typography>
-                </Box>
-              ))}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                💡 例文
+              </Typography>
+              <IconButton
+                size="small"
+                onClick={() => handleEditExamples(comment.post_id, aiContent.examples)}
+                sx={{ p: 0.5 }}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
             </Box>
+            {editingExamples?.postId === comment.post_id ? (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <TextField
+                  multiline
+                  rows={4}
+                  value={editingExamples.examples}
+                  onChange={(e) => setEditingExamples({ ...editingExamples, examples: e.target.value })}
+                  size="small"
+                />
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button size="small" onClick={handleSaveExamples}>保存</Button>
+                  <Button size="small" onClick={() => setEditingExamples(null)}>キャンセル</Button>
+                </Box>
+              </Box>
+            ) : (
+              <Typography variant="body2" sx={{ mt: 0.5 }}>
+                {aiContent.examples}
+              </Typography>
+            )}
           </Box>
         )}
 
         {/* 関連表現 */}
         {aiContent.relatedExpressions.length > 0 && (
           <Box sx={{ mb: 2 }}>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-              📚 関連表現
-            </Typography>
-            <Box sx={{ mt: 0.5 }}>
-              {aiContent.relatedExpressions.map((expression, index) => {
-                // 関連表現をキーワードと説明に分離
-                const parts = expression.split(':');
-                const keyword = parts[0]?.trim();
-                const description = parts[1]?.trim();
-                
-                return (
-                  <Box key={index} sx={{ 
-                    mb: 1, 
-                    p: 1, 
-                    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
-                    borderRadius: 1,
-                    borderLeft: '3px solid #4caf50'
-                  }}>
-                    {keyword && (
-                      <Typography variant="body2" sx={{ 
-                        fontWeight: 600, 
-                        color: 'primary.main',
-                        mb: description ? 0.5 : 0
-                      }}>
-                        {keyword}
-                      </Typography>
-                    )}
-                    {description && (
-                      <Typography variant="body2" sx={{ 
-                        fontSize: '0.875rem',
-                        color: 'text.secondary'
-                      }}>
-                        {description}
-                      </Typography>
-                    )}
-                  </Box>
-                );
-              })}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                📚 関連表現
+              </Typography>
+              <IconButton
+                size="small"
+                onClick={() => handleEditRelatedExpressions(comment.post_id, aiContent.relatedExpressions)}
+                sx={{ p: 0.5 }}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
             </Box>
+            {editingRelatedExpressions?.postId === comment.post_id ? (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <TextField
+                  multiline
+                  rows={3}
+                  value={editingRelatedExpressions.expressions.join('\n')}
+                  onChange={(e) => setEditingRelatedExpressions({ 
+                    ...editingRelatedExpressions, 
+                    expressions: e.target.value.split('\n').filter(line => line.trim()) 
+                  })}
+                  size="small"
+                  placeholder="1行に1つの関連表現を入力"
+                />
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button size="small" onClick={handleSaveRelatedExpressions}>保存</Button>
+                  <Button size="small" onClick={() => setEditingRelatedExpressions(null)}>キャンセル</Button>
+                </Box>
+              </Box>
+            ) : (
+              <Box sx={{ mt: 0.5 }}>
+                {aiContent.relatedExpressions.map((expression, index) => {
+                  const parts = expression.split(':');
+                  const keyword = parts[0]?.trim();
+                  const description = parts[1]?.trim();
+                  return (
+                    <Box key={index} sx={{
+                      mb: 1, p: 1,
+                      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                      borderRadius: 1,
+                      borderLeft: '3px solid #4caf50'
+                    }}>
+                      {keyword && (
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: 'primary.main', mb: description ? 0.5 : 0 }}>
+                          {keyword}
+                        </Typography>
+                      )}
+                      {description && (
+                        <Typography variant="body2" sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
+                          {description}
+                        </Typography>
+                      )}
+                    </Box>
+                  );
+                })}
+              </Box>
+            )}
           </Box>
         )}
       </Box>

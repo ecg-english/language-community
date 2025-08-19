@@ -264,10 +264,10 @@ async function extractMeaning(content, userLanguage = 'English') {
 
     const isEnglishLearner = userLanguage === 'English';
     
-    // 学習者言語での意味抽出プロンプト
+    // 学習者言語での意味抽出プロンプト（修正：学習言語と逆の言語で意味を表示）
     const prompt = isEnglishLearner ? 
-      `この日本語の表現の意味を簡潔に英語で説明してください: "${content}". 1行で簡潔に答えてください。` :
-      `この英語の表現の意味を簡潔に日本語で説明してください: "${content}". 1行で簡潔に答えてください。`;
+      `この英語の表現の意味を簡潔に日本語で説明してください: "${content}". 1行で簡潔に答えてください。` :
+      `この日本語の表現の意味を簡潔に英語で説明してください: "${content}". 1行で簡潔に答えてください。`;
 
     console.log('Extracting meaning with OpenAI API...');
     console.log('Prompt:', prompt);
