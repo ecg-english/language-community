@@ -530,4 +530,60 @@ router.put('/posts/:postId/examples', authenticateToken, async (req, res) => {
   }
 });
 
+// 意味を更新
+router.put('/posts/:postId/meaning', authenticateToken, async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const { meaning } = req.body;
+    const userId = req.user.userId || req.user.id;
+
+    console.log('Updating meaning for post:', postId);
+    console.log('New meaning:', meaning);
+    console.log('User ID:', userId);
+
+    // 投稿の意味を更新
+    db.prepare('UPDATE posts SET study_meaning = ? WHERE id = ?').run(meaning, postId);
+    console.log('Meaning updated successfully');
+
+    res.json({ success: true, message: '意味を更新しました' });
+  } catch (error) {
+    console.error('Meaning update error:', error);
+    res.status(500).json({ success: false, message: '意味の更新に失敗しました' });
+  }
+});
+
+// 関連表現を更新
+router.put('/posts/:postId/related-expressions', authenticateToken, async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const { expressions } = req.body;
+    const userId = req.user.userId || req.user.id;
+
+    console.log('Updating related expressions for post:', postId);
+    console.log('New expressions:', expressions);
+    console.log('User ID:', userId);
+
+    // AIコメントを更新
+    const aiUser = db.prepare('SELECT id FROM users WHERE username = ?').get('AI学習サポート');
+    if (aiUser) {
+      const comment = db.prepare('SELECT * FROM comments WHERE post_id = ? AND user_id = ?').get(postId, aiUser.id);
+      if (comment) {
+        // 既存のコメント内容を取得して関連表現部分のみを更新
+        const updatedContent = comment.content.replace(
+          /📚 \*\*関連表現\*\*\n([\s\S]*?)(?=\n\n|$)/,
+          `📚 **関連表現**\n${expressions.map(exp => `- ${exp}`).join('\n')}\n`
+        );
+        
+        db.prepare('UPDATE comments SET content = ? WHERE id = ?').run(updatedContent, comment.id);
+        console.log('Related expressions updated successfully');
+      }
+    }
+
+    res.json({ success: true, message: '関連表現を更新しました' });
+  } catch (error) {
+    console.error('Related expressions update error:', error);
+    res.status(500).json({ success: false, message: '関連表現の更新に失敗しました' });
+  }
+});
+
 module.exports = router; 
