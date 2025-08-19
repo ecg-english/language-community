@@ -203,37 +203,30 @@ const VocabularyPage: React.FC = () => {
     const sections = {
       encouragement: '',
       expressionAnalysis: '',
-      examples: [] as string[],
+      examples: '',
       relatedExpressions: [] as string[]
     };
 
-    console.log('Parsing AI comment:', commentContent);
-
-    // セクション別に解析
     const lines = commentContent.split('\n');
     let currentSection = '';
 
-    lines.forEach((line, index) => {
+    for (const line of lines) {
       const trimmedLine = line.trim();
-      console.log(`Line ${index}: "${trimmedLine}" (current section: ${currentSection})`);
       
-      if (trimmedLine.includes('🎉') || trimmedLine.includes('**励まし**') || trimmedLine.includes('**Encouragement**')) {
+      if (trimmedLine.includes('🎉 **励ましの言葉**') || trimmedLine.includes('🎉 **Encouragement**')) {
         currentSection = 'encouragement';
-        sections.encouragement = trimmedLine.replace(/^🎉\s*\*\*励ましの言葉\*\*/, '').replace(/^🎉\s*\*\*Encouragement\*\*/, '').trim();
-        console.log('Found encouragement section:', sections.encouragement);
-      } else if (trimmedLine.includes('📝') || trimmedLine.includes('**表現の解説**') || trimmedLine.includes('**Expression Analysis**')) {
+      } else if (trimmedLine.includes('📝 **表現の解説**') || trimmedLine.includes('📝 **Expression Analysis**')) {
         currentSection = 'expressionAnalysis';
-        console.log('Found expression analysis section');
-      } else if (trimmedLine.includes('💡') || trimmedLine.includes('**例文**') || trimmedLine.includes('**Example Sentences**')) {
+      } else if (trimmedLine.includes('💡 **例文**') || trimmedLine.includes('💡 **Example Sentences**')) {
         currentSection = 'examples';
-        console.log('Found examples section');
-      } else if (trimmedLine.includes('📚') || trimmedLine.includes('**関連表現**') || trimmedLine.includes('**Related Expressions**')) {
+      } else if (trimmedLine.includes('📚 **関連表現**') || trimmedLine.includes('📚 **Related Expressions**')) {
         currentSection = 'relatedExpressions';
-        console.log('Found related expressions section');
+      } else if (trimmedLine && currentSection === 'encouragement') {
+        sections.encouragement += (sections.encouragement ? '\n' : '') + trimmedLine;
       } else if (trimmedLine && currentSection === 'expressionAnalysis') {
         sections.expressionAnalysis += (sections.expressionAnalysis ? '\n' : '') + trimmedLine;
-      } else if (trimmedLine && currentSection === 'examples' && !trimmedLine.startsWith('-') && !trimmedLine.startsWith('•') && !trimmedLine.includes('**')) {
-        sections.examples.push(trimmedLine);
+      } else if (trimmedLine && currentSection === 'examples') {
+        sections.examples += (sections.examples ? '\n' : '') + trimmedLine;
       } else if (trimmedLine && currentSection === 'relatedExpressions') {
         // 関連表現の抽出を改善
         if (trimmedLine.startsWith('-') || trimmedLine.startsWith('•') || trimmedLine.startsWith('*')) {
@@ -261,9 +254,8 @@ const VocabularyPage: React.FC = () => {
           }
         }
       }
-    });
+    }
 
-    console.log('Parsed sections:', sections);
     return sections;
   };
 
@@ -524,7 +516,7 @@ const VocabularyPage: React.FC = () => {
         )}
 
         {/* 例文 */}
-        {aiContent.examples && (
+        {aiContent.examples && aiContent.examples.trim() && (
           <Box sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
               <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
@@ -532,7 +524,7 @@ const VocabularyPage: React.FC = () => {
               </Typography>
               <IconButton
                 size="small"
-                onClick={() => handleEditExamples(comment.post_id, aiContent.examples)}
+                onClick={() => handleEditExamples(comment.post_id, Array.isArray(aiContent.examples) ? aiContent.examples.join('\n') : aiContent.examples)}
                 sx={{ p: 0.5 }}
               >
                 <EditIcon fontSize="small" />
@@ -553,7 +545,7 @@ const VocabularyPage: React.FC = () => {
                 </Box>
               </Box>
             ) : (
-              <Typography variant="body2" sx={{ mt: 0.5 }}>
+              <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: 'pre-line' }}>
                 {aiContent.examples}
               </Typography>
             )}
