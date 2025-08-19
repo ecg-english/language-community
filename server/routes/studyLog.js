@@ -12,53 +12,94 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
     const { channelId } = req.params;
     const { content, aiResponseEnabled = false, targetLanguage = 'English', image_url } = req.body;
     
-    // ユーザーIDの正しい取得（JWTトークンの構造に合わせる）
-    const userId = req.user.userId || req.user.id;
-    
     console.log('=== Study Log Post Request ===');
     console.log('Channel ID:', channelId);
     console.log('Content:', content);
     console.log('AI Response Enabled:', aiResponseEnabled);
     console.log('Target Language:', targetLanguage);
-    console.log('User object:', req.user);
-    console.log('User ID (resolved):', userId);
+    console.log('Raw req.user object:', JSON.stringify(req.user, null, 2));
+    console.log('req.user exists:', !!req.user);
+    console.log('req.user.userId:', req.user ? req.user.userId : 'undefined');
+    console.log('req.user.id:', req.user ? req.user.id : 'undefined');
     console.log('OPENAI_API_KEY exists:', !!process.env.OPENAI_API_KEY);
     console.log('================================');
 
-    // ユーザーIDの検証
-    if (!userId) {
-      throw new Error('ユーザーIDが取得できませんでした');
+    // ユーザーIDの堅牢な取得と検証
+    let userId = null;
+    
+    if (req.user) {
+      userId = req.user.userId || req.user.id;
+      console.log('User ID resolution attempt 1:', userId);
+      
+      // 追加の検証：ユーザー情報を直接データベースから取得
+      if (!userId && req.user.username) {
+        console.log('Attempting to get user ID from username:', req.user.username);
+        const userFromDb = db.prepare('SELECT id FROM users WHERE username = ?').get(req.user.username);
+        if (userFromDb) {
+          userId = userFromDb.id;
+          console.log('User ID from database lookup:', userId);
+        }
+      }
     }
+
+    console.log('Final resolved User ID:', userId);
+    console.log('User ID type:', typeof userId);
+
+    // ユーザーIDの最終検証
+    if (!userId || isNaN(parseInt(userId))) {
+      console.error('User ID validation failed');
+      console.error('req.user full object:', req.user);
+      throw new Error('有効なユーザーIDが取得できませんでした。再ログインしてください。');
+    }
+
+    // 数値型に変換
+    const userIdNum = parseInt(userId);
+    console.log('Converted User ID to number:', userIdNum);
 
     // タグの自動抽出（OpenAI APIエラーを完全に処理）
     let tags = [];
-    try {
-      if (process.env.OPENAI_API_KEY && aiResponseEnabled) {
-        console.log('Attempting to extract tags...');
-        tags = await extractLearningTags(content);
-        console.log('Extracted tags:', tags);
-      } else {
-        console.log('Skipping tag extraction - API key not set or AI response disabled');
+    if (aiResponseEnabled) {
+      try {
+        if (process.env.OPENAI_API_KEY) {
+          console.log('Attempting to extract tags...');
+          tags = await extractLearningTags(content);
+          console.log('Extracted tags:', tags);
+        } else {
+          console.log('Skipping tag extraction - API key not set');
+        }
+      } catch (tagError) {
+        console.error('Tag extraction failed, continuing without tags:', tagError.message);
+        // OpenAI APIエラーでも投稿は続行
+        tags = [];
       }
-    } catch (tagError) {
-      console.error('Tag extraction failed, continuing without tags:', tagError.message);
-      // OpenAI APIエラーでも投稿は続行
-      tags = [];
     }
 
     // 学習ログ投稿を作成（SQLite型エラーを修正）
     console.log('Creating post in database...');
-    
-    // Boolean値を数値に変換してSQLiteエラーを回避
-    const isStudyLog = 1; // TRUE
-    const aiResponseEnabledValue = aiResponseEnabled ? 1 : 0;
-    const tagsJson = JSON.stringify(tags);
-    const imageUrlValue = image_url || null;
+    console.log('Database parameters:', {
+      content: content,
+      user_id: userIdNum,
+      channel_id: parseInt(channelId),
+      is_study_log: 1,
+      ai_response_enabled: aiResponseEnabled ? 1 : 0,
+      study_tags: JSON.stringify(tags),
+      target_language: targetLanguage,
+      image_url: image_url || null
+    });
     
     const result = db.prepare(`
       INSERT INTO posts (content, user_id, channel_id, is_study_log, ai_response_enabled, study_tags, target_language, image_url, created_at) 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-    `).run(content, userId, channelId, isStudyLog, aiResponseEnabledValue, tagsJson, targetLanguage, imageUrlValue);
+    `).run(
+      content, 
+      userIdNum, 
+      parseInt(channelId), 
+      1, // is_study_log = TRUE
+      aiResponseEnabled ? 1 : 0, // ai_response_enabled
+      JSON.stringify(tags), 
+      targetLanguage, 
+      image_url || null
+    );
 
     const postId = result.lastInsertRowid;
     console.log('Post created with ID:', postId);
@@ -85,7 +126,7 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
       FROM posts p 
       JOIN users u ON p.user_id = u.id 
       WHERE p.id = ?
-    `).all(userId, postId);
+    `).all(userIdNum, postId);
 
     if (posts.length === 0) {
       throw new Error('投稿の取得に失敗しました');
@@ -109,6 +150,12 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
   } catch (error) {
     console.error('学習ログ投稿作成エラー:', error);
     console.error('Error stack:', error.stack);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code
+    });
+    
     res.status(500).json({ 
       error: '学習ログ投稿の作成に失敗しました',
       details: error.message 
