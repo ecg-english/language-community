@@ -1,9 +1,20 @@
 const OpenAI = require('openai');
 
 // OpenAIクライアントの初期化（環境変数から読み込み）
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+let openai = null;
+
+try {
+  if (process.env.OPENAI_API_KEY) {
+    openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
+    });
+    console.log('OpenAI client initialized successfully');
+  } else {
+    console.warn('OpenAI API キーが設定されていません。AI機能は無効になります。');
+  }
+} catch (error) {
+  console.error('OpenAI client initialization failed:', error);
+}
 
 /**
  * 学習ログ投稿に対するAI返信を生成
@@ -13,7 +24,7 @@ const openai = new OpenAI({
  */
 async function generateStudyLogResponse(content, userLanguage = 'English') {
   try {
-    if (!process.env.OPENAI_API_KEY) {
+    if (!openai) {
       throw new Error('OpenAI API キーが設定されていません');
     }
 
@@ -73,7 +84,7 @@ Response format:
 
   } catch (error) {
     console.error('OpenAI API Error:', error);
-    throw new Error('AI返信の生成に失敗しました');
+    throw new Error('AI返信の生成に失敗しました: ' + error.message);
   }
 }
 
@@ -84,7 +95,7 @@ Response format:
  */
 async function extractLearningTags(content) {
   try {
-    if (!process.env.OPENAI_API_KEY) {
+    if (!openai) {
       console.warn('OpenAI API キーが設定されていません。タグ抽出をスキップします。');
       return [];
     }

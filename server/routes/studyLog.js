@@ -13,8 +13,21 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
     const { content, aiResponseEnabled = false, targetLanguage = 'English', image_url } = req.body;
     const userId = req.user.id;
 
-    // タグの自動抽出
-    const tags = await extractLearningTags(content);
+    console.log('Study log post request:', { channelId, content, aiResponseEnabled, targetLanguage, userId });
+
+    // タグの自動抽出（エラーが発生しても投稿は続行）
+    let tags = [];
+    try {
+      if (process.env.OPENAI_API_KEY) {
+        tags = await extractLearningTags(content);
+        console.log('Extracted tags:', tags);
+      } else {
+        console.log('OpenAI API key not set, skipping tag extraction');
+      }
+    } catch (tagError) {
+      console.error('Tag extraction failed, continuing without tags:', tagError);
+      tags = [];
+    }
 
     // 学習ログ投稿を作成
     const result = db.prepare(`
@@ -23,13 +36,16 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
     `).run(content, userId, channelId, aiResponseEnabled, JSON.stringify(tags), targetLanguage, image_url);
 
     const postId = result.lastInsertRowid;
+    console.log('Post created with ID:', postId);
 
-    // AI返信が有効な場合は非同期でAI返信を生成
-    if (aiResponseEnabled) {
+    // AI返信が有効な場合で、OpenAI APIキーが設定されている場合のみAI返信を生成
+    if (aiResponseEnabled && process.env.OPENAI_API_KEY) {
       // 非同期でAI返信を生成（レスポンスを待たない）
       generateAIResponse(postId, content, targetLanguage).catch(error => {
         console.error('AI返信生成エラー:', error);
       });
+    } else if (aiResponseEnabled && !process.env.OPENAI_API_KEY) {
+      console.log('AI response requested but OpenAI API key not set');
     }
 
     // 投稿情報を取得して返す
@@ -43,6 +59,8 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
       WHERE p.id = ?
     `).all(userId, postId);
 
+    console.log('Post retrieved:', posts[0]);
+
     res.json({
       success: true,
       post: posts[0],
@@ -51,7 +69,11 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
 
   } catch (error) {
     console.error('学習ログ投稿作成エラー:', error);
-    res.status(500).json({ error: '学習ログ投稿の作成に失敗しました' });
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      error: '学習ログ投稿の作成に失敗しました',
+      details: error.message 
+    });
   }
 });
 
