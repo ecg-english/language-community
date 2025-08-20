@@ -683,9 +683,9 @@ router.put('/posts/:postId/vocabulary-word', authenticateToken, async (req, res)
     const existing = db.prepare('SELECT * FROM vocabulary_words WHERE post_id = ? AND user_id = ?').get(postId, userId);
     
     if (existing) {
-      db.prepare('UPDATE vocabulary_words SET word = ?, updated_at = datetime("now") WHERE post_id = ? AND user_id = ?').run(word, postId, userId);
+      db.prepare('UPDATE vocabulary_words SET word = ?, updated_at = CURRENT_TIMESTAMP WHERE post_id = ? AND user_id = ?').run(word, postId, userId);
     } else {
-      db.prepare('INSERT INTO vocabulary_words (post_id, user_id, word, created_at, updated_at) VALUES (?, ?, ?, datetime("now"), datetime("now"))').run(postId, userId, word);
+      db.prepare('INSERT INTO vocabulary_words (post_id, user_id, word, created_at, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)').run(postId, userId, word);
     }
     
     console.log('Vocabulary word updated successfully');
@@ -728,9 +728,9 @@ router.put('/posts/:postId/vocabulary-meaning', authenticateToken, async (req, r
     const existing = db.prepare('SELECT * FROM vocabulary_meanings WHERE post_id = ? AND user_id = ?').get(postId, userId);
     
     if (existing) {
-      db.prepare('UPDATE vocabulary_meanings SET meaning = ?, updated_at = datetime("now") WHERE post_id = ? AND user_id = ?').run(meaning, postId, userId);
+      db.prepare('UPDATE vocabulary_meanings SET meaning = ?, updated_at = CURRENT_TIMESTAMP WHERE post_id = ? AND user_id = ?').run(meaning, postId, userId);
     } else {
-      db.prepare('INSERT INTO vocabulary_meanings (post_id, user_id, meaning, created_at, updated_at) VALUES (?, ?, ?, datetime("now"), datetime("now"))').run(postId, userId, meaning);
+      db.prepare('INSERT INTO vocabulary_meanings (post_id, user_id, meaning, created_at, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)').run(postId, userId, meaning);
     }
     
     console.log('Vocabulary meaning updated successfully');
@@ -773,9 +773,9 @@ router.put('/posts/:postId/vocabulary-learning-content', authenticateToken, asyn
     const existing = db.prepare('SELECT * FROM vocabulary_learning_contents WHERE post_id = ? AND user_id = ?').get(postId, userId);
     
     if (existing) {
-      db.prepare('UPDATE vocabulary_learning_contents SET content = ?, updated_at = datetime("now") WHERE post_id = ? AND user_id = ?').run(content, postId, userId);
+      db.prepare('UPDATE vocabulary_learning_contents SET content = ?, updated_at = CURRENT_TIMESTAMP WHERE post_id = ? AND user_id = ?').run(content, postId, userId);
     } else {
-      db.prepare('INSERT INTO vocabulary_learning_contents (post_id, user_id, content, created_at, updated_at) VALUES (?, ?, ?, datetime("now"), datetime("now"))').run(postId, userId, content);
+      db.prepare('INSERT INTO vocabulary_learning_contents (post_id, user_id, content, created_at, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)').run(postId, userId, content);
     }
     
     console.log('Vocabulary learning content updated successfully');
