@@ -817,75 +817,63 @@ router.get('/saved-posts', authenticateToken, async (req, res) => {
       ORDER BY sp.saved_at DESC
     `).all(userId);
 
-    console.log('Raw saved posts:', savedPosts);
+    console.log('Raw saved posts count:', savedPosts.length);
 
     // 各投稿にマイ単語帳専用データを追加
-    const postsWithVocabularyData = savedPosts.map(post => {
+    const postsWithVocabularyData = [];
+
+    for (const post of savedPosts) {
+      console.log(`Processing post ${post.id}...`);
+      
+      // 単語・表現を取得
       let vocabularyWord = null;
-      let vocabularyMeaning = null;
-      let vocabularyLearningContent = null;
-
       try {
-        // テーブルが存在するかチェックしてからデータを取得
-        const wordsTableExists = db.prepare(`
-          SELECT name FROM sqlite_master 
-          WHERE type='table' AND name='vocabulary_words'
-        `).get();
-        
-        console.log(`Words table exists for post ${post.id}:`, !!wordsTableExists);
-        
-        if (wordsTableExists) {
-          vocabularyWord = db.prepare('SELECT word FROM vocabulary_words WHERE post_id = ? AND user_id = ?').get(post.id, userId);
-          console.log(`Vocabulary word for post ${post.id}:`, vocabularyWord);
-        }
-
-        const meaningsTableExists = db.prepare(`
-          SELECT name FROM sqlite_master 
-          WHERE type='table' AND name='vocabulary_meanings'
-        `).get();
-        
-        console.log(`Meanings table exists for post ${post.id}:`, !!meaningsTableExists);
-        
-        if (meaningsTableExists) {
-          vocabularyMeaning = db.prepare('SELECT meaning FROM vocabulary_meanings WHERE post_id = ? AND user_id = ?').get(post.id, userId);
-          console.log(`Vocabulary meaning for post ${post.id}:`, vocabularyMeaning);
-        }
-
-        const learningContentsTableExists = db.prepare(`
-          SELECT name FROM sqlite_master 
-          WHERE type='table' AND name='vocabulary_learning_contents'
-        `).get();
-        
-        console.log(`Learning contents table exists for post ${post.id}:`, !!learningContentsTableExists);
-        
-        if (learningContentsTableExists) {
-          vocabularyLearningContent = db.prepare('SELECT content FROM vocabulary_learning_contents WHERE post_id = ? AND user_id = ?').get(post.id, userId);
-          console.log(`Vocabulary learning content for post ${post.id}:`, vocabularyLearningContent);
-        }
+        const wordResult = db.prepare('SELECT word FROM vocabulary_words WHERE post_id = ? AND user_id = ?').get(post.id, userId);
+        vocabularyWord = wordResult ? wordResult.word : null;
+        console.log(`Post ${post.id} - vocabulary_word:`, vocabularyWord);
       } catch (error) {
-        console.log('Error fetching vocabulary data for post', post.id, ':', error.message);
+        console.log(`Error fetching word for post ${post.id}:`, error.message);
+      }
+
+      // 意味を取得
+      let vocabularyMeaning = null;
+      try {
+        const meaningResult = db.prepare('SELECT meaning FROM vocabulary_meanings WHERE post_id = ? AND user_id = ?').get(post.id, userId);
+        vocabularyMeaning = meaningResult ? meaningResult.meaning : null;
+        console.log(`Post ${post.id} - vocabulary_meaning:`, vocabularyMeaning);
+      } catch (error) {
+        console.log(`Error fetching meaning for post ${post.id}:`, error.message);
+      }
+
+      // 学習内容を取得
+      let vocabularyLearningContent = null;
+      try {
+        const contentResult = db.prepare('SELECT content FROM vocabulary_learning_contents WHERE post_id = ? AND user_id = ?').get(post.id, userId);
+        vocabularyLearningContent = contentResult ? contentResult.content : null;
+        console.log(`Post ${post.id} - vocabulary_learning_content:`, vocabularyLearningContent);
+      } catch (error) {
+        console.log(`Error fetching learning content for post ${post.id}:`, error.message);
       }
 
       const result = {
         ...post,
-        vocabulary_word: vocabularyWord?.word || null,
-        vocabulary_meaning: vocabularyMeaning?.meaning || null,
-        vocabulary_learning_content: vocabularyLearningContent?.content || null
+        vocabulary_word: vocabularyWord,
+        vocabulary_meaning: vocabularyMeaning,
+        vocabulary_learning_content: vocabularyLearningContent
       };
 
-      console.log(`Final post ${post.id} data:`, {
-        id: result.id,
-        content: result.content,
+      console.log(`Final post ${post.id} vocabulary data:`, {
         vocabulary_word: result.vocabulary_word,
         vocabulary_meaning: result.vocabulary_meaning,
         vocabulary_learning_content: result.vocabulary_learning_content
       });
 
-      return result;
-    });
+      postsWithVocabularyData.push(result);
+    }
 
-    console.log('Saved posts fetched successfully');
-    console.log('Final posts with vocabulary data:', postsWithVocabularyData);
+    console.log('Total posts processed:', postsWithVocabularyData.length);
+    console.log('Sending response with vocabulary data...');
+    
     res.json({ success: true, savedPosts: postsWithVocabularyData });
   } catch (error) {
     console.error('Fetch saved posts error:', error);
