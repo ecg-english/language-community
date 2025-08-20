@@ -805,6 +805,8 @@ router.get('/saved-posts', authenticateToken, async (req, res) => {
       ORDER BY sp.saved_at DESC
     `).all(userId);
 
+    console.log('Raw saved posts:', savedPosts);
+
     // 各投稿にマイ単語帳専用データを追加
     const postsWithVocabularyData = savedPosts.map(post => {
       let vocabularyWord = null;
@@ -818,8 +820,11 @@ router.get('/saved-posts', authenticateToken, async (req, res) => {
           WHERE type='table' AND name='vocabulary_words'
         `).get();
         
+        console.log(`Words table exists for post ${post.id}:`, !!wordsTableExists);
+        
         if (wordsTableExists) {
           vocabularyWord = db.prepare('SELECT word FROM vocabulary_words WHERE post_id = ? AND user_id = ?').get(post.id, userId);
+          console.log(`Vocabulary word for post ${post.id}:`, vocabularyWord);
         }
 
         const meaningsTableExists = db.prepare(`
@@ -827,8 +832,11 @@ router.get('/saved-posts', authenticateToken, async (req, res) => {
           WHERE type='table' AND name='vocabulary_meanings'
         `).get();
         
+        console.log(`Meanings table exists for post ${post.id}:`, !!meaningsTableExists);
+        
         if (meaningsTableExists) {
           vocabularyMeaning = db.prepare('SELECT meaning FROM vocabulary_meanings WHERE post_id = ? AND user_id = ?').get(post.id, userId);
+          console.log(`Vocabulary meaning for post ${post.id}:`, vocabularyMeaning);
         }
 
         const learningContentsTableExists = db.prepare(`
@@ -836,22 +844,36 @@ router.get('/saved-posts', authenticateToken, async (req, res) => {
           WHERE type='table' AND name='vocabulary_learning_contents'
         `).get();
         
+        console.log(`Learning contents table exists for post ${post.id}:`, !!learningContentsTableExists);
+        
         if (learningContentsTableExists) {
           vocabularyLearningContent = db.prepare('SELECT content FROM vocabulary_learning_contents WHERE post_id = ? AND user_id = ?').get(post.id, userId);
+          console.log(`Vocabulary learning content for post ${post.id}:`, vocabularyLearningContent);
         }
       } catch (error) {
         console.log('Error fetching vocabulary data for post', post.id, ':', error.message);
       }
 
-      return {
+      const result = {
         ...post,
         vocabulary_word: vocabularyWord?.word || null,
         vocabulary_meaning: vocabularyMeaning?.meaning || null,
         vocabulary_learning_content: vocabularyLearningContent?.content || null
       };
+
+      console.log(`Final post ${post.id} data:`, {
+        id: result.id,
+        content: result.content,
+        vocabulary_word: result.vocabulary_word,
+        vocabulary_meaning: result.vocabulary_meaning,
+        vocabulary_learning_content: result.vocabulary_learning_content
+      });
+
+      return result;
     });
 
     console.log('Saved posts fetched successfully');
+    console.log('Final posts with vocabulary data:', postsWithVocabularyData);
     res.json({ success: true, savedPosts: postsWithVocabularyData });
   } catch (error) {
     console.error('Fetch saved posts error:', error);
