@@ -1685,11 +1685,11 @@ const ChannelPage: React.FC = () => {
                       {/* コメント一覧 */}
                       {comments[post.id]?.map((comment) => (
                         <Paper key={comment.id} sx={{ 
-                          p: { xs: 0.125, sm: 0.5 }, 
+                          p: { xs: 0.05, sm: 0.1 }, 
                           mb: 1, 
                           bgcolor: 'background.paper',
                           '& .MuiStack-root': {
-                            gap: { xs: 0.25, sm: 1 }
+                            gap: { xs: 0.05, sm: 0.5 }
                           }
                         }}>
                           <Stack direction="row" spacing={2} alignItems="flex-start">
