@@ -108,6 +108,8 @@ const VocabularyPage: React.FC = () => {
       console.log('=== Saved Posts Response ===');
       console.log('Response data:', response.data);
       console.log('Saved posts:', response.data.savedPosts);
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
 
       if (response.data.success) {
         // 各投稿のコメントを取得

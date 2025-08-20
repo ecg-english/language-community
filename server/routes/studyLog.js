@@ -799,6 +799,7 @@ router.put('/posts/:postId/vocabulary-learning-content', authenticateToken, asyn
 
 // 保存済み投稿取得時にマイ単語帳専用データも取得
 router.get('/saved-posts', authenticateToken, async (req, res) => {
+  console.log('🔍 SAVED POSTS API CALLED - START');
   try {
     console.log('=== SAVED POSTS API CALLED ===');
     const userId = req.user.userId || req.user.id;
