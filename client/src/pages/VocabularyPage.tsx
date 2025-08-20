@@ -105,12 +105,22 @@ const VocabularyPage: React.FC = () => {
         }
       );
 
+      console.log('=== Saved Posts Response ===');
+      console.log('Response data:', response.data);
+      console.log('Saved posts:', response.data.savedPosts);
+
       if (response.data.success) {
         // 各投稿のコメントを取得
         const postsWithComments = await Promise.all(
           response.data.savedPosts.map(async (post: SavedPost) => {
             try {
               console.log(`Fetching comments for post ${post.id}...`);
+              console.log(`Post vocabulary data:`, {
+                vocabulary_word: post.vocabulary_word,
+                vocabulary_meaning: post.vocabulary_meaning,
+                vocabulary_learning_content: post.vocabulary_learning_content
+              });
+              
               const commentsResponse = await axios.get(
                 `${process.env.REACT_APP_API_URL}/api/posts/posts/${post.id}/comments`,
                 {
@@ -132,6 +142,7 @@ const VocabularyPage: React.FC = () => {
           })
         );
         
+        console.log('=== Final Posts with Comments ===');
         console.log('Posts with comments:', postsWithComments);
         setSavedPosts(postsWithComments);
         setFilteredPosts(postsWithComments);
@@ -232,20 +243,11 @@ const VocabularyPage: React.FC = () => {
         }
       );
       
-      // ローカル状態を更新（元の投稿には影響しない）
-      setSavedPosts(prev => prev.map(post => 
-        post.id === editingWord.postId 
-          ? { ...post, vocabulary_word: editingWord.word }
-          : post
-      ));
-      setFilteredPosts(prev => prev.map(post => 
-        post.id === editingWord.postId 
-          ? { ...post, vocabulary_word: editingWord.word }
-          : post
-      ));
-      
       setEditingWord(null);
       alert('✅ 単語・表現を更新しました');
+      
+      // データを再取得して最新の状態を反映
+      await fetchSavedPosts();
     } catch (error: any) {
       console.error('単語・表現更新エラー:', error);
       alert('❌ 単語・表現の更新に失敗しました');
@@ -272,20 +274,11 @@ const VocabularyPage: React.FC = () => {
         }
       );
       
-      // ローカル状態を更新（元の投稿には影響しない）
-      setSavedPosts(prev => prev.map(post => 
-        post.id === editingMeaning.postId 
-          ? { ...post, vocabulary_meaning: editingMeaning.meaning }
-          : post
-      ));
-      setFilteredPosts(prev => prev.map(post => 
-        post.id === editingMeaning.postId 
-          ? { ...post, vocabulary_meaning: editingMeaning.meaning }
-          : post
-      ));
-      
       setEditingMeaning(null);
       alert('✅ 意味を更新しました');
+      
+      // データを再取得して最新の状態を反映
+      await fetchSavedPosts();
     } catch (error: any) {
       console.error('意味更新エラー:', error);
       alert('❌ 意味の更新に失敗しました');
@@ -317,20 +310,11 @@ const VocabularyPage: React.FC = () => {
         }
       );
       
-      // ローカル状態を更新（元の投稿には影響しない）
-      setSavedPosts(prev => prev.map(post => 
-        post.id === editingLearningContent.postId 
-          ? { ...post, vocabulary_learning_content: editingLearningContent.content }
-          : post
-      ));
-      setFilteredPosts(prev => prev.map(post => 
-        post.id === editingLearningContent.postId 
-          ? { ...post, vocabulary_learning_content: editingLearningContent.content }
-          : post
-      ));
-      
       setEditingLearningContent(null);
       alert('✅ 学習内容を更新しました');
+      
+      // データを再取得して最新の状態を反映
+      await fetchSavedPosts();
     } catch (error: any) {
       console.error('学習内容更新エラー:', error);
       alert('❌ 学習内容の更新に失敗しました');
@@ -488,6 +472,20 @@ const VocabularyPage: React.FC = () => {
             const displayWord = post.vocabulary_word || post.content;
             const displayMeaning = post.vocabulary_meaning || '';
             const displayLearningContent = post.vocabulary_learning_content || post.content;
+            
+            console.log(`=== Rendering Post ${post.id} ===`);
+            console.log('Post data:', {
+              id: post.id,
+              content: post.content,
+              vocabulary_word: post.vocabulary_word,
+              vocabulary_meaning: post.vocabulary_meaning,
+              vocabulary_learning_content: post.vocabulary_learning_content
+            });
+            console.log('Display values:', {
+              displayWord,
+              displayMeaning,
+              displayLearningContent
+            });
             
             return (
               <Card key={post.id} sx={{ 
