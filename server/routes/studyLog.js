@@ -716,6 +716,8 @@ router.put('/posts/:postId/vocabulary-meaning', authenticateToken, async (req, r
       WHERE type='table' AND name='vocabulary_meanings'
     `).get();
 
+    console.log('vocabulary_meanings table exists:', !!tableExists);
+
     if (!tableExists) {
       console.error('vocabulary_meanings table does not exist');
       return res.status(500).json({ 
@@ -729,9 +731,15 @@ router.put('/posts/:postId/vocabulary-meaning', authenticateToken, async (req, r
     
     if (existing) {
       db.prepare('UPDATE vocabulary_meanings SET meaning = ?, updated_at = CURRENT_TIMESTAMP WHERE post_id = ? AND user_id = ?').run(meaning, postId, userId);
+      console.log('Updated existing vocabulary meaning record');
     } else {
       db.prepare('INSERT INTO vocabulary_meanings (post_id, user_id, meaning, created_at, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)').run(postId, userId, meaning);
+      console.log('Inserted new vocabulary meaning record');
     }
+    
+    // 保存後のデータを確認
+    const savedData = db.prepare('SELECT * FROM vocabulary_meanings WHERE post_id = ? AND user_id = ?').get(postId, userId);
+    console.log('Saved vocabulary meaning data:', savedData);
     
     console.log('Vocabulary meaning updated successfully');
     res.json({ success: true, message: '意味を更新しました' });
@@ -792,6 +800,7 @@ router.put('/posts/:postId/vocabulary-learning-content', authenticateToken, asyn
 // 保存済み投稿取得時にマイ単語帳専用データも取得
 router.get('/saved-posts', authenticateToken, async (req, res) => {
   try {
+    console.log('=== SAVED POSTS API CALLED ===');
     const userId = req.user.userId || req.user.id;
     console.log('Fetching saved posts for user:', userId);
 
