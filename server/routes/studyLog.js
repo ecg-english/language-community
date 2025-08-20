@@ -665,6 +665,20 @@ router.put('/posts/:postId/vocabulary-word', authenticateToken, async (req, res)
     console.log('New word:', word);
     console.log('User ID:', userId);
 
+    // テーブルが存在するかチェック
+    const tableExists = db.prepare(`
+      SELECT name FROM sqlite_master 
+      WHERE type='table' AND name='vocabulary_words'
+    `).get();
+
+    if (!tableExists) {
+      console.error('vocabulary_words table does not exist');
+      return res.status(500).json({ 
+        success: false, 
+        message: 'データベーステーブルが存在しません。管理者にお問い合わせください。' 
+      });
+    }
+
     // vocabulary_wordsテーブルに保存（元の投稿には影響しない）
     const existing = db.prepare('SELECT * FROM vocabulary_words WHERE post_id = ? AND user_id = ?').get(postId, userId);
     
@@ -678,7 +692,10 @@ router.put('/posts/:postId/vocabulary-word', authenticateToken, async (req, res)
     res.json({ success: true, message: '単語・表現を更新しました' });
   } catch (error) {
     console.error('Vocabulary word update error:', error);
-    res.status(500).json({ success: false, message: '単語・表現の更新に失敗しました' });
+    res.status(500).json({ 
+      success: false, 
+      message: '単語・表現の更新に失敗しました: ' + error.message 
+    });
   }
 });
 
@@ -693,6 +710,20 @@ router.put('/posts/:postId/vocabulary-meaning', authenticateToken, async (req, r
     console.log('New meaning:', meaning);
     console.log('User ID:', userId);
 
+    // テーブルが存在するかチェック
+    const tableExists = db.prepare(`
+      SELECT name FROM sqlite_master 
+      WHERE type='table' AND name='vocabulary_meanings'
+    `).get();
+
+    if (!tableExists) {
+      console.error('vocabulary_meanings table does not exist');
+      return res.status(500).json({ 
+        success: false, 
+        message: 'データベーステーブルが存在しません。管理者にお問い合わせください。' 
+      });
+    }
+
     // vocabulary_meaningsテーブルに保存（元の投稿には影響しない）
     const existing = db.prepare('SELECT * FROM vocabulary_meanings WHERE post_id = ? AND user_id = ?').get(postId, userId);
     
@@ -706,7 +737,10 @@ router.put('/posts/:postId/vocabulary-meaning', authenticateToken, async (req, r
     res.json({ success: true, message: '意味を更新しました' });
   } catch (error) {
     console.error('Vocabulary meaning update error:', error);
-    res.status(500).json({ success: false, message: '意味の更新に失敗しました' });
+    res.status(500).json({ 
+      success: false, 
+      message: '意味の更新に失敗しました: ' + error.message 
+    });
   }
 });
 
@@ -721,6 +755,20 @@ router.put('/posts/:postId/vocabulary-learning-content', authenticateToken, asyn
     console.log('New content:', content);
     console.log('User ID:', userId);
 
+    // テーブルが存在するかチェック
+    const tableExists = db.prepare(`
+      SELECT name FROM sqlite_master 
+      WHERE type='table' AND name='vocabulary_learning_contents'
+    `).get();
+
+    if (!tableExists) {
+      console.error('vocabulary_learning_contents table does not exist');
+      return res.status(500).json({ 
+        success: false, 
+        message: 'データベーステーブルが存在しません。管理者にお問い合わせください。' 
+      });
+    }
+
     // vocabulary_learning_contentsテーブルに保存（元の投稿には影響しない）
     const existing = db.prepare('SELECT * FROM vocabulary_learning_contents WHERE post_id = ? AND user_id = ?').get(postId, userId);
     
@@ -734,7 +782,10 @@ router.put('/posts/:postId/vocabulary-learning-content', authenticateToken, asyn
     res.json({ success: true, message: '学習内容を更新しました' });
   } catch (error) {
     console.error('Vocabulary learning content update error:', error);
-    res.status(500).json({ success: false, message: '学習内容の更新に失敗しました' });
+    res.status(500).json({ 
+      success: false, 
+      message: '学習内容の更新に失敗しました: ' + error.message 
+    });
   }
 });
 
@@ -756,14 +807,41 @@ router.get('/saved-posts', authenticateToken, async (req, res) => {
 
     // 各投稿にマイ単語帳専用データを追加
     const postsWithVocabularyData = savedPosts.map(post => {
-      // 単語・表現を取得
-      const vocabularyWord = db.prepare('SELECT word FROM vocabulary_words WHERE post_id = ? AND user_id = ?').get(post.id, userId);
-      
-      // 意味を取得
-      const vocabularyMeaning = db.prepare('SELECT meaning FROM vocabulary_meanings WHERE post_id = ? AND user_id = ?').get(post.id, userId);
-      
-      // 学習内容を取得
-      const vocabularyLearningContent = db.prepare('SELECT content FROM vocabulary_learning_contents WHERE post_id = ? AND user_id = ?').get(post.id, userId);
+      let vocabularyWord = null;
+      let vocabularyMeaning = null;
+      let vocabularyLearningContent = null;
+
+      try {
+        // テーブルが存在するかチェックしてからデータを取得
+        const wordsTableExists = db.prepare(`
+          SELECT name FROM sqlite_master 
+          WHERE type='table' AND name='vocabulary_words'
+        `).get();
+        
+        if (wordsTableExists) {
+          vocabularyWord = db.prepare('SELECT word FROM vocabulary_words WHERE post_id = ? AND user_id = ?').get(post.id, userId);
+        }
+
+        const meaningsTableExists = db.prepare(`
+          SELECT name FROM sqlite_master 
+          WHERE type='table' AND name='vocabulary_meanings'
+        `).get();
+        
+        if (meaningsTableExists) {
+          vocabularyMeaning = db.prepare('SELECT meaning FROM vocabulary_meanings WHERE post_id = ? AND user_id = ?').get(post.id, userId);
+        }
+
+        const learningContentsTableExists = db.prepare(`
+          SELECT name FROM sqlite_master 
+          WHERE type='table' AND name='vocabulary_learning_contents'
+        `).get();
+        
+        if (learningContentsTableExists) {
+          vocabularyLearningContent = db.prepare('SELECT content FROM vocabulary_learning_contents WHERE post_id = ? AND user_id = ?').get(post.id, userId);
+        }
+      } catch (error) {
+        console.log('Error fetching vocabulary data for post', post.id, ':', error.message);
+      }
 
       return {
         ...post,
@@ -777,7 +855,10 @@ router.get('/saved-posts', authenticateToken, async (req, res) => {
     res.json({ success: true, savedPosts: postsWithVocabularyData });
   } catch (error) {
     console.error('Fetch saved posts error:', error);
-    res.status(500).json({ success: false, message: '保存済み投稿の取得に失敗しました' });
+    res.status(500).json({ 
+      success: false, 
+      message: '保存済み投稿の取得に失敗しました: ' + error.message 
+    });
   }
 });
 
