@@ -1685,7 +1685,7 @@ const ChannelPage: React.FC = () => {
                       {/* コメント一覧 */}
                       {comments[post.id]?.map((comment) => (
                         <Paper key={comment.id} sx={{ 
-                          p: { xs: 1, sm: 2 }, 
+                          p: { xs: 0.5, sm: 1.5 }, 
                           mb: 1, 
                           bgcolor: 'background.paper',
                           '& .MuiStack-root': {
@@ -1723,10 +1723,14 @@ const ChannelPage: React.FC = () => {
                                   backgroundColor: isDarkMode ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.05)',
                                   borderRadius: 2,
                                   border: `1px solid ${isDarkMode ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.2)'}`,
-                                  width: '100%'
+                                  width: '100%',
+                                  maxWidth: '100%',
+                                  boxSizing: 'border-box',
+                                  margin: 0,
+                                  padding: { xs: 1, sm: 2 }
                                 }}>
-                                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, width: '100%' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
                                       <AutoAwesomeIcon sx={{ color: 'secondary.main', mr: 1, fontSize: { xs: '0.9rem', sm: '1.25rem' } }} />
                                       <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'secondary.main', fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                                         🤖 AI学習サポート
