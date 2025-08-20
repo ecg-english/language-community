@@ -21,6 +21,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -31,6 +34,7 @@ import {
   Clear as ClearIcon,
   Edit as EditIcon,
   ContentPaste as ContentPasteIcon,
+  ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -82,6 +86,7 @@ const VocabularyPage: React.FC = () => {
   const [pastedContent, setPastedContent] = useState('');
   const [pastedWord, setPastedWord] = useState('');
   const [editingLearningContent, setEditingLearningContent] = useState<{ postId: number; content: string } | null>(null);
+  const [expandedAccordion, setExpandedAccordion] = useState<string | false>(false);
 
   // 保存済み投稿を取得
   const fetchSavedPosts = async () => {
@@ -488,6 +493,11 @@ const VocabularyPage: React.FC = () => {
     }
   };
 
+  // アコーディオンの開閉ハンドラー
+  const handleAccordionChange = (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+    setExpandedAccordion(isExpanded ? panel : false);
+  };
+
   // 学習内容の編集
   const handleEditLearningContent = (postId: number, currentContent: string) => {
     setEditingLearningContent({ postId, content: currentContent });
@@ -853,178 +863,150 @@ const VocabularyPage: React.FC = () => {
                 boxShadow: isDarkMode ? '0 4px 20px rgba(255,255,255,0.1)' : '0 4px 20px rgba(0,0,0,0.1)'
               }
             }}>
-              <CardContent>
-                {/* 投稿ヘッダー */}
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
-                  <Avatar 
-                    sx={{ bgcolor: 'primary.main' }}
-                    src={post.avatar_url}
-                  >
-                    {post.username.charAt(0).toUpperCase()}
-                  </Avatar>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                      {post.username}
-                    </Typography>
+              <CardContent sx={{ p: 2 }}>
+                {/* 単語・表現のヘッダー */}
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                    {post.content}
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Typography variant="caption" color="text.secondary">
-                      投稿: {formatDate(post.created_at)}
+                      {formatDate(post.saved_at)}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                      保存: {formatDate(post.saved_at)}
-                    </Typography>
+                    <Tooltip title={t('removeFromVocabulary')}>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleRemoveFromVocabulary(post.id)}
+                        sx={{
+                          backgroundColor: isDarkMode ? 'grey.800' : 'grey.100',
+                          '&:hover': {
+                            backgroundColor: isDarkMode ? 'grey.700' : 'grey.200'
+                          }
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
                   </Box>
-                  <Tooltip title={t('removeFromVocabulary')}>
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => handleRemoveFromVocabulary(post.id)}
-                      sx={{
-                        backgroundColor: isDarkMode ? 'grey.800' : 'grey.100',
-                        '&:hover': {
-                          backgroundColor: isDarkMode ? 'grey.700' : 'grey.200'
-                        }
-                      }}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
                 </Box>
 
-                {/* 投稿内容 */}
-                <Typography 
-                  variant="body1" 
+                {/* アコーディオンで詳細表示 */}
+                <Accordion 
+                  expanded={expandedAccordion === `panel-${post.id}`}
+                  onChange={handleAccordionChange(`panel-${post.id}`)}
                   sx={{ 
-                    mb: 2,
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word'
+                    boxShadow: 'none',
+                    backgroundColor: 'transparent',
+                    '&:before': { display: 'none' }
                   }}
-                  dangerouslySetInnerHTML={{ __html: convertUrlsToLinks(post.content) }}
-                />
-
-                {/* Study Board用の意味表示 */}
-                {(post as any).is_study_log && (post as any).study_meaning && (
-                  <Box sx={{ mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography variant="caption" color="text.secondary">
-                        📖 意味:
-                      </Typography>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleEditMeaning(post.id, (post as any).study_meaning)}
-                        sx={{ p: 0.5 }}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                    {editingMeaning?.postId === post.id ? (
-                      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                        <TextField
-                          size="small"
-                          value={editingMeaning.meaning}
-                          onChange={(e) => setEditingMeaning({ ...editingMeaning, meaning: e.target.value })}
-                          sx={{ flex: 1 }}
-                        />
-                        <Button size="small" onClick={handleSaveMeaning}>保存</Button>
-                        <Button size="small" onClick={() => setEditingMeaning(null)}>キャンセル</Button>
-                      </Box>
-                    ) : (
-                      <Typography variant="body2" sx={{ 
-                        fontWeight: 600,
-                        color: 'primary.main',
-                        backgroundColor: isDarkMode ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.1)',
-                        padding: 1,
-                        borderRadius: 1,
-                        border: `1px solid ${isDarkMode ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.2)'}`
-                      }}>
-                        {/* 冗長な説明を削除して簡潔な意味のみを表示 */}
-                        {(post as any).study_meaning
-                          .replace(/^["「].*?["」]\s*means?\s*["「]/, '') // "Let's go" means " を削除
-                          .replace(/["「].*?["」]\s*です?。?$/, '') // " です。" を削除
-                          .replace(/^.*?を指す英単語です?。?$/, '') // "「魚」を指す英単語です。" を削除
-                          .trim() || (post as any).study_meaning
-                        }
-                      </Typography>
-                    )}
-                  </Box>
-                )}
-
-                {/* Study Board用のタグ表示（削除） */}
-                {/* タグはマイ単語帳では不要 */}
-
-                {/* Study Board用のAI返信表示 */}
-                {post.is_study_log && post.ai_response_enabled && (
-                  <Box sx={{ mb: 2 }}>
-                    <Chip 
-                      icon={<AutoAwesomeIcon />}
-                      label={`🤖 AI学習サポート有効 | 学習言語: ${post.target_language === 'English' ? '英語' : '日本語'}`}
-                      size="small"
-                      color="secondary"
-                      variant="outlined"
-                    />
-                  </Box>
-                )}
-
-                {/* 学習内容の表示（フリースペース） */}
-                {post.is_study_log && (
-                  <Box sx={{ mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography variant="caption" color="text.secondary">
-                        📝 学習内容:
-                      </Typography>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleEditLearningContent(post.id, post.content)}
-                        sx={{ p: 0.5 }}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                    {editingLearningContent?.postId === post.id ? (
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                        <TextField
-                          multiline
-                          rows={6}
-                          value={editingLearningContent.content}
-                          onChange={(e) => setEditingLearningContent({ ...editingLearningContent, content: e.target.value })}
-                          size="small"
-                          placeholder="Study BoardのAI学習サポートをコピペしたり、自分で自由に記入してください"
-                        />
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                          <Button size="small" onClick={handleSaveLearningContent}>保存</Button>
-                          <Button size="small" onClick={() => setEditingLearningContent(null)}>キャンセル</Button>
-                        </Box>
-                      </Box>
-                    ) : (
-                      <Typography variant="body2" sx={{ 
-                        whiteSpace: 'pre-line',
-                        backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
-                        padding: 2,
-                        borderRadius: 1,
-                        border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-                        minHeight: '60px'
-                      }}>
-                        {post.content || '学習内容を記入してください'}
-                      </Typography>
-                    )}
-                  </Box>
-                )}
-
-                {/* AIコメントの詳細表示 */}
-                {/* マイ単語帳ではAI学習サポートを表示しない（フリースペースとして使用） */}
-
-                <Divider sx={{ my: 2 }} />
-
-                {/* アクションボタン */}
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() => navigate(`/channel/19`)}
-                    sx={{ fontSize: '0.75rem' }}
+                >
+                  <AccordionSummary
+                    expandIcon={<ExpandMoreIcon />}
+                    sx={{ 
+                      px: 0,
+                      minHeight: '40px',
+                      '& .MuiAccordionSummary-content': { margin: 0 }
+                    }}
                   >
-                    {t('backToStudyBoard')}
-                  </Button>
-                </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      詳細
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails sx={{ px: 0, pt: 1 }}>
+                    {/* 意味表示 */}
+                    {(post as any).is_study_log && (post as any).study_meaning && (
+                      <Box sx={{ mb: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                          <Typography variant="caption" color="text.secondary">
+                            📖 意味:
+                          </Typography>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEditMeaning(post.id, (post as any).study_meaning)}
+                            sx={{ p: 0.5 }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                        {editingMeaning?.postId === post.id ? (
+                          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                            <TextField
+                              size="small"
+                              value={editingMeaning.meaning}
+                              onChange={(e) => setEditingMeaning({ ...editingMeaning, meaning: e.target.value })}
+                              sx={{ flex: 1 }}
+                            />
+                            <Button size="small" onClick={handleSaveMeaning}>保存</Button>
+                            <Button size="small" onClick={() => setEditingMeaning(null)}>キャンセル</Button>
+                          </Box>
+                        ) : (
+                          <Typography variant="body2" sx={{ 
+                            fontWeight: 600,
+                            color: 'primary.main',
+                            backgroundColor: isDarkMode ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.1)',
+                            padding: 1,
+                            borderRadius: 1,
+                            border: `1px solid ${isDarkMode ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.2)'}`
+                          }}>
+                            {/* 冗長な説明を削除して簡潔な意味のみを表示 */}
+                            {(post as any).study_meaning
+                              .replace(/^["「].*?["」]\s*means?\s*["「]/, '') // "Let's go" means " を削除
+                              .replace(/["「].*?["」]\s*です?。?$/, '') // " です。" を削除
+                              .replace(/^.*?を指す英単語です?。?$/, '') // "「魚」を指す英単語です。" を削除
+                              .trim() || (post as any).study_meaning
+                            }
+                          </Typography>
+                        )}
+                      </Box>
+                    )}
+
+                    {/* 学習内容（フリースペース） */}
+                    {post.is_study_log && (
+                      <Box sx={{ mb: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                          <Typography variant="caption" color="text.secondary">
+                            📝 学習内容:
+                          </Typography>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEditLearningContent(post.id, post.content)}
+                            sx={{ p: 0.5 }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                        {editingLearningContent?.postId === post.id ? (
+                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            <TextField
+                              multiline
+                              rows={6}
+                              value={editingLearningContent.content}
+                              onChange={(e) => setEditingLearningContent({ ...editingLearningContent, content: e.target.value })}
+                              size="small"
+                              placeholder="Study BoardのAI学習サポートをコピペしたり、自分で自由に記入してください"
+                            />
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                              <Button size="small" onClick={handleSaveLearningContent}>保存</Button>
+                              <Button size="small" onClick={() => setEditingLearningContent(null)}>キャンセル</Button>
+                            </Box>
+                          </Box>
+                        ) : (
+                          <Typography variant="body2" sx={{ 
+                            whiteSpace: 'pre-line',
+                            backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                            padding: 2,
+                            borderRadius: 1,
+                            border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                            minHeight: '60px'
+                          }}>
+                            {post.content || '学習内容を記入してください'}
+                          </Typography>
+                        )}
+                      </Box>
+                    )}
+                  </AccordionDetails>
+                </Accordion>
               </CardContent>
             </Card>
           ))}
