@@ -17,10 +17,6 @@ import {
   Paper,
   Stack,
   Tooltip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Accordion,
   AccordionSummary,
   AccordionDetails,
@@ -33,7 +29,6 @@ import {
   AutoAwesome as AutoAwesomeIcon,
   Clear as ClearIcon,
   Edit as EditIcon,
-  ContentPaste as ContentPasteIcon,
   ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -85,9 +80,6 @@ const VocabularyPage: React.FC = () => {
   const [editingWord, setEditingWord] = useState<{ postId: number; word: string } | null>(null);
   const [editingMeaning, setEditingMeaning] = useState<{ postId: number; meaning: string } | null>(null);
   const [editingLearningContent, setEditingLearningContent] = useState<{ postId: number; content: string } | null>(null);
-  const [showPasteDialog, setShowPasteDialog] = useState(false);
-  const [pastedContent, setPastedContent] = useState('');
-  const [pastedWord, setPastedWord] = useState('');
   const [expandedAccordion, setExpandedAccordion] = useState<string | false>(false);
 
   // 保存済み投稿を取得
@@ -323,52 +315,6 @@ const VocabularyPage: React.FC = () => {
     }
   };
 
-  // ペースト機能のハンドラー
-  const handlePasteFromClipboard = async () => {
-    try {
-      const clipboardText = await navigator.clipboard.readText();
-      setPastedContent(clipboardText);
-      setShowPasteDialog(true);
-    } catch (error) {
-      console.error('クリップボード読み取りエラー:', error);
-      alert('❌ クリップボードの読み取りに失敗しました');
-    }
-  };
-
-  const handleSavePastedContent = async () => {
-    if (!pastedWord.trim() || !pastedContent.trim()) {
-      alert('❌ 単語と内容を入力してください');
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/study-log/paste-vocabulary`,
-        {
-          word: pastedWord,
-          content: pastedContent
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.data.success) {
-        alert('✅ マイ単語帳に保存しました！');
-        setShowPasteDialog(false);
-        setPastedContent('');
-        setPastedWord('');
-        fetchSavedPosts(); // 投稿一覧を再取得
-      }
-    } catch (error: any) {
-      console.error('ペースト保存エラー:', error);
-      alert('❌ 保存に失敗しました');
-    }
-  };
-
   useEffect(() => {
     fetchSavedPosts();
   }, []);
@@ -430,19 +376,6 @@ const VocabularyPage: React.FC = () => {
               ),
             }}
           />
-          <Button
-            variant="contained"
-            startIcon={<ContentPasteIcon />}
-            onClick={handlePasteFromClipboard}
-            sx={{ 
-              backgroundColor: 'secondary.main',
-              '&:hover': {
-                backgroundColor: 'secondary.dark'
-              }
-            }}
-          >
-            ペースト
-          </Button>
         </Box>
       </Box>
 
@@ -660,37 +593,6 @@ const VocabularyPage: React.FC = () => {
           })}
         </Stack>
       )}
-
-      {/* ペーストダイアログ */}
-      <Dialog open={showPasteDialog} onClose={() => setShowPasteDialog(false)} maxWidth="md" fullWidth>
-        <DialogTitle>マイ単語帳にペースト</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField
-              label="単語・表現"
-              value={pastedWord}
-              onChange={(e) => setPastedWord(e.target.value)}
-              placeholder="例: fish, Let's go, こんにちは"
-              fullWidth
-            />
-            <TextField
-              label="学習内容"
-              value={pastedContent}
-              onChange={(e) => setPastedContent(e.target.value)}
-              multiline
-              rows={8}
-              fullWidth
-              placeholder="学習した内容やメモをここに入力してください"
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowPasteDialog(false)}>キャンセル</Button>
-          <Button onClick={handleSavePastedContent} variant="contained" color="primary">
-            保存
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Container>
   );
 };
