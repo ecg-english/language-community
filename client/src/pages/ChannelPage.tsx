@@ -1586,9 +1586,8 @@ const ChannelPage: React.FC = () => {
 
                     {/* Study Board用のマイ単語帳保存ボタン */}
                     {(post as any).is_study_log && (
-                      <Button
+                      <IconButton
                         size="small"
-                        startIcon={<BookmarkAddIcon />}
                         onClick={() => handleSaveToVocabulary(post.id)}
                         sx={{ 
                           color: 'secondary.main',
@@ -1598,8 +1597,8 @@ const ChannelPage: React.FC = () => {
                           }
                         }}
                       >
-                        マイ単語帳に保存
-                      </Button>
+                        <BookmarkAddIcon />
+                      </IconButton>
                     )}
                   </Box>
 
@@ -1657,39 +1656,46 @@ const ChannelPage: React.FC = () => {
 
                       {/* コメント一覧 */}
                       {comments[post.id]?.map((comment) => (
-                        <Paper key={comment.id} sx={{ p: 2, mb: 1, bgcolor: 'background.paper' }}>
+                        <Paper key={comment.id} sx={{ 
+                          p: { xs: 1, sm: 2 }, 
+                          mb: 1, 
+                          bgcolor: 'background.paper',
+                          '& .MuiStack-root': {
+                            gap: { xs: 1, sm: 2 }
+                          }
+                        }}>
                           <Stack direction="row" spacing={2} alignItems="flex-start">
                             <Avatar 
-                              sx={{ width: 32, height: 32 }}
+                              sx={{ width: { xs: 28, sm: 32 }, height: { xs: 28, sm: 32 } }}
                               src={comment.avatar_url}
                             >
                               {comment.username.charAt(0).toUpperCase()}
                             </Avatar>
-                            <Box sx={{ flexGrow: 1 }}>
-                              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
-                                <Typography variant="subtitle2" fontWeight={600}>
+                            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5, flexWrap: 'wrap' }}>
+                                <Typography variant="subtitle2" fontWeight={600} sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
                                   {comment.username}
                                 </Typography>
                                 <Chip
                                   label={comment.role}
                                   size="small"
-                                  sx={{ fontSize: '0.7rem' }}
+                                  sx={{ fontSize: { xs: '0.6rem', sm: '0.7rem' } }}
                                 />
-                                <Typography variant="caption" color="text.secondary">
+                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>
                                   {formatDate(comment.created_at)}
                                 </Typography>
                               </Stack>
                               {comment.username === 'AI学習サポート' ? (
                                 <Box sx={{ 
-                                  p: 2, 
+                                  p: { xs: 1, sm: 2 }, 
                                   backgroundColor: isDarkMode ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.05)',
                                   borderRadius: 2,
                                   border: `1px solid ${isDarkMode ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.2)'}`
                                 }}>
                                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
                                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                      <AutoAwesomeIcon sx={{ color: 'secondary.main', mr: 1 }} />
-                                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'secondary.main' }}>
+                                      <AutoAwesomeIcon sx={{ color: 'secondary.main', mr: 1, fontSize: { xs: '1rem', sm: '1.25rem' } }} />
+                                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'secondary.main', fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
                                         🤖 AI学習サポート
                                       </Typography>
                                     </Box>
@@ -1698,6 +1704,7 @@ const ChannelPage: React.FC = () => {
                                       onClick={() => handleCopyAIContent(comment.content)}
                                       sx={{ 
                                         color: 'primary.main',
+                                        p: { xs: 0.5, sm: 1 },
                                         '&:hover': {
                                           backgroundColor: 'rgba(99, 102, 241, 0.1)'
                                         }
@@ -1711,7 +1718,9 @@ const ChannelPage: React.FC = () => {
                                     variant="body2"
                                     sx={{
                                       whiteSpace: 'pre-line',
-                                      wordBreak: 'break-word'
+                                      wordBreak: 'break-word',
+                                      fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                                      lineHeight: { xs: 1.4, sm: 1.5 }
                                     }}
                                   >
                                     {comment.content}
@@ -1722,7 +1731,9 @@ const ChannelPage: React.FC = () => {
                                   variant="body2"
                                   sx={{
                                     whiteSpace: 'pre-wrap',
-                                    wordBreak: 'break-word'
+                                    wordBreak: 'break-word',
+                                    fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                                    lineHeight: { xs: 1.4, sm: 1.5 }
                                   }}
                                 >
                                   {convertUrlsToLinks(comment.content)}
@@ -1734,6 +1745,7 @@ const ChannelPage: React.FC = () => {
                                 onClick={() => handleDeleteComment(comment.id)}
                                 size="small"
                                 color="error"
+                                sx={{ p: { xs: 0.5, sm: 1 } }}
                               >
                                 <DeleteIcon fontSize="small" />
                               </IconButton>
