@@ -97,7 +97,7 @@ const VocabularyPage: React.FC = () => {
       const token = localStorage.getItem('token');
       
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/study-log/saved-posts`,
+        `${process.env.REACT_APP_API_URL}/api/study-log/saved-posts-v2`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

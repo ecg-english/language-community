@@ -797,13 +797,13 @@ router.put('/posts/:postId/vocabulary-learning-content', authenticateToken, asyn
   }
 });
 
-// 保存済み投稿取得時にマイ単語帳専用データも取得
-router.get('/saved-posts', authenticateToken, async (req, res) => {
-  console.log('🔍 SAVED POSTS API CALLED - START');
-  console.log('🔍 SAVED POSTS API CALLED - START');
-  console.log('🔍 SAVED POSTS API CALLED - START');
+// 保存済み投稿取得時にマイ単語帳専用データも取得 (新しいエンドポイント)
+router.get('/saved-posts-v2', authenticateToken, async (req, res) => {
+  console.log('🔍 SAVED POSTS V2 API CALLED - START');
+  console.log('🔍 SAVED POSTS V2 API CALLED - START');
+  console.log('🔍 SAVED POSTS V2 API CALLED - START');
   try {
-    console.log('=== SAVED POSTS API CALLED ===');
+    console.log('=== SAVED POSTS V2 API CALLED ===');
     const userId = req.user.userId || req.user.id;
     console.log('Fetching saved posts for user:', userId);
 
@@ -876,7 +876,7 @@ router.get('/saved-posts', authenticateToken, async (req, res) => {
     
     res.json({ success: true, savedPosts: postsWithVocabularyData });
   } catch (error) {
-    console.error('Fetch saved posts error:', error);
+    console.error('Fetch saved posts V2 error:', error);
     res.status(500).json({ 
       success: false, 
       message: '保存済み投稿の取得に失敗しました: ' + error.message 
