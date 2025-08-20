@@ -476,6 +476,64 @@ const initializeDatabase = () => {
       console.log('Data migration error (this is usually okay):', error.message);
     }
 
+    // マイ単語帳専用テーブルの作成
+    try {
+      db.prepare(`
+        CREATE TABLE IF NOT EXISTS vocabulary_words (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          post_id INTEGER NOT NULL,
+          user_id INTEGER NOT NULL,
+          word TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+          UNIQUE(post_id, user_id)
+        )
+      `).run();
+      console.log('Created vocabulary_words table');
+    } catch (error) {
+      console.log('vocabulary_words table creation error:', error.message);
+    }
+
+    try {
+      db.prepare(`
+        CREATE TABLE IF NOT EXISTS vocabulary_meanings (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          post_id INTEGER NOT NULL,
+          user_id INTEGER NOT NULL,
+          meaning TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+          UNIQUE(post_id, user_id)
+        )
+      `).run();
+      console.log('Created vocabulary_meanings table');
+    } catch (error) {
+      console.log('vocabulary_meanings table creation error:', error.message);
+    }
+
+    try {
+      db.prepare(`
+        CREATE TABLE IF NOT EXISTS vocabulary_learning_contents (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          post_id INTEGER NOT NULL,
+          user_id INTEGER NOT NULL,
+          content TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+          UNIQUE(post_id, user_id)
+        )
+      `).run();
+      console.log('Created vocabulary_learning_contents table');
+    } catch (error) {
+      console.log('vocabulary_learning_contents table creation error:', error.message);
+    }
+
     // 注意: 新規ユーザーのデフォルトロールを「ビジター」に変更
     // 既存ユーザーのロールは変更されません
     console.log('New users will be assigned "ビジター" role by default');

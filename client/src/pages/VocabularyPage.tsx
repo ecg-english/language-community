@@ -55,6 +55,10 @@ interface SavedPost {
   target_language?: string;
   ai_response_enabled?: boolean;
   comments?: Comment[];
+  // マイ単語帳専用フィールド
+  vocabulary_word?: string;
+  vocabulary_meaning?: string;
+  vocabulary_learning_content?: string;
 }
 
 interface Comment {
@@ -64,7 +68,7 @@ interface Comment {
   username: string;
   created_at: string;
   avatar_url?: string;
-  post_id: number; // Added post_id to Comment interface
+  post_id: number;
 }
 
 const VocabularyPage: React.FC = () => {
@@ -78,14 +82,12 @@ const VocabularyPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredPosts, setFilteredPosts] = useState<SavedPost[]>([]);
+  const [editingWord, setEditingWord] = useState<{ postId: number; word: string } | null>(null);
   const [editingMeaning, setEditingMeaning] = useState<{ postId: number; meaning: string } | null>(null);
-  const [editingRelatedExpressions, setEditingRelatedExpressions] = useState<{ postId: number; expressions: string[] } | null>(null);
-  const [editingExpressionAnalysis, setEditingExpressionAnalysis] = useState<{ postId: number; analysis: string } | null>(null);
-  const [editingExamples, setEditingExamples] = useState<{ postId: number; examples: string } | null>(null);
+  const [editingLearningContent, setEditingLearningContent] = useState<{ postId: number; content: string } | null>(null);
   const [showPasteDialog, setShowPasteDialog] = useState(false);
   const [pastedContent, setPastedContent] = useState('');
   const [pastedWord, setPastedWord] = useState('');
-  const [editingLearningContent, setEditingLearningContent] = useState<{ postId: number; content: string } | null>(null);
   const [expandedAccordion, setExpandedAccordion] = useState<string | false>(false);
 
   // 保存済み投稿を取得
@@ -181,13 +183,19 @@ const VocabularyPage: React.FC = () => {
       return;
     }
 
-    const filtered = savedPosts.filter(post => 
-      post.content.toLowerCase().includes(term.toLowerCase()) ||
-      post.username.toLowerCase().includes(term.toLowerCase()) ||
-      (post.study_tags && JSON.parse(post.study_tags).some((tag: string) => 
-        tag.toLowerCase().includes(term.toLowerCase())
-      ))
-    );
+    const filtered = savedPosts.filter(post => {
+      const word = post.vocabulary_word || post.content;
+      const meaning = post.vocabulary_meaning || '';
+      const learningContent = post.vocabulary_learning_content || post.content;
+      
+      return word.toLowerCase().includes(term.toLowerCase()) ||
+             meaning.toLowerCase().includes(term.toLowerCase()) ||
+             learningContent.toLowerCase().includes(term.toLowerCase()) ||
+             post.username.toLowerCase().includes(term.toLowerCase()) ||
+             (post.study_tags && JSON.parse(post.study_tags).some((tag: string) => 
+               tag.toLowerCase().includes(term.toLowerCase())
+             ));
+    });
     
     setFilteredPosts(filtered);
   };
@@ -204,73 +212,44 @@ const VocabularyPage: React.FC = () => {
     });
   };
 
-  // URLをリンクに変換
-  const convertUrlsToLinks = (text: string) => {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    return text.replace(urlRegex, (url) => {
-      return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #1976d2; text-decoration: underline;">${url}</a>`;
-    });
+  // 単語・表現の編集
+  const handleEditWord = (postId: number, currentWord: string) => {
+    setEditingWord({ postId, word: currentWord });
   };
 
-  // AIコメントを学習用に解析・整理
-  const parseAIComment = (commentContent: string) => {
-    const sections = {
-      encouragement: '',
-      expressionAnalysis: '',
-      examples: '',
-      relatedExpressions: [] as string[]
-    };
-
-    const lines = commentContent.split('\n');
-    let currentSection = '';
-
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-      
-      if (trimmedLine.includes('🎉 **励ましの言葉**') || trimmedLine.includes('🎉 **Encouragement**')) {
-        currentSection = 'encouragement';
-      } else if (trimmedLine.includes('📝 **表現の解説**') || trimmedLine.includes('📝 **Expression Analysis**')) {
-        currentSection = 'expressionAnalysis';
-      } else if (trimmedLine.includes('💡 **例文**') || trimmedLine.includes('💡 **Example Sentences**')) {
-        currentSection = 'examples';
-      } else if (trimmedLine.includes('📚 **関連表現**') || trimmedLine.includes('📚 **Related Expressions**')) {
-        currentSection = 'relatedExpressions';
-      } else if (trimmedLine && currentSection === 'encouragement') {
-        sections.encouragement += (sections.encouragement ? '\n' : '') + trimmedLine;
-      } else if (trimmedLine && currentSection === 'expressionAnalysis') {
-        sections.expressionAnalysis += (sections.expressionAnalysis ? '\n' : '') + trimmedLine;
-      } else if (trimmedLine && currentSection === 'examples') {
-        sections.examples += (sections.examples ? '\n' : '') + trimmedLine;
-      } else if (trimmedLine && currentSection === 'relatedExpressions') {
-        // 関連表現の抽出を改善
-        if (trimmedLine.startsWith('-') || trimmedLine.startsWith('•') || trimmedLine.startsWith('*')) {
-          // 箇条書き形式の関連表現を抽出
-          const expression = trimmedLine
-            .replace(/^[-•*]\s*/, '') // 箇条書き記号を削除
-            .replace(/\*\*(.*?)\*\*/g, '$1') // マークダウンの太字を削除
-            .replace(/\(.*?\)/g, '') // 括弧内の説明を削除
-            .trim();
-          
-          if (expression && !expression.includes('**') && !expression.includes('関連表現') && !expression.includes('Related Expressions')) {
-            sections.relatedExpressions.push(expression);
-            console.log('Found related expression:', expression);
-          }
-        } else if (!trimmedLine.includes('**') && !trimmedLine.includes('関連表現') && !trimmedLine.includes('Related Expressions') && !trimmedLine.includes('これらの表現') && !trimmedLine.includes('These expressions') && trimmedLine.length > 0) {
-          // 通常のテキスト形式の関連表現を抽出（説明文を除外）
-          const expression = trimmedLine
-            .replace(/\*\*(.*?)\*\*/g, '$1') // マークダウンの太字を削除
-            .replace(/\(.*?\)/g, '') // 括弧内の説明を削除
-            .trim();
-          
-          if (expression && expression.length > 0 && !expression.includes('使い分け') && !expression.includes('使い方')) {
-            sections.relatedExpressions.push(expression);
-            console.log('Found related expression (text):', expression);
-          }
+  const handleSaveWord = async () => {
+    if (!editingWord) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/study-log/posts/${editingWord.postId}/vocabulary-word`,
+        { word: editingWord.word },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      }
+      );
+      
+      // ローカル状態を更新（元の投稿には影響しない）
+      setSavedPosts(prev => prev.map(post => 
+        post.id === editingWord.postId 
+          ? { ...post, vocabulary_word: editingWord.word }
+          : post
+      ));
+      setFilteredPosts(prev => prev.map(post => 
+        post.id === editingWord.postId 
+          ? { ...post, vocabulary_word: editingWord.word }
+          : post
+      ));
+      
+      setEditingWord(null);
+      alert('✅ 単語・表現を更新しました');
+    } catch (error: any) {
+      console.error('単語・表現更新エラー:', error);
+      alert('❌ 単語・表現の更新に失敗しました');
     }
-
-    return sections;
   };
 
   // 意味の編集
@@ -284,7 +263,7 @@ const VocabularyPage: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `${process.env.REACT_APP_API_URL}/api/study-log/posts/${editingMeaning.postId}/meaning`,
+        `${process.env.REACT_APP_API_URL}/api/study-log/posts/${editingMeaning.postId}/vocabulary-meaning`,
         { meaning: editingMeaning.meaning },
         {
           headers: {
@@ -293,15 +272,15 @@ const VocabularyPage: React.FC = () => {
         }
       );
       
-      // ローカル状態を更新
+      // ローカル状態を更新（元の投稿には影響しない）
       setSavedPosts(prev => prev.map(post => 
         post.id === editingMeaning.postId 
-          ? { ...post, study_meaning: editingMeaning.meaning }
+          ? { ...post, vocabulary_meaning: editingMeaning.meaning }
           : post
       ));
       setFilteredPosts(prev => prev.map(post => 
         post.id === editingMeaning.postId 
-          ? { ...post, study_meaning: editingMeaning.meaning }
+          ? { ...post, vocabulary_meaning: editingMeaning.meaning }
           : post
       ));
       
@@ -310,186 +289,6 @@ const VocabularyPage: React.FC = () => {
     } catch (error: any) {
       console.error('意味更新エラー:', error);
       alert('❌ 意味の更新に失敗しました');
-    }
-  };
-
-  // 関連表現の編集
-  const handleEditRelatedExpressions = (postId: number, currentExpressions: string[]) => {
-    setEditingRelatedExpressions({ postId, expressions: currentExpressions });
-  };
-
-  const handleSaveRelatedExpressions = async () => {
-    if (!editingRelatedExpressions) return;
-    
-    try {
-      const token = localStorage.getItem('token');
-      await axios.put(
-        `${process.env.REACT_APP_API_URL}/api/study-log/posts/${editingRelatedExpressions.postId}/related-expressions`,
-        { expressions: editingRelatedExpressions.expressions },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      
-      // ローカル状態を更新（AIコメントも更新）
-      setSavedPosts(prev => prev.map(post => 
-        post.id === editingRelatedExpressions.postId 
-          ? {
-              ...post,
-              comments: post.comments?.map(comment => 
-                comment.username === 'AI学習サポート' 
-                  ? { 
-                      ...comment, 
-                      content: comment.content.replace(
-                        /📚 \*\*関連表現\*\*\n([\s\S]*?)(?=\n\n|$)/,
-                        `📚 **関連表現**\n${editingRelatedExpressions.expressions.map(exp => `- ${exp}`).join('\n')}\n`
-                      )
-                    }
-                  : comment
-              )
-            }
-          : post
-      ));
-      setFilteredPosts(prev => prev.map(post => 
-        post.id === editingRelatedExpressions.postId 
-          ? {
-              ...post,
-              comments: post.comments?.map(comment => 
-                comment.username === 'AI学習サポート' 
-                  ? { 
-                      ...comment, 
-                      content: comment.content.replace(
-                        /📚 \*\*関連表現\*\*\n([\s\S]*?)(?=\n\n|$)/,
-                        `📚 **関連表現**\n${editingRelatedExpressions.expressions.map(exp => `- ${exp}`).join('\n')}\n`
-                      )
-                    }
-                  : comment
-              )
-            }
-          : post
-      ));
-      
-      setEditingRelatedExpressions(null);
-      
-      // 強制的に再レンダリング
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
-      
-      alert('✅ 関連表現を更新しました');
-    } catch (error: any) {
-      console.error('関連表現更新エラー:', error);
-      alert('❌ 関連表現の更新に失敗しました');
-    }
-  };
-
-  // 表現の解説の編集
-  const handleEditExpressionAnalysis = (postId: number, currentAnalysis: string) => {
-    setEditingExpressionAnalysis({ postId, analysis: currentAnalysis });
-  };
-
-  const handleSaveExpressionAnalysis = async () => {
-    if (!editingExpressionAnalysis) return;
-    
-    try {
-      const token = localStorage.getItem('token');
-      await axios.put(
-        `${process.env.REACT_APP_API_URL}/api/study-log/posts/${editingExpressionAnalysis.postId}/expression-analysis`,
-        { analysis: editingExpressionAnalysis.analysis },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      
-      // ローカル状態を更新（AIコメントを更新）
-      setSavedPosts(prev => prev.map(post => 
-        post.id === editingExpressionAnalysis.postId 
-          ? {
-              ...post,
-              comments: post.comments?.map(comment => 
-                comment.username === 'AI学習サポート' 
-                  ? { ...comment, content: comment.content.replace(/📝 \*\*表現の解説\*\*\n([\s\S]*?)(?=💡 \*\*例文\*\*|📚 \*\*関連表現\*\*|$)/, `📝 **表現の解説**\n${editingExpressionAnalysis.analysis}\n`) }
-                  : comment
-              )
-            }
-          : post
-      ));
-      setFilteredPosts(prev => prev.map(post => 
-        post.id === editingExpressionAnalysis.postId 
-          ? {
-              ...post,
-              comments: post.comments?.map(comment => 
-                comment.username === 'AI学習サポート' 
-                  ? { ...comment, content: comment.content.replace(/📝 \*\*表現の解説\*\*\n([\s\S]*?)(?=💡 \*\*例文\*\*|📚 \*\*関連表現\*\*|$)/, `📝 **表現の解説**\n${editingExpressionAnalysis.analysis}\n`) }
-                  : comment
-              )
-            }
-          : post
-      ));
-      
-      setEditingExpressionAnalysis(null);
-      alert('✅ 表現の解説を更新しました');
-    } catch (error: any) {
-      console.error('表現の解説更新エラー:', error);
-      alert('❌ 表現の解説の更新に失敗しました');
-    }
-  };
-
-  // 例文の編集
-  const handleEditExamples = (postId: number, currentExamples: string) => {
-    setEditingExamples({ postId, examples: currentExamples });
-  };
-
-  const handleSaveExamples = async () => {
-    if (!editingExamples) return;
-    
-    try {
-      const token = localStorage.getItem('token');
-      await axios.put(
-        `${process.env.REACT_APP_API_URL}/api/study-log/posts/${editingExamples.postId}/examples`,
-        { examples: editingExamples.examples },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      
-      // ローカル状態を更新（AIコメントを更新）
-      setSavedPosts(prev => prev.map(post => 
-        post.id === editingExamples.postId 
-          ? {
-              ...post,
-              comments: post.comments?.map(comment => 
-                comment.username === 'AI学習サポート' 
-                  ? { ...comment, content: comment.content.replace(/💡 \*\*例文\*\*\n([\s\S]*?)(?=📚 \*\*関連表現\*\*|$)/, `💡 **例文**\n${editingExamples.examples}\n`) }
-                  : comment
-              )
-            }
-          : post
-      ));
-      setFilteredPosts(prev => prev.map(post => 
-        post.id === editingExamples.postId 
-          ? {
-              ...post,
-              comments: post.comments?.map(comment => 
-                comment.username === 'AI学習サポート' 
-                  ? { ...comment, content: comment.content.replace(/💡 \*\*例文\*\*\n([\s\S]*?)(?=📚 \*\*関連表現\*\*|$)/, `💡 **例文**\n${editingExamples.examples}\n`) }
-                  : comment
-              )
-            }
-          : post
-      ));
-      
-      setEditingExamples(null);
-      alert('✅ 例文を更新しました');
-    } catch (error: any) {
-      console.error('例文更新エラー:', error);
-      alert('❌ 例文の更新に失敗しました');
     }
   };
 
@@ -509,7 +308,7 @@ const VocabularyPage: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `${process.env.REACT_APP_API_URL}/api/study-log/posts/${editingLearningContent.postId}/learning-content`,
+        `${process.env.REACT_APP_API_URL}/api/study-log/posts/${editingLearningContent.postId}/vocabulary-learning-content`,
         { content: editingLearningContent.content },
         {
           headers: {
@@ -518,15 +317,15 @@ const VocabularyPage: React.FC = () => {
         }
       );
       
-      // ローカル状態を更新
+      // ローカル状態を更新（元の投稿には影響しない）
       setSavedPosts(prev => prev.map(post => 
         post.id === editingLearningContent.postId 
-          ? { ...post, content: editingLearningContent.content }
+          ? { ...post, vocabulary_learning_content: editingLearningContent.content }
           : post
       ));
       setFilteredPosts(prev => prev.map(post => 
         post.id === editingLearningContent.postId 
-          ? { ...post, content: editingLearningContent.content }
+          ? { ...post, vocabulary_learning_content: editingLearningContent.content }
           : post
       ));
       
@@ -584,178 +383,6 @@ const VocabularyPage: React.FC = () => {
     }
   };
 
-  // AIコメント表示コンポーネント
-  const AILearningSection = ({ comment }: { comment: Comment }) => {
-    const aiContent = parseAIComment(comment.content);
-    
-    return (
-      <Box sx={{ 
-        mt: 2, 
-        p: 2, 
-        backgroundColor: isDarkMode ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.05)',
-        borderRadius: 2,
-        border: `1px solid ${isDarkMode ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.2)'}`
-      }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <AutoAwesomeIcon sx={{ mr: 1, color: 'secondary.main' }} />
-          <Typography variant="subtitle2" fontWeight={600} color="secondary.main">
-            AI学習サポート
-          </Typography>
-        </Box>
-
-        {/* 励ましの言葉 */}
-        {aiContent.encouragement && (
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-              🎉 励ましの言葉
-            </Typography>
-            <Typography variant="body2" sx={{ mt: 0.5 }}>
-              {aiContent.encouragement}
-            </Typography>
-          </Box>
-        )}
-
-        {/* 表現の解説 */}
-        {aiContent.expressionAnalysis && (
-          <Box sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-                📝 表現の解説
-              </Typography>
-              <IconButton
-                size="small"
-                onClick={() => handleEditExpressionAnalysis(comment.post_id, aiContent.expressionAnalysis)}
-                sx={{ p: 0.5 }}
-              >
-                <EditIcon fontSize="small" />
-              </IconButton>
-            </Box>
-            {editingExpressionAnalysis?.postId === comment.post_id ? (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <TextField
-                  multiline
-                  rows={3}
-                  value={editingExpressionAnalysis.analysis}
-                  onChange={(e) => setEditingExpressionAnalysis({ ...editingExpressionAnalysis, analysis: e.target.value })}
-                  size="small"
-                />
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Button size="small" onClick={handleSaveExpressionAnalysis}>保存</Button>
-                  <Button size="small" onClick={() => setEditingExpressionAnalysis(null)}>キャンセル</Button>
-                </Box>
-              </Box>
-            ) : (
-              <Typography variant="body2" sx={{ mt: 0.5 }}>
-                {aiContent.expressionAnalysis}
-              </Typography>
-            )}
-          </Box>
-        )}
-
-        {/* 例文 */}
-        {aiContent.examples && aiContent.examples.trim() && (
-          <Box sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-                💡 例文
-              </Typography>
-              <IconButton
-                size="small"
-                onClick={() => handleEditExamples(comment.post_id, Array.isArray(aiContent.examples) ? aiContent.examples.join('\n') : aiContent.examples)}
-                sx={{ p: 0.5 }}
-              >
-                <EditIcon fontSize="small" />
-              </IconButton>
-            </Box>
-            {editingExamples?.postId === comment.post_id ? (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <TextField
-                  multiline
-                  rows={4}
-                  value={editingExamples.examples}
-                  onChange={(e) => setEditingExamples({ ...editingExamples, examples: e.target.value })}
-                  size="small"
-                />
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Button size="small" onClick={handleSaveExamples}>保存</Button>
-                  <Button size="small" onClick={() => setEditingExamples(null)}>キャンセル</Button>
-                </Box>
-              </Box>
-            ) : (
-              <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: 'pre-line' }}>
-                {aiContent.examples}
-              </Typography>
-            )}
-          </Box>
-        )}
-
-        {/* 関連表現 */}
-        {aiContent.relatedExpressions.length > 0 && (
-          <Box sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-                📚 関連表現
-              </Typography>
-              <IconButton
-                size="small"
-                onClick={() => handleEditRelatedExpressions(comment.post_id, aiContent.relatedExpressions)}
-                sx={{ p: 0.5 }}
-              >
-                <EditIcon fontSize="small" />
-              </IconButton>
-            </Box>
-            {editingRelatedExpressions?.postId === comment.post_id ? (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <TextField
-                  multiline
-                  rows={3}
-                  value={editingRelatedExpressions.expressions.join('\n')}
-                  onChange={(e) => setEditingRelatedExpressions({ 
-                    ...editingRelatedExpressions, 
-                    expressions: e.target.value.split('\n').filter(line => line.trim()) 
-                  })}
-                  size="small"
-                  placeholder="1行に1つの関連表現を入力"
-                />
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Button size="small" onClick={handleSaveRelatedExpressions}>保存</Button>
-                  <Button size="small" onClick={() => setEditingRelatedExpressions(null)}>キャンセル</Button>
-                </Box>
-              </Box>
-            ) : (
-              <Box sx={{ mt: 0.5 }}>
-                {aiContent.relatedExpressions.map((expression, index) => {
-                  const parts = expression.split(':');
-                  const keyword = parts[0]?.trim();
-                  const description = parts[1]?.trim();
-                  return (
-                    <Box key={index} sx={{
-                      mb: 1, p: 1,
-                      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
-                      borderRadius: 1,
-                      borderLeft: '3px solid #4caf50'
-                    }}>
-                      {keyword && (
-                        <Typography variant="body2" sx={{ fontWeight: 600, color: 'primary.main', mb: description ? 0.5 : 0 }}>
-                          {keyword}
-                        </Typography>
-                      )}
-                      {description && (
-                        <Typography variant="body2" sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
-                          {description}
-                        </Typography>
-                      )}
-                    </Box>
-                  );
-                })}
-              </Box>
-            )}
-          </Box>
-        )}
-      </Box>
-    );
-  };
-
   useEffect(() => {
     fetchSavedPosts();
   }, []);
@@ -806,7 +433,7 @@ const VocabularyPage: React.FC = () => {
           <TextField
             placeholder={t('searchPlaceholder')}
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => handleSearch(e.target.value)}
             size="small"
             sx={{ flex: 1 }}
             InputProps={{
@@ -856,66 +483,95 @@ const VocabularyPage: React.FC = () => {
         </Paper>
       ) : (
         <Stack spacing={2}>
-          {filteredPosts.map((post) => (
-            <Card key={post.id} sx={{ 
-              border: isDarkMode ? '1px solid #333' : '1px solid #e0e0e0',
-              '&:hover': {
-                boxShadow: isDarkMode ? '0 4px 20px rgba(255,255,255,0.1)' : '0 4px 20px rgba(0,0,0,0.1)'
-              }
-            }}>
-              <CardContent sx={{ p: 2 }}>
-                {/* 単語・表現のヘッダー */}
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
-                    {post.content}
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="caption" color="text.secondary">
-                      {formatDate(post.saved_at)}
-                    </Typography>
-                    <Tooltip title={t('removeFromVocabulary')}>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => handleRemoveFromVocabulary(post.id)}
-                        sx={{
-                          backgroundColor: isDarkMode ? 'grey.800' : 'grey.100',
-                          '&:hover': {
-                            backgroundColor: isDarkMode ? 'grey.700' : 'grey.200'
-                          }
-                        }}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
+          {filteredPosts.map((post) => {
+            // マイ単語帳専用の値を取得（なければ元の値をフォールバック）
+            const displayWord = post.vocabulary_word || post.content;
+            const displayMeaning = post.vocabulary_meaning || '';
+            const displayLearningContent = post.vocabulary_learning_content || post.content;
+            
+            return (
+              <Card key={post.id} sx={{ 
+                border: isDarkMode ? '1px solid #333' : '1px solid #e0e0e0',
+                '&:hover': {
+                  boxShadow: isDarkMode ? '0 4px 20px rgba(255,255,255,0.1)' : '0 4px 20px rgba(0,0,0,0.1)'
+                }
+              }}>
+                <CardContent sx={{ p: 2 }}>
+                  {/* 単語・表現のヘッダー */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
+                      {editingWord?.postId === post.id ? (
+                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flex: 1 }}>
+                          <TextField
+                            size="small"
+                            value={editingWord.word}
+                            onChange={(e) => setEditingWord({ ...editingWord, word: e.target.value })}
+                            sx={{ flex: 1 }}
+                          />
+                          <Button size="small" onClick={handleSaveWord}>保存</Button>
+                          <Button size="small" onClick={() => setEditingWord(null)}>キャンセル</Button>
+                        </Box>
+                      ) : (
+                        <>
+                          <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                            {displayWord}
+                          </Typography>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEditWord(post.id, displayWord)}
+                            sx={{ p: 0.5 }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </>
+                      )}
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        {formatDate(post.saved_at)}
+                      </Typography>
+                      <Tooltip title={t('removeFromVocabulary')}>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleRemoveFromVocabulary(post.id)}
+                          sx={{
+                            backgroundColor: isDarkMode ? 'grey.800' : 'grey.100',
+                            '&:hover': {
+                              backgroundColor: isDarkMode ? 'grey.700' : 'grey.200'
+                            }
+                          }}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
                   </Box>
-                </Box>
 
-                {/* アコーディオンで詳細表示 */}
-                <Accordion 
-                  expanded={expandedAccordion === `panel-${post.id}`}
-                  onChange={handleAccordionChange(`panel-${post.id}`)}
-                  sx={{ 
-                    boxShadow: 'none',
-                    backgroundColor: 'transparent',
-                    '&:before': { display: 'none' }
-                  }}
-                >
-                  <AccordionSummary
-                    expandIcon={<ExpandMoreIcon />}
+                  {/* アコーディオンで詳細表示 */}
+                  <Accordion 
+                    expanded={expandedAccordion === `panel-${post.id}`}
+                    onChange={handleAccordionChange(`panel-${post.id}`)}
                     sx={{ 
-                      px: 0,
-                      minHeight: '40px',
-                      '& .MuiAccordionSummary-content': { margin: 0 }
+                      boxShadow: 'none',
+                      backgroundColor: 'transparent',
+                      '&:before': { display: 'none' }
                     }}
                   >
-                    <Typography variant="body2" color="text.secondary">
-                      詳細
-                    </Typography>
-                  </AccordionSummary>
-                  <AccordionDetails sx={{ px: 0, pt: 1 }}>
-                    {/* 意味表示 */}
-                    {(post as any).is_study_log && (post as any).study_meaning && (
+                    <AccordionSummary
+                      expandIcon={<ExpandMoreIcon />}
+                      sx={{ 
+                        px: 0,
+                        minHeight: '40px',
+                        '& .MuiAccordionSummary-content': { margin: 0 }
+                      }}
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        詳細
+                      </Typography>
+                    </AccordionSummary>
+                    <AccordionDetails sx={{ px: 0, pt: 1 }}>
+                      {/* 意味表示 */}
                       <Box sx={{ mb: 2 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
                           <Typography variant="caption" color="text.secondary">
@@ -923,7 +579,7 @@ const VocabularyPage: React.FC = () => {
                           </Typography>
                           <IconButton
                             size="small"
-                            onClick={() => handleEditMeaning(post.id, (post as any).study_meaning)}
+                            onClick={() => handleEditMeaning(post.id, displayMeaning)}
                             sx={{ p: 0.5 }}
                           >
                             <EditIcon fontSize="small" />
@@ -949,20 +605,12 @@ const VocabularyPage: React.FC = () => {
                             borderRadius: 1,
                             border: `1px solid ${isDarkMode ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.2)'}`
                           }}>
-                            {/* 冗長な説明を削除して簡潔な意味のみを表示 */}
-                            {(post as any).study_meaning
-                              .replace(/^["「].*?["」]\s*means?\s*["「]/, '') // "Let's go" means " を削除
-                              .replace(/["「].*?["」]\s*です?。?$/, '') // " です。" を削除
-                              .replace(/^.*?を指す英単語です?。?$/, '') // "「魚」を指す英単語です。" を削除
-                              .trim() || (post as any).study_meaning
-                            }
+                            {displayMeaning || '意味を記入してください'}
                           </Typography>
                         )}
                       </Box>
-                    )}
 
-                    {/* 学習内容（フリースペース） */}
-                    {post.is_study_log && (
+                      {/* 学習内容（フリースペース） */}
                       <Box sx={{ mb: 2 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
                           <Typography variant="caption" color="text.secondary">
@@ -970,7 +618,7 @@ const VocabularyPage: React.FC = () => {
                           </Typography>
                           <IconButton
                             size="small"
-                            onClick={() => handleEditLearningContent(post.id, post.content)}
+                            onClick={() => handleEditLearningContent(post.id, displayLearningContent)}
                             sx={{ p: 0.5 }}
                           >
                             <EditIcon fontSize="small" />
@@ -1000,16 +648,16 @@ const VocabularyPage: React.FC = () => {
                             border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
                             minHeight: '60px'
                           }}>
-                            {post.content || '学習内容を記入してください'}
+                            {displayLearningContent || '学習内容を記入してください'}
                           </Typography>
                         )}
                       </Box>
-                    )}
-                  </AccordionDetails>
-                </Accordion>
-              </CardContent>
-            </Card>
-          ))}
+                    </AccordionDetails>
+                  </Accordion>
+                </CardContent>
+              </Card>
+            );
+          })}
         </Stack>
       )}
 

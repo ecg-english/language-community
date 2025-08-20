@@ -652,4 +652,133 @@ router.put('/posts/:postId/learning-content', authenticateToken, async (req, res
   }
 });
 
+// マイ単語帳専用APIエンドポイント
+
+// 単語・表現を更新（マイ単語帳専用）
+router.put('/posts/:postId/vocabulary-word', authenticateToken, async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const { word } = req.body;
+    const userId = req.user.userId || req.user.id;
+
+    console.log('Updating vocabulary word for post:', postId);
+    console.log('New word:', word);
+    console.log('User ID:', userId);
+
+    // vocabulary_wordsテーブルに保存（元の投稿には影響しない）
+    const existing = db.prepare('SELECT * FROM vocabulary_words WHERE post_id = ? AND user_id = ?').get(postId, userId);
+    
+    if (existing) {
+      db.prepare('UPDATE vocabulary_words SET word = ?, updated_at = datetime("now") WHERE post_id = ? AND user_id = ?').run(word, postId, userId);
+    } else {
+      db.prepare('INSERT INTO vocabulary_words (post_id, user_id, word, created_at, updated_at) VALUES (?, ?, ?, datetime("now"), datetime("now"))').run(postId, userId, word);
+    }
+    
+    console.log('Vocabulary word updated successfully');
+    res.json({ success: true, message: '単語・表現を更新しました' });
+  } catch (error) {
+    console.error('Vocabulary word update error:', error);
+    res.status(500).json({ success: false, message: '単語・表現の更新に失敗しました' });
+  }
+});
+
+// 意味を更新（マイ単語帳専用）
+router.put('/posts/:postId/vocabulary-meaning', authenticateToken, async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const { meaning } = req.body;
+    const userId = req.user.userId || req.user.id;
+
+    console.log('Updating vocabulary meaning for post:', postId);
+    console.log('New meaning:', meaning);
+    console.log('User ID:', userId);
+
+    // vocabulary_meaningsテーブルに保存（元の投稿には影響しない）
+    const existing = db.prepare('SELECT * FROM vocabulary_meanings WHERE post_id = ? AND user_id = ?').get(postId, userId);
+    
+    if (existing) {
+      db.prepare('UPDATE vocabulary_meanings SET meaning = ?, updated_at = datetime("now") WHERE post_id = ? AND user_id = ?').run(meaning, postId, userId);
+    } else {
+      db.prepare('INSERT INTO vocabulary_meanings (post_id, user_id, meaning, created_at, updated_at) VALUES (?, ?, ?, datetime("now"), datetime("now"))').run(postId, userId, meaning);
+    }
+    
+    console.log('Vocabulary meaning updated successfully');
+    res.json({ success: true, message: '意味を更新しました' });
+  } catch (error) {
+    console.error('Vocabulary meaning update error:', error);
+    res.status(500).json({ success: false, message: '意味の更新に失敗しました' });
+  }
+});
+
+// 学習内容を更新（マイ単語帳専用）
+router.put('/posts/:postId/vocabulary-learning-content', authenticateToken, async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const { content } = req.body;
+    const userId = req.user.userId || req.user.id;
+
+    console.log('Updating vocabulary learning content for post:', postId);
+    console.log('New content:', content);
+    console.log('User ID:', userId);
+
+    // vocabulary_learning_contentsテーブルに保存（元の投稿には影響しない）
+    const existing = db.prepare('SELECT * FROM vocabulary_learning_contents WHERE post_id = ? AND user_id = ?').get(postId, userId);
+    
+    if (existing) {
+      db.prepare('UPDATE vocabulary_learning_contents SET content = ?, updated_at = datetime("now") WHERE post_id = ? AND user_id = ?').run(content, postId, userId);
+    } else {
+      db.prepare('INSERT INTO vocabulary_learning_contents (post_id, user_id, content, created_at, updated_at) VALUES (?, ?, ?, datetime("now"), datetime("now"))').run(postId, userId, content);
+    }
+    
+    console.log('Vocabulary learning content updated successfully');
+    res.json({ success: true, message: '学習内容を更新しました' });
+  } catch (error) {
+    console.error('Vocabulary learning content update error:', error);
+    res.status(500).json({ success: false, message: '学習内容の更新に失敗しました' });
+  }
+});
+
+// 保存済み投稿取得時にマイ単語帳専用データも取得
+router.get('/saved-posts', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId || req.user.id;
+    console.log('Fetching saved posts for user:', userId);
+
+    // 保存済み投稿を取得
+    const savedPosts = db.prepare(`
+      SELECT p.*, sp.saved_at, u.username, u.avatar_url
+      FROM posts p
+      JOIN saved_posts sp ON p.id = sp.post_id
+      JOIN users u ON p.user_id = u.id
+      WHERE sp.user_id = ?
+      ORDER BY sp.saved_at DESC
+    `).all(userId);
+
+    // 各投稿にマイ単語帳専用データを追加
+    const postsWithVocabularyData = savedPosts.map(post => {
+      // 単語・表現を取得
+      const vocabularyWord = db.prepare('SELECT word FROM vocabulary_words WHERE post_id = ? AND user_id = ?').get(post.id, userId);
+      
+      // 意味を取得
+      const vocabularyMeaning = db.prepare('SELECT meaning FROM vocabulary_meanings WHERE post_id = ? AND user_id = ?').get(post.id, userId);
+      
+      // 学習内容を取得
+      const vocabularyLearningContent = db.prepare('SELECT content FROM vocabulary_learning_contents WHERE post_id = ? AND user_id = ?').get(post.id, userId);
+
+      return {
+        ...post,
+        vocabulary_word: vocabularyWord?.word || null,
+        vocabulary_meaning: vocabularyMeaning?.meaning || null,
+        vocabulary_learning_content: vocabularyLearningContent?.content || null
+      };
+    });
+
+    console.log('Saved posts fetched successfully');
+    res.json({ success: true, savedPosts: postsWithVocabularyData });
+  } catch (error) {
+    console.error('Fetch saved posts error:', error);
+    res.status(500).json({ success: false, message: '保存済み投稿の取得に失敗しました' });
+  }
+});
+
 module.exports = router; 
