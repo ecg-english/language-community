@@ -1699,14 +1699,14 @@ const ChannelPage: React.FC = () => {
                       }}>
                         {comments[post.id]?.map((comment) => (
                           <Paper key={comment.id} sx={{ 
-                            p: { xs: 1, sm: 2 }, 
+                            p: { xs: 0.5, sm: 1 }, 
                             mb: 2, 
                             bgcolor: 'background.paper',
                             '& .MuiStack-root': {
-                              gap: { xs: 1, sm: 2 }
+                              gap: { xs: 0.5, sm: 1 }
                             }
                           }}>
-                            <Stack direction="row" spacing={2} alignItems="flex-start">
+                            <Stack direction="row" spacing={1} alignItems="flex-start">
                               <Avatar 
                                 sx={{ 
                                   width: { xs: 24, sm: 32 }, 
@@ -1733,7 +1733,7 @@ const ChannelPage: React.FC = () => {
                                 </Stack>
                                 {comment.username === 'AI学習サポート' ? (
                                   <Box sx={{ 
-                                    p: { xs: 1.5, sm: 2.5 }, 
+                                    p: { xs: 1, sm: 2 }, 
                                     backgroundColor: isDarkMode ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.05)',
                                     borderRadius: 2,
                                     border: `1px solid ${isDarkMode ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.2)'}`,
@@ -1741,7 +1741,7 @@ const ChannelPage: React.FC = () => {
                                     maxWidth: '100%',
                                     boxSizing: 'border-box',
                                     margin: 0,
-                                    padding: { xs: 1.5, sm: 2.5 }
+                                    padding: { xs: 1, sm: 2 }
                                   }}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, width: '100%' }}>
                                       <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
