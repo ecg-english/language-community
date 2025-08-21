@@ -1632,7 +1632,11 @@ const ChannelPage: React.FC = () => {
 
                   {/* コメントセクション */}
                   <Collapse in={expandedComments[post.id]} timeout="auto" unmountOnExit>
-                    <Box sx={{ mt: 2 }}>
+                    <Box sx={{ 
+                      mt: 2,
+                      maxHeight: 'none',
+                      overflow: 'visible'
+                    }}>
                       <Divider sx={{ mb: 2 }} />
                       
                       {/* コメント入力 */}
@@ -1683,115 +1687,120 @@ const ChannelPage: React.FC = () => {
                       </Box>
 
                       {/* コメント一覧 */}
-                      {comments[post.id]?.map((comment) => (
-                        <Paper key={comment.id} sx={{ 
-                          p: { xs: 0.05, sm: 0.1 }, 
-                          mb: 1, 
-                          bgcolor: 'background.paper',
-                          '& .MuiStack-root': {
-                            gap: { xs: 0.05, sm: 0.5 }
-                          }
-                        }}>
-                          <Stack direction="row" spacing={2} alignItems="flex-start">
-                            <Avatar 
-                              sx={{ 
-                                width: { xs: 20, sm: 32 }, 
-                                height: { xs: 20, sm: 32 },
-                                flexShrink: 0
-                              }}
-                              src={comment.avatar_url}
-                            >
-                              {comment.username.charAt(0).toUpperCase()}
-                            </Avatar>
-                            <Box sx={{ flexGrow: 1, minWidth: 0, width: '100%' }}>
-                              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5, flexWrap: 'wrap' }}>
-                                <Typography variant="subtitle2" fontWeight={600} sx={{ fontSize: { xs: '0.7rem', sm: '0.875rem' } }}>
-                                  {comment.username}
-                                </Typography>
-                                <Chip
-                                  label={comment.role}
-                                  size="small"
-                                  sx={{ fontSize: { xs: '0.45rem', sm: '0.7rem' } }}
-                                />
-                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.6rem', sm: '0.75rem' } }}>
-                                  {formatDate(comment.created_at)}
-                                </Typography>
-                              </Stack>
-                              {comment.username === 'AI学習サポート' ? (
-                                <Box sx={{ 
-                                  p: { xs: 1, sm: 2 }, 
-                                  backgroundColor: isDarkMode ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.05)',
-                                  borderRadius: 2,
-                                  border: `1px solid ${isDarkMode ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.2)'}`,
-                                  width: '100%',
-                                  maxWidth: '100%',
-                                  boxSizing: 'border-box',
-                                  margin: 0,
-                                  padding: { xs: 1, sm: 2 }
-                                }}>
-                                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, width: '100%' }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-                                      <AutoAwesomeIcon sx={{ color: 'secondary.main', mr: 1, fontSize: { xs: '0.8rem', sm: '1.25rem' } }} />
-                                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'secondary.main', fontSize: { xs: '0.7rem', sm: '0.875rem' } }}>
-                                        🤖 AI学習サポート
-                                      </Typography>
+                      <Box sx={{ 
+                        maxHeight: 'none',
+                        overflow: 'visible'
+                      }}>
+                        {comments[post.id]?.map((comment) => (
+                          <Paper key={comment.id} sx={{ 
+                            p: { xs: 0.125, sm: 0.5 }, 
+                            mb: 1, 
+                            bgcolor: 'background.paper',
+                            '& .MuiStack-root': {
+                              gap: { xs: 0.25, sm: 1 }
+                            }
+                          }}>
+                            <Stack direction="row" spacing={2} alignItems="flex-start">
+                              <Avatar 
+                                sx={{ 
+                                  width: { xs: 20, sm: 32 }, 
+                                  height: { xs: 20, sm: 32 },
+                                  flexShrink: 0
+                                }}
+                                src={comment.avatar_url}
+                              >
+                                {comment.username.charAt(0).toUpperCase()}
+                              </Avatar>
+                              <Box sx={{ flexGrow: 1, minWidth: 0, width: '100%' }}>
+                                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5, flexWrap: 'wrap' }}>
+                                  <Typography variant="subtitle2" fontWeight={600} sx={{ fontSize: { xs: '0.7rem', sm: '0.875rem' } }}>
+                                    {comment.username}
+                                  </Typography>
+                                  <Chip
+                                    label={comment.role}
+                                    size="small"
+                                    sx={{ fontSize: { xs: '0.45rem', sm: '0.7rem' } }}
+                                  />
+                                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.6rem', sm: '0.75rem' } }}>
+                                    {formatDate(comment.created_at)}
+                                  </Typography>
+                                </Stack>
+                                {comment.username === 'AI学習サポート' ? (
+                                  <Box sx={{ 
+                                    p: { xs: 1, sm: 2 }, 
+                                    backgroundColor: isDarkMode ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.05)',
+                                    borderRadius: 2,
+                                    border: `1px solid ${isDarkMode ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.2)'}`,
+                                    width: '100%',
+                                    maxWidth: '100%',
+                                    boxSizing: 'border-box',
+                                    margin: 0,
+                                    padding: { xs: 1, sm: 2 }
+                                  }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, width: '100%' }}>
+                                      <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                                        <AutoAwesomeIcon sx={{ color: 'secondary.main', mr: 1, fontSize: { xs: '0.8rem', sm: '1.25rem' } }} />
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'secondary.main', fontSize: { xs: '0.7rem', sm: '0.875rem' } }}>
+                                          🤖 AI学習サポート
+                                        </Typography>
+                                      </Box>
+                                      <IconButton
+                                        size="small"
+                                        onClick={() => handleCopyAIContent(comment.content)}
+                                        sx={{ 
+                                          color: 'primary.main',
+                                          p: { xs: 0.5, sm: 1 },
+                                          '&:hover': {
+                                            backgroundColor: 'rgba(99, 102, 241, 0.1)'
+                                          }
+                                        }}
+                                        title="AI学習サポートの内容をコピー"
+                                      >
+                                        <CopyIcon fontSize="small" />
+                                      </IconButton>
                                     </Box>
-                                    <IconButton
-                                      size="small"
-                                      onClick={() => handleCopyAIContent(comment.content)}
-                                      sx={{ 
-                                        color: 'primary.main',
-                                        p: { xs: 0.5, sm: 1 },
-                                        '&:hover': {
-                                          backgroundColor: 'rgba(99, 102, 241, 0.1)'
-                                        }
+                                    <Typography 
+                                      variant="body2"
+                                      sx={{
+                                        whiteSpace: 'pre-line',
+                                        wordBreak: 'break-word',
+                                        fontSize: { xs: '0.7rem', sm: '0.875rem' },
+                                        lineHeight: { xs: 1.5, sm: 1.6 },
+                                        width: '100%'
                                       }}
-                                      title="AI学習サポートの内容をコピー"
                                     >
-                                      <CopyIcon fontSize="small" />
-                                    </IconButton>
+                                      {comment.content}
+                                    </Typography>
                                   </Box>
+                                ) : (
                                   <Typography 
                                     variant="body2"
                                     sx={{
-                                      whiteSpace: 'pre-line',
+                                      whiteSpace: 'pre-wrap',
                                       wordBreak: 'break-word',
                                       fontSize: { xs: '0.7rem', sm: '0.875rem' },
                                       lineHeight: { xs: 1.5, sm: 1.6 },
                                       width: '100%'
                                     }}
                                   >
-                                    {comment.content}
+                                    {convertUrlsToLinks(comment.content)}
                                   </Typography>
-                                </Box>
-                              ) : (
-                                <Typography 
-                                  variant="body2"
-                                  sx={{
-                                    whiteSpace: 'pre-wrap',
-                                    wordBreak: 'break-word',
-                                    fontSize: { xs: '0.7rem', sm: '0.875rem' },
-                                    lineHeight: { xs: 1.5, sm: 1.6 },
-                                    width: '100%'
-                                  }}
+                                )}
+                              </Box>
+                              {(user?.id === comment.user_id || user?.role === 'サーバー管理者') && (
+                                <IconButton
+                                  onClick={() => handleDeleteComment(comment.id)}
+                                  size="small"
+                                  color="error"
+                                  sx={{ p: { xs: 0.25, sm: 1 }, flexShrink: 0 }}
                                 >
-                                  {convertUrlsToLinks(comment.content)}
-                                </Typography>
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
                               )}
-                            </Box>
-                            {(user?.id === comment.user_id || user?.role === 'サーバー管理者') && (
-                              <IconButton
-                                onClick={() => handleDeleteComment(comment.id)}
-                                size="small"
-                                color="error"
-                                sx={{ p: { xs: 0.25, sm: 1 }, flexShrink: 0 }}
-                              >
-                                <DeleteIcon fontSize="small" />
-                              </IconButton>
-                            )}
-                          </Stack>
-                        </Paper>
-                      ))}
+                            </Stack>
+                          </Paper>
+                        ))}
+                      </Box>
                     </Box>
                   </Collapse>
                 </CardContent>
