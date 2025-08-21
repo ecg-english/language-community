@@ -1523,25 +1523,6 @@ const ChannelPage: React.FC = () => {
                     {convertUrlsToLinks(post.content)}
                   </Typography>
 
-                  {/* Study Board用の意味表示 */}
-                  {(post as any).is_study_log && (post as any).study_meaning && (
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-                        📖 意味:
-                      </Typography>
-                      <Typography variant="body2" sx={{ 
-                        fontWeight: 600,
-                        color: 'primary.main',
-                        backgroundColor: isDarkMode ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.1)',
-                        padding: 1,
-                        borderRadius: 1,
-                        border: `1px solid ${isDarkMode ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.2)'}`
-                      }}>
-                        {(post as any).study_meaning}
-                      </Typography>
-                    </Box>
-                  )}
-
                   {/* Study Board用のAI返信表示 */}
                   {(post as any).is_study_log && (post as any).ai_response_enabled && (
                     <Box sx={{ mb: 2 }}>
