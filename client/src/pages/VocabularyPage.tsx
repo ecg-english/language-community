@@ -431,36 +431,74 @@ const VocabularyPage: React.FC = () => {
               }}>
                 <CardContent sx={{ p: 2 }}>
                   {/* 単語・表現のヘッダー */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, flexWrap: 'wrap', gap: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, minWidth: 0 }}>
                       {editingWord?.postId === post.id ? (
-                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flex: 1 }}>
+                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flex: 1, flexWrap: 'wrap', width: '100%' }}>
                           <TextField
                             size="small"
                             value={editingWord.word}
                             onChange={(e) => setEditingWord({ ...editingWord, word: e.target.value })}
-                            sx={{ flex: 1 }}
+                            sx={{ 
+                              flex: 1,
+                              minWidth: { xs: '150px', sm: '200px' }
+                            }}
                           />
-                          <Button size="small" onClick={handleSaveWord}>保存</Button>
-                          <Button size="small" onClick={() => setEditingWord(null)}>キャンセル</Button>
+                          <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
+                            <Button 
+                              size="small" 
+                              onClick={handleSaveWord}
+                              sx={{ 
+                                fontSize: { xs: '0.7rem', sm: '0.875rem' },
+                                px: { xs: 1, sm: 2 },
+                                py: { xs: 0.5, sm: 1 }
+                              }}
+                            >
+                              保存
+                            </Button>
+                            <Button 
+                              size="small" 
+                              onClick={() => setEditingWord(null)}
+                              sx={{ 
+                                fontSize: { xs: '0.7rem', sm: '0.875rem' },
+                                px: { xs: 1, sm: 2 },
+                                py: { xs: 0.5, sm: 1 }
+                              }}
+                            >
+                              キャンセル
+                            </Button>
+                          </Box>
                         </Box>
                       ) : (
                         <>
-                          <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                          <Typography 
+                            variant="h6" 
+                            sx={{ 
+                              fontWeight: 600, 
+                              color: 'primary.main',
+                              fontSize: { xs: '1rem', sm: '1.25rem' },
+                              flex: 1,
+                              minWidth: 0,
+                              wordBreak: 'break-word'
+                            }}
+                          >
                             {displayWord}
                           </Typography>
                           <IconButton
                             size="small"
                             onClick={() => handleEditWord(post.id, displayWord)}
-                            sx={{ p: 0.5 }}
+                            sx={{ 
+                              p: { xs: 0.5, sm: 0.5 },
+                              flexShrink: 0
+                            }}
                           >
                             <EditIcon fontSize="small" />
                           </IconButton>
                         </>
                       )}
                     </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="caption" color="text.secondary">
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>
                         {formatDate(post.saved_at)}
                       </Typography>
                       <Tooltip title={t('removeFromVocabulary')}>
@@ -470,12 +508,13 @@ const VocabularyPage: React.FC = () => {
                           onClick={() => handleRemoveFromVocabulary(post.id)}
                           sx={{
                             backgroundColor: isDarkMode ? 'grey.800' : 'grey.100',
+                            p: { xs: 0.5, sm: 0.5 },
                             '&:hover': {
                               backgroundColor: isDarkMode ? 'grey.700' : 'grey.200'
                             }
                           }}
                         >
-                          <DeleteIcon />
+                          <DeleteIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
                     </Box>
