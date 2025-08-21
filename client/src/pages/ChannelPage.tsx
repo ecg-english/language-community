@@ -1416,8 +1416,11 @@ const ChannelPage: React.FC = () => {
                     variant="body1" 
                     sx={{ 
                       mb: 2,
+                      mt: 2,
+                      py: 1,
                       whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word'
+                      wordBreak: 'break-word',
+                      lineHeight: 1.6
                     }}
                   >
                     {convertUrlsToLinks(post.content)}
@@ -1510,8 +1513,11 @@ const ChannelPage: React.FC = () => {
                     variant="body1" 
                     sx={{ 
                       mb: 2,
+                      mt: 2,
+                      py: 1,
                       whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word'
+                      wordBreak: 'break-word',
+                      lineHeight: 1.6
                     }}
                   >
                     {convertUrlsToLinks(post.content)}
