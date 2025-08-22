@@ -29,6 +29,7 @@ import {
   Alert,
   CircularProgress,
   Divider,
+  LinearProgress,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -39,6 +40,8 @@ import {
   School as SchoolIcon,
   CheckCircle as CheckCircleIcon,
   Schedule as ScheduleIcon,
+  ArrowBack as ArrowBackIcon,
+  ArrowForward as ArrowForwardIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -80,6 +83,11 @@ const Class1ManagementPage: React.FC = () => {
   const [addStudentDialog, setAddStudentDialog] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [dataLoaded, setDataLoaded] = useState(false);
+  
+  // 週次チェックリスト用の状態
+  const [currentWeek, setCurrentWeek] = useState<string>('');
+  const [selectedInstructorFilter, setSelectedInstructorFilter] = useState<string>('all');
+  const [weeklyProgress, setWeeklyProgress] = useState<{[key: string]: any}>({});
 
   // フォーム状態
   const [studentName, setStudentName] = useState('');
@@ -96,6 +104,7 @@ const Class1ManagementPage: React.FC = () => {
       navigate('/');
       return;
     }
+    setCurrentWeek(getCurrentWeek());
     fetchData();
   }, [hasPermission, navigate]);
 
@@ -302,6 +311,52 @@ const Class1ManagementPage: React.FC = () => {
     return members;
   };
 
+  // 週次チェックリスト用のヘルパー関数
+  const getCurrentWeek = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const week = Math.ceil((now.getDate() + new Date(year, now.getMonth(), 1).getDay()) / 7);
+    return `${year}-W${week.toString().padStart(2, '0')}`;
+  };
+
+  const getWeekRange = (weekString: string) => {
+    const [year, week] = weekString.split('-W');
+    const yearNum = parseInt(year);
+    const weekNum = parseInt(week);
+    
+    // その年の最初の日曜日を基準に計算
+    const firstDayOfYear = new Date(yearNum, 0, 1);
+    const firstSunday = new Date(firstDayOfYear);
+    firstSunday.setDate(firstDayOfYear.getDate() + (7 - firstDayOfYear.getDay()) % 7);
+    
+    // 指定週の開始日（月曜日）
+    const weekStart = new Date(firstSunday);
+    weekStart.setDate(firstSunday.getDate() + (weekNum - 1) * 7 + 1);
+    
+    // 指定週の終了日（日曜日）
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    
+    return {
+      start: weekStart.toISOString().split('T')[0],
+      end: weekEnd.toISOString().split('T')[0]
+    };
+  };
+
+  const getFilteredStudents = () => {
+    if (selectedInstructorFilter === 'all') {
+      return students;
+    }
+    return students.filter(student => 
+      student.instructor_id.toString() === selectedInstructorFilter
+    );
+  };
+
+  const getInstructorName = (instructorId: number) => {
+    const instructor = users.find(user => user.id === instructorId);
+    return instructor?.username || 'Unknown';
+  };
+
   if (!hasPermission) {
     return null;
   }
@@ -357,119 +412,232 @@ const Class1ManagementPage: React.FC = () => {
 
       {/* 生徒管理タブ */}
       {activeTab === 0 && (
-        <Grid container spacing={3}>
-          {students.map((student) => (
-            <Grid item xs={12} md={6} key={student.id}>
-              <Card sx={{ 
-                border: isDarkMode ? '1px solid #333' : '1px solid #e0e0e0',
-                '&:hover': {
-                  boxShadow: isDarkMode ? '0 4px 20px rgba(255,255,255,0.1)' : '0 4px 20px rgba(0,0,0,0.1)'
-                }
-              }}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                        {student.name}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        担当講師: {student.instructor_name}
-                      </Typography>
-                    </Box>
-                    <IconButton
-                      color="error"
-                      onClick={() => handleDeleteStudent(student.id)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Box>
+        <>
+          {/* 週次チェックリスト */}
+          <Card sx={{ mb: 3, p: 3 }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+              週次チェックリスト
+            </Typography>
+            
+            {/* 週選択 */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+              <IconButton 
+                onClick={() => {
+                  const [year, week] = currentWeek.split('-W');
+                  const prevWeek = parseInt(week) - 1;
+                  if (prevWeek >= 1) {
+                    setCurrentWeek(`${year}-W${prevWeek.toString().padStart(2, '0')}`);
+                  }
+                }}
+              >
+                <ArrowBackIcon />
+              </IconButton>
+              
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                {currentWeek} 週
+              </Typography>
+              
+              <Typography variant="body2" color="text.secondary">
+                {getWeekRange(currentWeek).start} ~ {getWeekRange(currentWeek).end}
+              </Typography>
+              
+              <IconButton 
+                onClick={() => {
+                  const [year, week] = currentWeek.split('-W');
+                  const nextWeek = parseInt(week) + 1;
+                  if (nextWeek <= 53) {
+                    setCurrentWeek(`${year}-W${nextWeek.toString().padStart(2, '0')}`);
+                  }
+                }}
+              >
+                <ArrowForwardIcon />
+              </IconButton>
+            </Box>
+            
+            {/* 講師フィルター */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                講師フィルター:
+              </Typography>
+              <FormControl sx={{ minWidth: 200 }}>
+                <Select
+                  value={selectedInstructorFilter}
+                  onChange={(e) => setSelectedInstructorFilter(e.target.value)}
+                  size="small"
+                >
+                  <MenuItem value="all">全講師</MenuItem>
+                  {getInstructors().map((instructor) => (
+                    <MenuItem key={instructor.id} value={instructor.id.toString()}>
+                      {instructor.username}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+            
+            {/* 生徒チェックリスト */}
+            <Grid container spacing={2}>
+              {getFilteredStudents().map((student, index) => (
+                <Grid item xs={12} key={student.id}>
+                  <Card sx={{ 
+                    border: isDarkMode ? '1px solid #333' : '1px solid #e0e0e0',
+                    '&:hover': {
+                      boxShadow: isDarkMode ? '0 4px 20px rgba(255,255,255,0.1)' : '0 4px 20px rgba(0,0,0,0.1)'
+                    }
+                  }}>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                        <Box>
+                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            生徒{index + 1}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            講師: {getInstructorName(student.instructor_id)}
+                          </Typography>
+                        </Box>
+                        <IconButton
+                          color="error"
+                          onClick={() => handleDeleteStudent(student.id)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Box>
 
-                  {student.memo && (
-                    <Typography variant="body2" sx={{ mb: 2, fontStyle: 'italic' }}>
-                      メモ: {student.memo}
-                    </Typography>
-                  )}
+                      {/* DMで次回レッスン日を調整 */}
+                      <Box sx={{ mb: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                          <Checkbox
+                            checked={student.dm_scheduled}
+                            disabled
+                            sx={{
+                              color: 'primary.main',
+                              '&.Mui-checked': {
+                                color: 'success.main',
+                                animation: 'glow 2s ease-in-out infinite alternate',
+                                '@keyframes glow': {
+                                  '0%': {
+                                    boxShadow: '0 0 5px #4caf50',
+                                  },
+                                  '100%': {
+                                    boxShadow: '0 0 20px #4caf50, 0 0 30px #4caf50',
+                                  },
+                                },
+                              },
+                            }}
+                          />
+                          <Typography variant="body2">
+                            DMで次回レッスン日を調整した
+                          </Typography>
+                        </Box>
+                        <Typography variant="caption" color="text.secondary" sx={{ ml: 4, display: 'block' }}>
+                          日付を入力すると完了になります
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', ml: 4, mt: 1 }}>
+                          <TextField
+                            type="date"
+                            size="small"
+                            value={student.next_lesson_date || ''}
+                            onChange={(e) => handleUpdateLessonDate(student.id, 'next_lesson_date', e.target.value)}
+                            sx={{ flex: 1 }}
+                          />
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() => {
+                              const today = new Date().toISOString().split('T')[0];
+                              handleUpdateLessonDate(student.id, 'next_lesson_date', today);
+                            }}
+                          >
+                            今日を設定
+                          </Button>
+                        </Box>
+                        <Typography variant="caption" color="text.secondary" sx={{ ml: 4, mt: 1, display: 'block' }}>
+                          次回レッスン予定日を記録
+                        </Typography>
+                      </Box>
 
-                  <Divider sx={{ my: 2 }} />
+                      {/* レッスンを実施 */}
+                      <Box sx={{ mb: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                          <Checkbox
+                            checked={student.lesson_completed}
+                            disabled
+                            sx={{
+                              color: 'primary.main',
+                              '&.Mui-checked': {
+                                color: 'success.main',
+                                animation: 'glow 2s ease-in-out infinite alternate',
+                                '@keyframes glow': {
+                                  '0%': {
+                                    boxShadow: '0 0 5px #4caf50',
+                                  },
+                                  '100%': {
+                                    boxShadow: '0 0 20px #4caf50, 0 0 30px #4caf50',
+                                  },
+                                },
+                              },
+                            }}
+                          />
+                          <Typography variant="body2">
+                            レッスンを実施した
+                          </Typography>
+                        </Box>
+                        <Typography variant="caption" color="text.secondary" sx={{ ml: 4, display: 'block' }}>
+                          日付を入力すると完了になります
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', ml: 4, mt: 1 }}>
+                          <TextField
+                            type="date"
+                            size="small"
+                            value={student.lesson_completed_date || ''}
+                            onChange={(e) => handleUpdateLessonDate(student.id, 'lesson_completed_date', e.target.value)}
+                            sx={{ flex: 1 }}
+                          />
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() => {
+                              const today = new Date().toISOString().split('T')[0];
+                              handleUpdateLessonDate(student.id, 'lesson_completed_date', today);
+                            }}
+                          >
+                            今日を設定
+                          </Button>
+                        </Box>
+                        <Typography variant="caption" color="text.secondary" sx={{ ml: 4, mt: 1, display: 'block' }}>
+                          実施日を記録
+                        </Typography>
+                      </Box>
 
-                  {/* DMで次回レッスン日を調整 */}
-                  <Box sx={{ mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                      <Checkbox
-                        checked={student.dm_scheduled}
-                        disabled
-                        color="primary"
-                      />
-                      <Typography variant="body2">
-                        DMで次回レッスン日を調整した
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                      <TextField
-                        type="date"
-                        size="small"
-                        value={student.next_lesson_date || ''}
-                        onChange={(e) => handleUpdateLessonDate(student.id, 'next_lesson_date', e.target.value)}
-                        sx={{ flex: 1 }}
-                      />
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => {
-                          const today = new Date().toISOString().split('T')[0];
-                          handleUpdateLessonDate(student.id, 'next_lesson_date', today);
-                        }}
-                      >
-                        今日を設定
-                      </Button>
-                    </Box>
-                  </Box>
-
-                  {/* レッスンを実施 */}
-                  <Box sx={{ mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                      <Checkbox
-                        checked={student.lesson_completed}
-                        disabled
-                        color="primary"
-                      />
-                      <Typography variant="body2">
-                        レッスンを実施した
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                      <TextField
-                        type="date"
-                        size="small"
-                        value={student.lesson_completed_date || ''}
-                        onChange={(e) => handleUpdateLessonDate(student.id, 'lesson_completed_date', e.target.value)}
-                        sx={{ flex: 1 }}
-                      />
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => {
-                          const today = new Date().toISOString().split('T')[0];
-                          handleUpdateLessonDate(student.id, 'lesson_completed_date', today);
-                        }}
-                      >
-                        今日を設定
-                      </Button>
-                    </Box>
-                  </Box>
-
-                  {/* 進捗表示 */}
-                  <Box sx={{ mt: 2 }}>
-                    <Typography variant="caption" color="text.secondary">
-                      進捗: {student.dm_scheduled ? '✅' : '⏳'} DM調整 
-                      {student.lesson_completed ? '✅' : '⏳'} レッスン実施
-                    </Typography>
-                  </Box>
-                </CardContent>
-              </Card>
+                      {/* 進捗表示 */}
+                      <Box sx={{ mt: 2 }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                          進捗
+                        </Typography>
+                        <LinearProgress 
+                          variant="determinate" 
+                          value={((student.dm_scheduled ? 1 : 0) + (student.lesson_completed ? 1 : 0)) * 50}
+                          sx={{
+                            height: 8,
+                            borderRadius: 4,
+                            backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                            '& .MuiLinearProgress-bar': {
+                              borderRadius: 4,
+                              background: 'linear-gradient(90deg, #4caf50, #66bb6a)',
+                            },
+                          }}
+                        />
+                        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                          {((student.dm_scheduled ? 1 : 0) + (student.lesson_completed ? 1 : 0)) * 50}%
+                        </Typography>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
             </Grid>
-          ))}
-        </Grid>
+          </Card>
+        </>
       )}
 
       {/* カレンダータブ */}
