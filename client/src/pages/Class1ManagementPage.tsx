@@ -186,7 +186,7 @@ const Class1ManagementPage: React.FC = () => {
   };
 
   const handleDeleteStudent = async (studentId: number) => {
-    if (!confirm('この生徒を削除しますか？')) return;
+    if (!window.confirm('この生徒を削除しますか？')) return;
 
     try {
       const token = localStorage.getItem('token');
