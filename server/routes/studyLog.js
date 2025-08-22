@@ -155,8 +155,8 @@ router.post('/channels/:channelId/study-posts', authenticateToken, async (req, r
     // まず基本的な投稿情報を取得
     const posts = db.prepare(`
       SELECT p.*, u.username, u.avatar_url
-      FROM posts p 
-      JOIN users u ON p.user_id = u.id 
+       FROM posts p 
+       JOIN users u ON p.user_id = u.id 
       WHERE p.id = ?
     `).all(postId);
 
@@ -353,8 +353,8 @@ router.post('/posts/:postId/save', authenticateToken, async (req, res) => {
     `).run(parseInt(userId), parseInt(postId));
 
     console.log('Post saved to vocabulary successfully');
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       message: 'マイ単語帳に保存しました！' 
     });
 
@@ -379,8 +379,8 @@ router.delete('/posts/:postId/save', authenticateToken, async (req, res) => {
 
     db.prepare('DELETE FROM saved_posts WHERE user_id = ? AND post_id = ?').run(parseInt(userId), parseInt(postId));
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       message: 'マイ単語帳から削除しました' 
     });
 
@@ -404,15 +404,15 @@ router.get('/saved-posts', authenticateToken, async (req, res) => {
 
     const savedPosts = db.prepare(`
       SELECT p.*, u.username, u.avatar_url, sp.saved_at
-      FROM saved_posts sp
-      JOIN posts p ON sp.post_id = p.id  
-      JOIN users u ON p.user_id = u.id
-      WHERE sp.user_id = ?
-      ORDER BY sp.saved_at DESC
+       FROM saved_posts sp
+       JOIN posts p ON sp.post_id = p.id
+       JOIN users u ON p.user_id = u.id
+       WHERE sp.user_id = ?
+       ORDER BY sp.saved_at DESC
     `).all(parseInt(userId));
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       savedPosts: savedPosts 
     });
 

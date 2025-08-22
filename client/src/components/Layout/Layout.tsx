@@ -26,6 +26,7 @@ import {
   DarkMode as DarkModeIcon,
   Menu as MenuIcon,
   Bookmark as BookmarkIcon,
+  School as SchoolIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -357,6 +358,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             マイ単語帳
           </Typography>
         </MenuItem>
+
+        {(user?.role === 'ECG講師' || user?.role === 'JCG講師' || user?.role === 'サーバー管理者') && (
+          <MenuItem
+            onClick={() => navigate('/class1-management')}
+            sx={{
+              py: 1.5,
+              '&:hover': {
+                backgroundColor: 'rgba(30, 64, 175, 0.04)',
+              },
+            }}
+          >
+            <SchoolIcon sx={{ mr: 2, color: 'warning.main' }} />
+            <Typography variant="body2" fontWeight={500}>
+              Class1 レッスン管理
+            </Typography>
+          </MenuItem>
+        )}
 
         {user?.role !== 'ビジター' && (
           <MenuItem

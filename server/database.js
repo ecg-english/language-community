@@ -534,6 +534,27 @@ const initializeDatabase = () => {
       console.log('vocabulary_learning_contents table creation error:', error.message);
     }
 
+    // Class1生徒テーブルの作成
+    try {
+      db.prepare(`
+        CREATE TABLE IF NOT EXISTS class1_students (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          instructor_id INTEGER NOT NULL,
+          email TEXT,
+          memo TEXT,
+          next_lesson_date DATE,
+          lesson_completed_date DATE,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (instructor_id) REFERENCES users(id)
+        )
+      `).run();
+      console.log('Created class1_students table');
+    } catch (error) {
+      console.log('class1_students table creation error:', error.message);
+    }
+
     // 注意: 新規ユーザーのデフォルトロールを「ビジター」に変更
     // 既存ユーザーのロールは変更されません
     console.log('New users will be assigned "ビジター" role by default');

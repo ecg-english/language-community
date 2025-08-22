@@ -738,4 +738,27 @@ router.delete('/users/:userId', authenticateToken, requireAdmin, (req, res) => {
   }
 });
 
+// ユーザー一覧を取得（Class1管理用）
+router.get('/users', authenticateToken, (req, res) => {
+  try {
+    const userRole = req.user.role;
+    
+    // 権限チェック
+    if (userRole !== 'ECG講師' && userRole !== 'JCG講師' && userRole !== 'サーバー管理者') {
+      return res.status(403).json({ success: false, message: '権限がありません' });
+    }
+
+    const users = db.prepare(`
+      SELECT id, username, role, email, created_at
+      FROM users
+      ORDER BY username
+    `).all();
+
+    res.json({ success: true, users });
+  } catch (error) {
+    console.error('ユーザー一覧取得エラー:', error);
+    res.status(500).json({ success: false, message: 'ユーザー一覧の取得に失敗しました' });
+  }
+});
+
 module.exports = router; 
