@@ -724,7 +724,7 @@ const Class1ManagementPage: React.FC = () => {
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
                           <Box>
                             <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                              生徒{index + 1}
+                              {student.name || `生徒${index + 1}`}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                               講師: {getInstructorName(student.instructor_id)}

@@ -132,14 +132,29 @@ router.delete('/students/:studentId', authenticateToken, checkClass1Permission, 
 });
 
 // 週次チェックリストの取得
-router.get('/weekly-checklist/:weekKey', checkClass1Permission, async (req, res) => {
+router.get('/weekly-checklist/:weekKey', authenticateToken, checkClass1Permission, async (req, res) => {
   try {
     const { weekKey } = req.params;
+    
+    // テーブルが存在するかチェック
+    const tableExists = db.prepare(`
+      SELECT name FROM sqlite_master WHERE type='table' AND name='class1_weekly_checklist'
+    `).get();
+    
+    if (!tableExists) {
+      console.log('class1_weekly_checklist table does not exist, returning empty data');
+      return res.json({
+        success: true,
+        checklist: []
+      });
+    }
     
     const checklist = db.prepare(`
       SELECT * FROM class1_weekly_checklist 
       WHERE week_key = ?
     `).all(weekKey);
+    
+    console.log('Weekly checklist data:', { weekKey, checklistCount: checklist.length });
     
     res.json({
       success: true,
@@ -155,10 +170,35 @@ router.get('/weekly-checklist/:weekKey', checkClass1Permission, async (req, res)
 });
 
 // 週次チェックリストの更新
-router.put('/weekly-checklist/:weekKey/:studentId', checkClass1Permission, async (req, res) => {
+router.put('/weekly-checklist/:weekKey/:studentId', authenticateToken, checkClass1Permission, async (req, res) => {
   try {
     const { weekKey, studentId } = req.params;
     const { dm_scheduled, lesson_completed, next_lesson_date, lesson_completed_date } = req.body;
+    
+    console.log('Weekly checklist update:', { weekKey, studentId, dm_scheduled, lesson_completed, next_lesson_date, lesson_completed_date });
+    
+    // テーブルが存在するかチェック
+    const tableExists = db.prepare(`
+      SELECT name FROM sqlite_master WHERE type='table' AND name='class1_weekly_checklist'
+    `).get();
+    
+    if (!tableExists) {
+      console.log('Creating class1_weekly_checklist table');
+      db.prepare(`
+        CREATE TABLE IF NOT EXISTS class1_weekly_checklist (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          week_key TEXT NOT NULL,
+          student_id INTEGER NOT NULL,
+          dm_scheduled BOOLEAN DEFAULT FALSE,
+          lesson_completed BOOLEAN DEFAULT FALSE,
+          next_lesson_date TEXT,
+          lesson_completed_date TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(week_key, student_id)
+        )
+      `).run();
+    }
     
     // 既存データを確認
     const existing = db.prepare(`
@@ -173,6 +213,7 @@ router.put('/weekly-checklist/:weekKey/:studentId', checkClass1Permission, async
         SET dm_scheduled = ?, lesson_completed = ?, next_lesson_date = ?, lesson_completed_date = ?, updated_at = CURRENT_TIMESTAMP
         WHERE week_key = ? AND student_id = ?
       `).run(dm_scheduled, lesson_completed, next_lesson_date, lesson_completed_date, weekKey, studentId);
+      console.log('Updated existing weekly checklist entry');
     } else {
       // 新規作成
       db.prepare(`
@@ -180,6 +221,7 @@ router.put('/weekly-checklist/:weekKey/:studentId', checkClass1Permission, async
         (week_key, student_id, dm_scheduled, lesson_completed, next_lesson_date, lesson_completed_date)
         VALUES (?, ?, ?, ?, ?, ?)
       `).run(weekKey, studentId, dm_scheduled, lesson_completed, next_lesson_date, lesson_completed_date);
+      console.log('Created new weekly checklist entry');
     }
     
     res.json({
