@@ -705,12 +705,12 @@ const Class1ManagementPage: React.FC = () => {
           return;
         }
 
-        // 同じ生徒の同じ日付での重複を避けるため、まず実施済みをチェック
+        // レッスン実施済み日を処理
         if (studentData.lesson_completed_date) {
           const dateKey = studentData.lesson_completed_date;
           if (!events[dateKey]) events[dateKey] = [];
           
-          // 同じ生徒が既に存在するかチェック
+          // 同じ生徒が既に存在するかチェック（同じ生徒の重複のみ排除）
           const existingIndex = events[dateKey].findIndex(e => e.studentId === studentId);
           if (existingIndex === -1) {
             events[dateKey].push({
@@ -719,16 +719,26 @@ const Class1ManagementPage: React.FC = () => {
               type: 'completed',
               date: dateKey
             });
+          } else {
+            // 同じ生徒が既に存在する場合、チェックマーク（実施済み）で上書き
+            events[dateKey][existingIndex] = {
+              studentId,
+              studentName: student.name,
+              type: 'completed',
+              date: dateKey
+            };
           }
         }
-        // 次回レッスン予定日（実施済みでない場合のみ）
-        else if (studentData.next_lesson_date) {
+
+        // 次回レッスン予定日を処理
+        if (studentData.next_lesson_date) {
           const dateKey = studentData.next_lesson_date;
           if (!events[dateKey]) events[dateKey] = [];
           
           // 同じ生徒が既に存在するかチェック
           const existingIndex = events[dateKey].findIndex(e => e.studentId === studentId);
           if (existingIndex === -1) {
+            // 同じ生徒が存在しない場合のみ追加
             events[dateKey].push({
               studentId,
               studentName: student.name,
@@ -736,6 +746,7 @@ const Class1ManagementPage: React.FC = () => {
               date: dateKey
             });
           }
+          // 同じ生徒が既に存在する場合は何もしない（実施済みが優先される）
         }
       });
     });
