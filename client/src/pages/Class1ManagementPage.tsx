@@ -130,6 +130,12 @@ const Class1ManagementPage: React.FC = () => {
         setUsers(usersResponse.data.users);
         console.log('ユーザーデータ設定完了:', usersResponse.data.users);
         
+        // 全ユーザーのロールを確認
+        console.log('全ユーザーのロール一覧:', usersResponse.data.users.map((user: any) => ({
+          username: user.username,
+          role: user.role
+        })));
+        
         // 講師とClass1 Membersの数を確認
         const instructors = usersResponse.data.users.filter((user: any) => 
           user.role === 'ECG講師' || user.role === 'JCG講師'
