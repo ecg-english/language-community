@@ -131,30 +131,34 @@ const Class1ManagementPage: React.FC = () => {
       console.log('生徒データレスポンス:', studentsResponse.data);
       console.log('ユーザーデータレスポンス:', usersResponse.data);
 
-      if (studentsResponse.data.success) {
-        setStudents(studentsResponse.data.students);
+      // 生徒データの処理
+      if (studentsResponse.data && studentsResponse.data.success) {
+        setStudents(studentsResponse.data.students || []);
         console.log('生徒データ設定完了:', studentsResponse.data.students);
       } else {
         console.error('Students API returned success: false', studentsResponse.data);
+        setStudents([]); // 空配列を設定
       }
       
-      if (usersResponse.data.success) {
-        setUsers(usersResponse.data.users);
+      // ユーザーデータの処理
+      if (usersResponse.data && usersResponse.data.success) {
+        setUsers(usersResponse.data.users || []);
         console.log('ユーザーデータ設定完了:', usersResponse.data.users);
         
         // 全ユーザーのロールを確認
-        console.log('全ユーザーのロール一覧:', usersResponse.data.users.map((user: any) => ({
+        const users = usersResponse.data.users || [];
+        console.log('全ユーザーのロール一覧:', users.map((user: any) => ({
           username: user.username,
           role: user.role,
-          roleLength: user.role.length,
-          roleCharCodes: Array.from(user.role as string).map((char: string) => char.charCodeAt(0))
+          roleLength: user.role?.length || 0,
+          roleCharCodes: user.role ? Array.from(user.role as string).map((char: string) => char.charCodeAt(0)) : []
         })));
         
         // 講師とClass1 Membersの数を確認
-        const instructors = usersResponse.data.users.filter((user: any) => 
+        const instructors = users.filter((user: any) => 
           user.role === 'ECG講師' || user.role === 'JCG講師'
         );
-        const class1Members = usersResponse.data.users.filter((user: any) => 
+        const class1Members = users.filter((user: any) => 
           user.role === 'Class1 Members'
         );
         
@@ -162,11 +166,12 @@ const Class1ManagementPage: React.FC = () => {
         console.log('Class1 Members数:', class1Members.length, class1Members);
       } else {
         console.error('Users API returned success: false', usersResponse.data);
+        setUsers([]); // 空配列を設定
       }
       
-      // データ取得完了
+      // データ取得完了（必ず実行）
       setDataLoaded(true);
-      console.log('Data loading completed');
+      console.log('Data loading completed - dataLoaded set to true');
     } catch (error: any) {
       console.error('データ取得エラー:', error);
       console.error('Error details:', {
@@ -505,7 +510,7 @@ const Class1ManagementPage: React.FC = () => {
                   onChange={(e) => setStudentName(e.target.value)}
                   label="Class1 Members"
                 >
-                  {users.length === 0 ? (
+                  {!dataLoaded ? (
                     <MenuItem disabled value="">
                       読み込み中...
                     </MenuItem>
@@ -536,7 +541,7 @@ const Class1ManagementPage: React.FC = () => {
                 onChange={(e) => setSelectedInstructor(e.target.value)}
                 label="担当講師"
               >
-                {users.length === 0 ? (
+                {!dataLoaded ? (
                   <MenuItem disabled value="">
                     読み込み中...
                   </MenuItem>
