@@ -315,4 +315,62 @@ router.put('/weekly-checklist/:weekKey/:studentId', authenticateToken, checkClas
   }
 });
 
+// 全週チェックリストデータを取得
+router.get('/weekly-checklist-all', authenticateToken, checkClass1Permission, async (req, res) => {
+  try {
+    console.log('全週チェックリストデータ取得開始');
+    
+    // テーブルが存在するかチェック
+    const tableExists = db.prepare(`
+      SELECT name FROM sqlite_master WHERE type='table' AND name='class1_weekly_checklist'
+    `).get();
+    
+    if (!tableExists) {
+      console.log('class1_weekly_checklist table does not exist, returning empty data');
+      return res.json({
+        success: true,
+        allChecklist: {}
+      });
+    }
+    
+    // 全データを取得
+    const allChecklist = db.prepare(`
+      SELECT * FROM class1_weekly_checklist 
+      ORDER BY week_key, student_id
+    `).all();
+    
+    console.log('全週チェックリストデータ取得完了:', allChecklist.length, '件');
+    
+    // 週ごとにグループ化
+    const groupedData: {[weekKey: string]: any} = {};
+    
+    allChecklist.forEach((item: any) => {
+      const weekKey = item.week_key;
+      if (!groupedData[weekKey]) {
+        groupedData[weekKey] = {};
+      }
+      
+      groupedData[weekKey][item.student_id] = {
+        dm_scheduled: item.dm_scheduled === 1,
+        lesson_completed: item.lesson_completed === 1,
+        next_lesson_date: item.next_lesson_date || '',
+        lesson_completed_date: item.lesson_completed_date || ''
+      };
+    });
+    
+    console.log('グループ化完了:', Object.keys(groupedData).length, '週分');
+    
+    res.json({
+      success: true,
+      allChecklist: groupedData
+    });
+  } catch (error) {
+    console.error('全週チェックリスト取得エラー:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 module.exports = router; 

@@ -227,47 +227,22 @@ const Class1ManagementPage: React.FC = () => {
       console.log('全週データ取得開始');
       const token = localStorage.getItem('token');
       
-      // 現在の年から過去1年分の週データを取得
-      const currentYear = new Date().getFullYear();
-      const allWeeklyData: {[weekKey: string]: any} = {};
-      
-      // 過去1年分の週データを取得
-      for (let year = currentYear - 1; year <= currentYear; year++) {
-        for (let week = 1; week <= 53; week++) {
-          const weekKey = `${year}-W${week.toString().padStart(2, '0')}`;
-          
-          try {
-            const response = await axios.get(
-              `${process.env.REACT_APP_API_URL}/api/class1/weekly-checklist/${weekKey}`,
-              {
-                headers: { Authorization: `Bearer ${token}` },
-              }
-            );
-            
-            if (response.data.success && response.data.checklist.length > 0) {
-              const weekData: {[studentId: number]: any} = {};
-              
-              response.data.checklist.forEach((item: any) => {
-                weekData[item.student_id] = {
-                  dm_scheduled: Boolean(item.dm_scheduled),
-                  lesson_completed: Boolean(item.lesson_completed),
-                  next_lesson_date: item.next_lesson_date || '',
-                  lesson_completed_date: item.lesson_completed_date || ''
-                };
-              });
-              
-              allWeeklyData[weekKey] = weekData;
-              console.log(`週データ取得成功: ${weekKey}`, weekData);
-            }
-          } catch (error) {
-            // データが存在しない週は無視
-            console.log(`週データなし: ${weekKey}`);
-          }
+      // 新しいAPIエンドポイントを使用して全データを一度に取得
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/class1/weekly-checklist-all`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
         }
+      );
+      
+      if (response.data.success) {
+        const allWeeklyData = response.data.allChecklist;
+        console.log('全週データ取得完了:', allWeeklyData);
+        return allWeeklyData;
       }
       
-      console.log('全週データ取得完了:', allWeeklyData);
-      return allWeeklyData;
+      console.log('全週データ取得成功、データなし');
+      return {};
     } catch (error) {
       console.error('全週データの取得に失敗しました:', error);
       return {};
@@ -728,6 +703,11 @@ const Class1ManagementPage: React.FC = () => {
       
       // データベースにも保存
       saveWeeklyDataToDB(currentWeek, studentId, updatedStudentData);
+
+      // カレンダーイベントを即座に更新
+      setTimeout(() => {
+        updateCalendarEvents();
+      }, 100);
 
       return newWeeklyData;
     });
