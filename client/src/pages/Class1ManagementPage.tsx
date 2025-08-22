@@ -119,11 +119,27 @@ const Class1ManagementPage: React.FC = () => {
         }
       );
 
+      console.log('生徒データレスポンス:', studentsResponse.data);
+      console.log('ユーザーデータレスポンス:', usersResponse.data);
+
       if (studentsResponse.data.success) {
         setStudents(studentsResponse.data.students);
+        console.log('生徒データ設定完了:', studentsResponse.data.students);
       }
       if (usersResponse.data.success) {
         setUsers(usersResponse.data.users);
+        console.log('ユーザーデータ設定完了:', usersResponse.data.users);
+        
+        // 講師とClass1 Membersの数を確認
+        const instructors = usersResponse.data.users.filter((user: any) => 
+          user.role === 'ECG講師' || user.role === 'JCG講師'
+        );
+        const class1Members = usersResponse.data.users.filter((user: any) => 
+          user.role === 'Class1 Members'
+        );
+        
+        console.log('講師数:', instructors.length, instructors);
+        console.log('Class1 Members数:', class1Members.length, class1Members);
       }
     } catch (error: any) {
       console.error('データ取得エラー:', error);
@@ -445,11 +461,15 @@ const Class1ManagementPage: React.FC = () => {
                   onChange={(e) => setStudentName(e.target.value)}
                   label="Class1 Members"
                 >
-                  {getClass1Members().map((member) => (
-                    <MenuItem key={member.id} value={member.username}>
-                      {member.username}
-                    </MenuItem>
-                  ))}
+                  {(() => {
+                    const members = getClass1Members();
+                    console.log('Class1 Members for dropdown:', members);
+                    return members.map((member) => (
+                      <MenuItem key={member.id} value={member.username}>
+                        {member.username}
+                      </MenuItem>
+                    ));
+                  })()}
                 </Select>
               </FormControl>
             )}
@@ -461,11 +481,15 @@ const Class1ManagementPage: React.FC = () => {
                 onChange={(e) => setSelectedInstructor(e.target.value)}
                 label="担当講師"
               >
-                {getInstructors().map((instructor) => (
-                  <MenuItem key={instructor.id} value={instructor.id}>
-                    {instructor.username} ({instructor.role})
-                  </MenuItem>
-                ))}
+                {(() => {
+                  const instructors = getInstructors();
+                  console.log('講師 for dropdown:', instructors);
+                  return instructors.map((instructor) => (
+                    <MenuItem key={instructor.id} value={instructor.id}>
+                      {instructor.username} ({instructor.role})
+                    </MenuItem>
+                  ));
+                })()}
               </Select>
             </FormControl>
 
