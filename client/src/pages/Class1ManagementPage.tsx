@@ -97,6 +97,16 @@ const Class1ManagementPage: React.FC = () => {
     lesson_completed_date?: string;
   }}}>({});
 
+  // カレンダー機能用の状態
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [selectedInstructorCalendar, setSelectedInstructorCalendar] = useState<string>('all');
+  const [calendarEvents, setCalendarEvents] = useState<{[date: string]: Array<{
+    studentId: number;
+    studentName: string;
+    type: 'scheduled' | 'completed';
+    date: string;
+  }>}>({});
+
   // 現在の週を正しく計算する関数
   const getCurrentWeek = () => {
     const now = new Date();
@@ -308,6 +318,13 @@ const Class1ManagementPage: React.FC = () => {
       saveWeeklyData(weeklyData);
     }
   }, [weeklyData]);
+
+  // 週次データまたは講師フィルターが変更されたときにカレンダーイベントを更新
+  useEffect(() => {
+    if (students.length > 0 && Object.keys(weeklyData).length > 0) {
+      updateCalendarEvents();
+    }
+  }, [weeklyData, selectedInstructorCalendar, students]);
 
   const fetchData = async () => {
     try {
@@ -527,6 +544,54 @@ const Class1ManagementPage: React.FC = () => {
     return instructor?.username || 'Unknown';
   };
 
+  // カレンダー関連のヘルパー関数
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const firstDayOfWeek = firstDay.getDay();
+    
+    return { firstDayOfWeek, daysInMonth };
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toISOString().split('T')[0];
+  };
+
+  const getDateKey = (year: number, month: number, day: number) => {
+    return `${year}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+  };
+
+  const getEventsForDate = (dateKey: string) => {
+    return calendarEvents[dateKey] || [];
+  };
+
+  const getEventDisplay = (events: Array<any>) => {
+    if (events.length === 0) return null;
+    
+    // チェックマーク（実施済み）を優先
+    const completedEvents = events.filter(e => e.type === 'completed');
+    const scheduledEvents = events.filter(e => e.type === 'scheduled');
+    
+    if (completedEvents.length > 0) {
+      return {
+        type: 'completed',
+        count: completedEvents.length,
+        events: completedEvents
+      };
+    } else if (scheduledEvents.length > 0) {
+      return {
+        type: 'scheduled',
+        count: scheduledEvents.length,
+        events: scheduledEvents
+      };
+    }
+    
+    return null;
+  };
+
   // 週次データ管理用のヘルパー関数
   const getWeeklyDataKey = (weekString: string, studentId: number) => {
     return `${weekString}_${studentId}`;
@@ -595,6 +660,69 @@ const Class1ManagementPage: React.FC = () => {
 
       return newWeeklyData;
     });
+  };
+
+  // カレンダーイベントを生成する関数
+  const generateCalendarEvents = () => {
+    const events: {[date: string]: Array<{
+      studentId: number;
+      studentName: string;
+      type: 'scheduled' | 'completed';
+      date: string;
+    }>} = {};
+
+    // 全週のデータを取得
+    Object.keys(weeklyData).forEach(weekKey => {
+      const weekData = weeklyData[weekKey];
+      
+      Object.keys(weekData).forEach(studentIdStr => {
+        const studentId = parseInt(studentIdStr);
+        const studentData = weekData[studentId];
+        const student = students.find(s => s.id === studentId);
+        
+        if (!student) return;
+
+        // 講師フィルター適用
+        if (selectedInstructorCalendar !== 'all' && 
+            student.instructor_id.toString() !== selectedInstructorCalendar) {
+          return;
+        }
+
+        // 次回レッスン予定日
+        if (studentData.next_lesson_date) {
+          const dateKey = studentData.next_lesson_date;
+          if (!events[dateKey]) events[dateKey] = [];
+          
+          events[dateKey].push({
+            studentId,
+            studentName: student.name,
+            type: 'scheduled',
+            date: dateKey
+          });
+        }
+
+        // レッスン実施日
+        if (studentData.lesson_completed_date) {
+          const dateKey = studentData.lesson_completed_date;
+          if (!events[dateKey]) events[dateKey] = [];
+          
+          events[dateKey].push({
+            studentId,
+            studentName: student.name,
+            type: 'completed',
+            date: dateKey
+          });
+        }
+      });
+    });
+
+    return events;
+  };
+
+  // カレンダーイベントを更新する関数
+  const updateCalendarEvents = () => {
+    const events = generateCalendarEvents();
+    setCalendarEvents(events);
   };
 
   if (!hasPermission) {
@@ -899,14 +1027,214 @@ const Class1ManagementPage: React.FC = () => {
 
       {/* カレンダータブ */}
       {activeTab === 1 && (
-        <Card>
+        <Card sx={{ 
+          border: isDarkMode ? '1px solid #333' : '1px solid #e0e0e0',
+          '&:hover': {
+            boxShadow: isDarkMode ? '0 4px 20px rgba(255,255,255,0.1)' : '0 4px 20px rgba(0,0,0,0.1)'
+          }
+        }}>
           <CardContent>
-            <Typography variant="h6" sx={{ mb: 2 }}>
+            <Typography variant="h5" sx={{ fontWeight: 600, mb: 3 }}>
               レッスンカレンダー
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              カレンダー機能は現在開発中です。
-            </Typography>
+
+            {/* 講師フィルター */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                講師フィルター:
+              </Typography>
+              <FormControl sx={{ minWidth: 200 }}>
+                <Select
+                  value={selectedInstructorCalendar}
+                  onChange={(e) => setSelectedInstructorCalendar(e.target.value)}
+                  size="small"
+                >
+                  <MenuItem value="all">全講師</MenuItem>
+                  {getInstructors().map((instructor) => (
+                    <MenuItem key={instructor.id} value={instructor.id.toString()}>
+                      {instructor.username}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+
+            {/* カレンダー */}
+            <Box sx={{ mb: 3 }}>
+              {/* 月ナビゲーション */}
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <IconButton 
+                  onClick={() => {
+                    const prevMonth = new Date(currentMonth);
+                    prevMonth.setMonth(prevMonth.getMonth() - 1);
+                    setCurrentMonth(prevMonth);
+                  }}
+                >
+                  <ArrowBackIcon />
+                </IconButton>
+                
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  {currentMonth.getFullYear()}年{currentMonth.getMonth() + 1}月
+                </Typography>
+                
+                <IconButton 
+                  onClick={() => {
+                    const nextMonth = new Date(currentMonth);
+                    nextMonth.setMonth(nextMonth.getMonth() + 1);
+                    setCurrentMonth(nextMonth);
+                  }}
+                >
+                  <ArrowForwardIcon />
+                </IconButton>
+              </Box>
+
+              {/* カレンダーグリッド */}
+              <Box sx={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(7, 1fr)', 
+                gap: 1,
+                border: isDarkMode ? '1px solid #333' : '1px solid #e0e0e0',
+                borderRadius: 1
+              }}>
+                {/* 曜日ヘッダー */}
+                {['日', '月', '火', '水', '木', '金', '土'].map((day) => (
+                  <Box key={day} sx={{ 
+                    p: 1, 
+                    textAlign: 'center', 
+                    fontWeight: 600,
+                    backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                    borderBottom: isDarkMode ? '1px solid #333' : '1px solid #e0e0e0'
+                  }}>
+                    <Typography variant="body2">{day}</Typography>
+                  </Box>
+                ))}
+
+                {/* カレンダー日付 */}
+                {(() => {
+                  const { firstDayOfWeek, daysInMonth } = getDaysInMonth(currentMonth);
+                  const days = [];
+                  
+                  // 前月の日付（空白セル）
+                  for (let i = 0; i < firstDayOfWeek; i++) {
+                    days.push(
+                      <Box key={`empty-${i}`} sx={{ 
+                        p: 1, 
+                        minHeight: 60,
+                        backgroundColor: isDarkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'
+                      }} />
+                    );
+                  }
+                  
+                  // 当月の日付
+                  for (let day = 1; day <= daysInMonth; day++) {
+                    const dateKey = getDateKey(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+                    const events = getEventsForDate(dateKey);
+                    const eventDisplay = getEventDisplay(events);
+                    const isToday = formatDate(new Date()) === dateKey;
+                    
+                    days.push(
+                      <Box key={day} sx={{ 
+                        p: 1, 
+                        minHeight: 60,
+                        border: isDarkMode ? '1px solid #333' : '1px solid #e0e0e0',
+                        backgroundColor: isToday ? (isDarkMode ? 'rgba(25, 118, 210, 0.2)' : 'rgba(25, 118, 210, 0.1)') : 'transparent',
+                        position: 'relative',
+                        cursor: events.length > 0 ? 'pointer' : 'default',
+                        '&:hover': {
+                          backgroundColor: events.length > 0 ? (isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)') : 'transparent'
+                        }
+                      }}>
+                        <Typography variant="body2" sx={{ 
+                          fontWeight: isToday ? 600 : 400,
+                          color: isToday ? 'primary.main' : 'inherit'
+                        }}>
+                          {day}
+                        </Typography>
+                        
+                        {eventDisplay && (
+                          <Box sx={{ 
+                            position: 'absolute', 
+                            top: 2, 
+                            right: 2,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 20,
+                            height: 20,
+                            borderRadius: '50%',
+                            backgroundColor: eventDisplay.type === 'completed' ? 'success.main' : 'warning.main',
+                            color: 'white',
+                            fontSize: '0.75rem',
+                            fontWeight: 600
+                          }}>
+                            {eventDisplay.count > 1 ? eventDisplay.count : 
+                             eventDisplay.type === 'completed' ? '✓' : '⭐'}
+                          </Box>
+                        )}
+                      </Box>
+                    );
+                  }
+                  
+                  return days;
+                })()}
+              </Box>
+            </Box>
+
+            {/* 凡例 */}
+            <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                凡例:
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ 
+                  width: 16, 
+                  height: 16, 
+                  borderRadius: '50%', 
+                  backgroundColor: 'success.main',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.75rem',
+                  color: 'white'
+                }}>
+                  ✓
+                </Box>
+                <Typography variant="body2">レッスン実施済み</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ 
+                  width: 16, 
+                  height: 16, 
+                  borderRadius: '50%', 
+                  backgroundColor: 'warning.main',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.75rem',
+                  color: 'white'
+                }}>
+                  ⭐
+                </Box>
+                <Typography variant="body2">次回レッスン予定</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ 
+                  width: 16, 
+                  height: 16, 
+                  borderRadius: '50%', 
+                  backgroundColor: 'primary.main',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.75rem',
+                  color: 'white',
+                  fontWeight: 600
+                }}>
+                  3
+                </Box>
+                <Typography variant="body2">複数生徒</Typography>
+              </Box>
+            </Box>
           </CardContent>
         </Card>
       )}
