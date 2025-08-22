@@ -88,6 +88,14 @@ const Class1ManagementPage: React.FC = () => {
   const [currentWeek, setCurrentWeek] = useState<string>('');
   const [selectedInstructorFilter, setSelectedInstructorFilter] = useState<string>('all');
   const [weeklyProgress, setWeeklyProgress] = useState<{[key: string]: any}>({});
+  
+  // 週次データ管理
+  const [weeklyData, setWeeklyData] = useState<{[weekKey: string]: {[studentId: number]: {
+    dm_scheduled: boolean;
+    lesson_completed: boolean;
+    next_lesson_date?: string;
+    lesson_completed_date?: string;
+  }}}>({});
 
   // フォーム状態
   const [studentName, setStudentName] = useState('');
@@ -357,6 +365,50 @@ const Class1ManagementPage: React.FC = () => {
     return instructor?.username || 'Unknown';
   };
 
+  // 週次データ管理用のヘルパー関数
+  const getWeeklyDataKey = (weekString: string, studentId: number) => {
+    return `${weekString}_${studentId}`;
+  };
+
+  const getStudentWeeklyData = (studentId: number) => {
+    const weekData = weeklyData[currentWeek] || {};
+    return weekData[studentId] || {
+      dm_scheduled: false,
+      lesson_completed: false,
+      next_lesson_date: '',
+      lesson_completed_date: ''
+    };
+  };
+
+  const updateStudentWeeklyData = (studentId: number, field: string, value: any) => {
+    setWeeklyData(prev => {
+      const weekData = prev[currentWeek] || {};
+      const studentData = weekData[studentId] || {
+        dm_scheduled: false,
+        lesson_completed: false,
+        next_lesson_date: '',
+        lesson_completed_date: ''
+      };
+
+      // フィールドに応じてブール値も更新
+      let updatedStudentData = { ...studentData, [field]: value };
+      
+      if (field === 'next_lesson_date') {
+        updatedStudentData.dm_scheduled = !!value;
+      } else if (field === 'lesson_completed_date') {
+        updatedStudentData.lesson_completed = !!value;
+      }
+
+      return {
+        ...prev,
+        [currentWeek]: {
+          ...weekData,
+          [studentId]: updatedStudentData
+        }
+      };
+    });
+  };
+
   if (!hasPermission) {
     return null;
   }
@@ -477,164 +529,167 @@ const Class1ManagementPage: React.FC = () => {
             
             {/* 生徒チェックリスト */}
             <Grid container spacing={2}>
-              {getFilteredStudents().map((student, index) => (
-                <Grid item xs={12} key={student.id}>
-                  <Card sx={{ 
-                    border: isDarkMode ? '1px solid #333' : '1px solid #e0e0e0',
-                    '&:hover': {
-                      boxShadow: isDarkMode ? '0 4px 20px rgba(255,255,255,0.1)' : '0 4px 20px rgba(0,0,0,0.1)'
-                    }
-                  }}>
-                    <CardContent>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                        <Box>
-                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                            生徒{index + 1}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            講師: {getInstructorName(student.instructor_id)}
-                          </Typography>
+              {getFilteredStudents().map((student, index) => {
+                const weeklyData = getStudentWeeklyData(student.id);
+                return (
+                  <Grid item xs={12} key={student.id}>
+                    <Card sx={{ 
+                      border: isDarkMode ? '1px solid #333' : '1px solid #e0e0e0',
+                      '&:hover': {
+                        boxShadow: isDarkMode ? '0 4px 20px rgba(255,255,255,0.1)' : '0 4px 20px rgba(0,0,0,0.1)'
+                      }
+                    }}>
+                      <CardContent>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                          <Box>
+                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                              生徒{index + 1}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              講師: {getInstructorName(student.instructor_id)}
+                            </Typography>
+                          </Box>
+                          <IconButton
+                            color="error"
+                            onClick={() => handleDeleteStudent(student.id)}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
                         </Box>
-                        <IconButton
-                          color="error"
-                          onClick={() => handleDeleteStudent(student.id)}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Box>
 
-                      {/* DMで次回レッスン日を調整 */}
-                      <Box sx={{ mb: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                          <Checkbox
-                            checked={student.dm_scheduled}
-                            disabled
-                            sx={{
-                              color: 'primary.main',
-                              '&.Mui-checked': {
-                                color: 'success.main',
-                                animation: 'glow 2s ease-in-out infinite alternate',
-                                '@keyframes glow': {
-                                  '0%': {
-                                    boxShadow: '0 0 5px #4caf50',
-                                  },
-                                  '100%': {
-                                    boxShadow: '0 0 20px #4caf50, 0 0 30px #4caf50',
+                        {/* DMで次回レッスン日を調整 */}
+                        <Box sx={{ mb: 2 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                            <Checkbox
+                              checked={weeklyData.dm_scheduled}
+                              disabled
+                              sx={{
+                                color: 'primary.main',
+                                '&.Mui-checked': {
+                                  color: 'success.main',
+                                  animation: 'glow 2s ease-in-out infinite alternate',
+                                  '@keyframes glow': {
+                                    '0%': {
+                                      boxShadow: '0 0 5px #4caf50',
+                                    },
+                                    '100%': {
+                                      boxShadow: '0 0 20px #4caf50, 0 0 30px #4caf50',
+                                    },
                                   },
                                 },
-                              },
-                            }}
-                          />
-                          <Typography variant="body2">
-                            DMで次回レッスン日を調整した
+                              }}
+                            />
+                            <Typography variant="body2">
+                              DMで次回レッスン日を調整した
+                            </Typography>
+                          </Box>
+                          <Typography variant="caption" color="text.secondary" sx={{ ml: 4, display: 'block' }}>
+                            日付を入力すると完了になります
+                          </Typography>
+                          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', ml: 4, mt: 1 }}>
+                            <TextField
+                              type="date"
+                              size="small"
+                              value={weeklyData.next_lesson_date || ''}
+                              onChange={(e) => updateStudentWeeklyData(student.id, 'next_lesson_date', e.target.value)}
+                              sx={{ flex: 1 }}
+                            />
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() => {
+                                const today = new Date().toISOString().split('T')[0];
+                                updateStudentWeeklyData(student.id, 'next_lesson_date', today);
+                              }}
+                            >
+                              今日を設定
+                            </Button>
+                          </Box>
+                          <Typography variant="caption" color="text.secondary" sx={{ ml: 4, mt: 1, display: 'block' }}>
+                            次回レッスン予定日を記録
                           </Typography>
                         </Box>
-                        <Typography variant="caption" color="text.secondary" sx={{ ml: 4, display: 'block' }}>
-                          日付を入力すると完了になります
-                        </Typography>
-                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', ml: 4, mt: 1 }}>
-                          <TextField
-                            type="date"
-                            size="small"
-                            value={student.next_lesson_date || ''}
-                            onChange={(e) => handleUpdateLessonDate(student.id, 'next_lesson_date', e.target.value)}
-                            sx={{ flex: 1 }}
-                          />
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={() => {
-                              const today = new Date().toISOString().split('T')[0];
-                              handleUpdateLessonDate(student.id, 'next_lesson_date', today);
-                            }}
-                          >
-                            今日を設定
-                          </Button>
-                        </Box>
-                        <Typography variant="caption" color="text.secondary" sx={{ ml: 4, mt: 1, display: 'block' }}>
-                          次回レッスン予定日を記録
-                        </Typography>
-                      </Box>
 
-                      {/* レッスンを実施 */}
-                      <Box sx={{ mb: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                          <Checkbox
-                            checked={student.lesson_completed}
-                            disabled
-                            sx={{
-                              color: 'primary.main',
-                              '&.Mui-checked': {
-                                color: 'success.main',
-                                animation: 'glow 2s ease-in-out infinite alternate',
-                                '@keyframes glow': {
-                                  '0%': {
-                                    boxShadow: '0 0 5px #4caf50',
-                                  },
-                                  '100%': {
-                                    boxShadow: '0 0 20px #4caf50, 0 0 30px #4caf50',
+                        {/* レッスンを実施 */}
+                        <Box sx={{ mb: 2 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                            <Checkbox
+                              checked={weeklyData.lesson_completed}
+                              disabled
+                              sx={{
+                                color: 'primary.main',
+                                '&.Mui-checked': {
+                                  color: 'success.main',
+                                  animation: 'glow 2s ease-in-out infinite alternate',
+                                  '@keyframes glow': {
+                                    '0%': {
+                                      boxShadow: '0 0 5px #4caf50',
+                                    },
+                                    '100%': {
+                                      boxShadow: '0 0 20px #4caf50, 0 0 30px #4caf50',
+                                    },
                                   },
                                 },
-                              },
-                            }}
-                          />
-                          <Typography variant="body2">
-                            レッスンを実施した
+                              }}
+                            />
+                            <Typography variant="body2">
+                              レッスンを実施した
+                            </Typography>
+                          </Box>
+                          <Typography variant="caption" color="text.secondary" sx={{ ml: 4, display: 'block' }}>
+                            日付を入力すると完了になります
+                          </Typography>
+                          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', ml: 4, mt: 1 }}>
+                            <TextField
+                              type="date"
+                              size="small"
+                              value={weeklyData.lesson_completed_date || ''}
+                              onChange={(e) => updateStudentWeeklyData(student.id, 'lesson_completed_date', e.target.value)}
+                              sx={{ flex: 1 }}
+                            />
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() => {
+                                const today = new Date().toISOString().split('T')[0];
+                                updateStudentWeeklyData(student.id, 'lesson_completed_date', today);
+                              }}
+                            >
+                              今日を設定
+                            </Button>
+                          </Box>
+                          <Typography variant="caption" color="text.secondary" sx={{ ml: 4, mt: 1, display: 'block' }}>
+                            実施日を記録
                           </Typography>
                         </Box>
-                        <Typography variant="caption" color="text.secondary" sx={{ ml: 4, display: 'block' }}>
-                          日付を入力すると完了になります
-                        </Typography>
-                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', ml: 4, mt: 1 }}>
-                          <TextField
-                            type="date"
-                            size="small"
-                            value={student.lesson_completed_date || ''}
-                            onChange={(e) => handleUpdateLessonDate(student.id, 'lesson_completed_date', e.target.value)}
-                            sx={{ flex: 1 }}
-                          />
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={() => {
-                              const today = new Date().toISOString().split('T')[0];
-                              handleUpdateLessonDate(student.id, 'lesson_completed_date', today);
-                            }}
-                          >
-                            今日を設定
-                          </Button>
-                        </Box>
-                        <Typography variant="caption" color="text.secondary" sx={{ ml: 4, mt: 1, display: 'block' }}>
-                          実施日を記録
-                        </Typography>
-                      </Box>
 
-                      {/* 進捗表示 */}
-                      <Box sx={{ mt: 2 }}>
-                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                          進捗
-                        </Typography>
-                        <LinearProgress 
-                          variant="determinate" 
-                          value={((student.dm_scheduled ? 1 : 0) + (student.lesson_completed ? 1 : 0)) * 50}
-                          sx={{
-                            height: 8,
-                            borderRadius: 4,
-                            backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                            '& .MuiLinearProgress-bar': {
+                        {/* 進捗表示 */}
+                        <Box sx={{ mt: 2 }}>
+                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                            進捗
+                          </Typography>
+                          <LinearProgress 
+                            variant="determinate" 
+                            value={((weeklyData.dm_scheduled ? 1 : 0) + (weeklyData.lesson_completed ? 1 : 0)) * 50}
+                            sx={{
+                              height: 8,
                               borderRadius: 4,
-                              background: 'linear-gradient(90deg, #4caf50, #66bb6a)',
-                            },
-                          }}
-                        />
-                        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                          {((student.dm_scheduled ? 1 : 0) + (student.lesson_completed ? 1 : 0)) * 50}%
-                        </Typography>
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
+                              backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                              '& .MuiLinearProgress-bar': {
+                                borderRadius: 4,
+                                background: 'linear-gradient(90deg, #4caf50, #66bb6a)',
+                              },
+                            }}
+                          />
+                          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                            {((weeklyData.dm_scheduled ? 1 : 0) + (weeklyData.lesson_completed ? 1 : 0)) * 50}%
+                          </Typography>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                );
+              })}
             </Grid>
           </Card>
         </>
