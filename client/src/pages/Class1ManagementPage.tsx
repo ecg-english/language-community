@@ -238,13 +238,19 @@ const Class1ManagementPage: React.FC = () => {
   };
 
   const getInstructors = () => {
-    return users.filter(user => 
+    console.log('getInstructors called, users state:', users);
+    const instructors = users.filter(user => 
       user.role === 'ECG講師' || user.role === 'JCG講師'
     );
+    console.log('Filtered instructors:', instructors);
+    return instructors;
   };
 
   const getClass1Members = () => {
-    return users.filter(user => user.role === 'Class1 Members');
+    console.log('getClass1Members called, users state:', users);
+    const members = users.filter(user => user.role === 'Class1 Members');
+    console.log('Filtered Class1 Members:', members);
+    return members;
   };
 
   if (!hasPermission) {
