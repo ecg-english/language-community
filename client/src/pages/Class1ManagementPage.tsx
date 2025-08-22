@@ -221,6 +221,59 @@ const Class1ManagementPage: React.FC = () => {
     }
   };
 
+  // 全週のデータを一括で取得する関数
+  const fetchAllWeeklyData = async () => {
+    try {
+      console.log('全週データ取得開始');
+      const token = localStorage.getItem('token');
+      
+      // 現在の年から過去1年分の週データを取得
+      const currentYear = new Date().getFullYear();
+      const allWeeklyData: {[weekKey: string]: any} = {};
+      
+      // 過去1年分の週データを取得
+      for (let year = currentYear - 1; year <= currentYear; year++) {
+        for (let week = 1; week <= 53; week++) {
+          const weekKey = `${year}-W${week.toString().padStart(2, '0')}`;
+          
+          try {
+            const response = await axios.get(
+              `${process.env.REACT_APP_API_URL}/api/class1/weekly-checklist/${weekKey}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            );
+            
+            if (response.data.success && response.data.checklist.length > 0) {
+              const weekData: {[studentId: number]: any} = {};
+              
+              response.data.checklist.forEach((item: any) => {
+                weekData[item.student_id] = {
+                  dm_scheduled: Boolean(item.dm_scheduled),
+                  lesson_completed: Boolean(item.lesson_completed),
+                  next_lesson_date: item.next_lesson_date || '',
+                  lesson_completed_date: item.lesson_completed_date || ''
+                };
+              });
+              
+              allWeeklyData[weekKey] = weekData;
+              console.log(`週データ取得成功: ${weekKey}`, weekData);
+            }
+          } catch (error) {
+            // データが存在しない週は無視
+            console.log(`週データなし: ${weekKey}`);
+          }
+        }
+      }
+      
+      console.log('全週データ取得完了:', allWeeklyData);
+      return allWeeklyData;
+    } catch (error) {
+      console.error('全週データの取得に失敗しました:', error);
+      return {};
+    }
+  };
+
   // データベースに週次データを保存
   const saveWeeklyDataToDB = async (weekKey: string, studentId: number, data: any) => {
     try {
@@ -288,19 +341,12 @@ const Class1ManagementPage: React.FC = () => {
       // 基本データを取得
       await fetchData();
       
-      // データベースから週次データを取得
-      console.log('週次データ取得開始');
-      const dbData = await fetchWeeklyData(currentWeekString);
-      console.log('取得した週次データ:', dbData);
+      // 全週のデータを一括で取得
+      console.log('全週データ取得開始');
+      const allWeeklyData = await fetchAllWeeklyData();
+      console.log('取得した全週データ:', allWeeklyData);
       
-      setWeeklyData(prev => {
-        const newData = {
-          ...prev,
-          [currentWeekString]: dbData
-        };
-        console.log('設定する週次データ:', newData);
-        return newData;
-      });
+      setWeeklyData(allWeeklyData);
     };
     
     initializeData();
@@ -310,6 +356,14 @@ const Class1ManagementPage: React.FC = () => {
   useEffect(() => {
     if (currentWeek) {
       console.log('週変更検知:', currentWeek);
+      
+      // 全週データが既に読み込まれている場合は、その週のデータが存在するかチェック
+      if (Object.keys(weeklyData).length > 0) {
+        console.log('全週データが既に読み込まれています');
+        return;
+      }
+      
+      // 全週データが読み込まれていない場合のみ、その週のデータを取得
       const loadWeeklyDataFromDB = async () => {
         const dbData = await fetchWeeklyData(currentWeek);
         console.log('週変更時のデータ:', dbData);
