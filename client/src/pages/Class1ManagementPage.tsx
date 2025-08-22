@@ -42,6 +42,7 @@ import {
   Schedule as ScheduleIcon,
   ArrowBack as ArrowBackIcon,
   ArrowForward as ArrowForwardIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -106,6 +107,16 @@ const Class1ManagementPage: React.FC = () => {
     type: 'scheduled' | 'completed';
     date: string;
   }>}>({});
+  
+  // ポップアップ機能用の状態
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [selectedDateEvents, setSelectedDateEvents] = useState<Array<{
+    studentId: number;
+    studentName: string;
+    type: 'scheduled' | 'completed';
+    date: string;
+  }>>([]);
 
   // 現在の週を正しく計算する関数
   const getCurrentWeek = () => {
@@ -571,25 +582,31 @@ const Class1ManagementPage: React.FC = () => {
   const getEventDisplay = (events: Array<any>) => {
     if (events.length === 0) return null;
     
-    // チェックマーク（実施済み）を優先
-    const completedEvents = events.filter(e => e.type === 'completed');
-    const scheduledEvents = events.filter(e => e.type === 'scheduled');
-    
-    if (completedEvents.length > 0) {
+    // 複数生徒の場合は常に数字で表示
+    if (events.length > 1) {
       return {
-        type: 'completed',
-        count: completedEvents.length,
-        events: completedEvents
-      };
-    } else if (scheduledEvents.length > 0) {
-      return {
-        type: 'scheduled',
-        count: scheduledEvents.length,
-        events: scheduledEvents
+        type: 'multiple',
+        count: events.length,
+        events: events
       };
     }
     
-    return null;
+    // 単一生徒の場合
+    const event = events[0];
+    return {
+      type: event.type,
+      count: 1,
+      events: events
+    };
+  };
+
+  // ポップアップを開く関数
+  const handleDateClick = (dateKey: string, events: Array<any>) => {
+    if (events.length > 0) {
+      setSelectedDate(dateKey);
+      setSelectedDateEvents(events);
+      setPopupOpen(true);
+    }
   };
 
   // 週次データ管理用のヘルパー関数
@@ -1143,7 +1160,9 @@ const Class1ManagementPage: React.FC = () => {
                         '&:hover': {
                           backgroundColor: events.length > 0 ? (isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)') : 'transparent'
                         }
-                      }}>
+                      }}
+                      onClick={() => handleDateClick(dateKey, events)}
+                      >
                         <Typography variant="body2" sx={{ 
                           fontWeight: isToday ? 600 : 400,
                           color: isToday ? 'primary.main' : 'inherit'
@@ -1162,7 +1181,8 @@ const Class1ManagementPage: React.FC = () => {
                             width: 20,
                             height: 20,
                             borderRadius: '50%',
-                            backgroundColor: eventDisplay.type === 'completed' ? 'success.main' : 'warning.main',
+                            backgroundColor: eventDisplay.type === 'completed' ? 'success.main' : 
+                                             eventDisplay.type === 'scheduled' ? 'warning.main' : 'primary.main',
                             color: 'white',
                             fontSize: '0.75rem',
                             fontWeight: 600
@@ -1366,6 +1386,63 @@ const Class1ManagementPage: React.FC = () => {
             保存
           </Button>
         </DialogActions>
+      </Dialog>
+
+      {/* ポップアップ */}
+      <Dialog
+        open={popupOpen}
+        onClose={() => setPopupOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography variant="h6">
+              {selectedDate} のレッスン詳細
+            </Typography>
+            <IconButton onClick={() => setPopupOpen(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2 }}>
+            {selectedDateEvents.map((event, index) => (
+              <Box key={index} sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 2, 
+                p: 2, 
+                mb: 1,
+                border: isDarkMode ? '1px solid #333' : '1px solid #e0e0e0',
+                borderRadius: 1,
+                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)'
+              }}>
+                <Box sx={{ 
+                  width: 24, 
+                  height: 24, 
+                  borderRadius: '50%', 
+                  backgroundColor: event.type === 'completed' ? 'success.main' : 'warning.main',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.875rem',
+                  color: 'white'
+                }}>
+                  {event.type === 'completed' ? '✓' : '⭐'}
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                    {event.studentName}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {event.type === 'completed' ? 'レッスン実施済み' : '次回レッスン予定'}
+                  </Typography>
+                </Box>
+              </Box>
+            ))}
+          </Box>
+        </DialogContent>
       </Dialog>
     </Container>
   );
