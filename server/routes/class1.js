@@ -342,9 +342,9 @@ router.get('/weekly-checklist-all', authenticateToken, checkClass1Permission, as
     console.log('全週チェックリストデータ取得完了:', allChecklist.length, '件');
     
     // 週ごとにグループ化
-    const groupedData: {[weekKey: string]: any} = {};
+    const groupedData = {};
     
-    allChecklist.forEach((item: any) => {
+    allChecklist.forEach((item) => {
       const weekKey = item.week_key;
       if (!groupedData[weekKey]) {
         groupedData[weekKey] = {};
