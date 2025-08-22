@@ -205,22 +205,43 @@ const Class1ManagementPage: React.FC = () => {
     try {
       console.log('週次データ保存開始:', { weekKey, studentId, data });
       const token = localStorage.getItem('token');
+      
+      if (!token) {
+        console.error('認証トークンがありません');
+        return;
+      }
+      
+      const requestData = {
+        dm_scheduled: data.dm_scheduled,
+        lesson_completed: data.lesson_completed,
+        next_lesson_date: data.next_lesson_date,
+        lesson_completed_date: data.lesson_completed_date
+      };
+      
+      console.log('送信するデータ:', requestData);
+      
       const response = await axios.put(
         `${process.env.REACT_APP_API_URL}/api/class1/weekly-checklist/${weekKey}/${studentId}`,
-        {
-          dm_scheduled: data.dm_scheduled,
-          lesson_completed: data.lesson_completed,
-          next_lesson_date: data.next_lesson_date,
-          lesson_completed_date: data.lesson_completed_date
-        },
+        requestData,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
       
       console.log('週次データ保存成功:', response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('週次データの保存に失敗しました:', error);
+      console.error('エラー詳細:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers
+        }
+      });
     }
   };
 

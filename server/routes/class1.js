@@ -175,61 +175,117 @@ router.put('/weekly-checklist/:weekKey/:studentId', authenticateToken, checkClas
     const { weekKey, studentId } = req.params;
     const { dm_scheduled, lesson_completed, next_lesson_date, lesson_completed_date } = req.body;
     
-    console.log('Weekly checklist update:', { weekKey, studentId, dm_scheduled, lesson_completed, next_lesson_date, lesson_completed_date });
+    console.log('Weekly checklist update request received:', { 
+      weekKey, 
+      studentId, 
+      dm_scheduled, 
+      lesson_completed, 
+      next_lesson_date, 
+      lesson_completed_date,
+      body: req.body 
+    });
+    
+    // パラメータの検証
+    if (!weekKey || !studentId) {
+      console.error('Missing required parameters:', { weekKey, studentId });
+      return res.status(400).json({
+        success: false,
+        error: '週キーと生徒IDは必須です'
+      });
+    }
     
     // テーブルが存在するかチェック
+    console.log('Checking if table exists...');
     const tableExists = db.prepare(`
       SELECT name FROM sqlite_master WHERE type='table' AND name='class1_weekly_checklist'
     `).get();
     
+    console.log('Table exists check result:', tableExists);
+    
     if (!tableExists) {
       console.log('Creating class1_weekly_checklist table');
-      db.prepare(`
-        CREATE TABLE IF NOT EXISTS class1_weekly_checklist (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          week_key TEXT NOT NULL,
-          student_id INTEGER NOT NULL,
-          dm_scheduled BOOLEAN DEFAULT FALSE,
-          lesson_completed BOOLEAN DEFAULT FALSE,
-          next_lesson_date TEXT,
-          lesson_completed_date TEXT,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          UNIQUE(week_key, student_id)
-        )
-      `).run();
+      try {
+        db.prepare(`
+          CREATE TABLE IF NOT EXISTS class1_weekly_checklist (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            week_key TEXT NOT NULL,
+            student_id INTEGER NOT NULL,
+            dm_scheduled BOOLEAN DEFAULT FALSE,
+            lesson_completed BOOLEAN DEFAULT FALSE,
+            next_lesson_date TEXT,
+            lesson_completed_date TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(week_key, student_id)
+          )
+        `).run();
+        console.log('Table created successfully');
+      } catch (createError) {
+        console.error('Table creation error:', createError);
+        return res.status(500).json({
+          success: false,
+          error: 'テーブルの作成に失敗しました: ' + createError.message
+        });
+      }
     }
     
     // 既存データを確認
+    console.log('Checking for existing data...');
     const existing = db.prepare(`
       SELECT * FROM class1_weekly_checklist 
       WHERE week_key = ? AND student_id = ?
     `).get(weekKey, studentId);
     
+    console.log('Existing data check result:', existing);
+    
     if (existing) {
       // 更新
-      db.prepare(`
-        UPDATE class1_weekly_checklist 
-        SET dm_scheduled = ?, lesson_completed = ?, next_lesson_date = ?, lesson_completed_date = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE week_key = ? AND student_id = ?
-      `).run(dm_scheduled, lesson_completed, next_lesson_date, lesson_completed_date, weekKey, studentId);
-      console.log('Updated existing weekly checklist entry');
+      console.log('Updating existing entry...');
+      try {
+        const updateResult = db.prepare(`
+          UPDATE class1_weekly_checklist 
+          SET dm_scheduled = ?, lesson_completed = ?, next_lesson_date = ?, lesson_completed_date = ?, updated_at = CURRENT_TIMESTAMP
+          WHERE week_key = ? AND student_id = ?
+        `).run(dm_scheduled, lesson_completed, next_lesson_date, lesson_completed_date, weekKey, studentId);
+        
+        console.log('Update result:', updateResult);
+        console.log('Updated existing weekly checklist entry');
+      } catch (updateError) {
+        console.error('Update error:', updateError);
+        return res.status(500).json({
+          success: false,
+          error: 'データの更新に失敗しました: ' + updateError.message
+        });
+      }
     } else {
       // 新規作成
-      db.prepare(`
-        INSERT INTO class1_weekly_checklist 
-        (week_key, student_id, dm_scheduled, lesson_completed, next_lesson_date, lesson_completed_date)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `).run(weekKey, studentId, dm_scheduled, lesson_completed, next_lesson_date, lesson_completed_date);
-      console.log('Created new weekly checklist entry');
+      console.log('Creating new entry...');
+      try {
+        const insertResult = db.prepare(`
+          INSERT INTO class1_weekly_checklist 
+          (week_key, student_id, dm_scheduled, lesson_completed, next_lesson_date, lesson_completed_date)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `).run(weekKey, studentId, dm_scheduled, lesson_completed, next_lesson_date, lesson_completed_date);
+        
+        console.log('Insert result:', insertResult);
+        console.log('Created new weekly checklist entry');
+      } catch (insertError) {
+        console.error('Insert error:', insertError);
+        return res.status(500).json({
+          success: false,
+          error: 'データの作成に失敗しました: ' + insertError.message
+        });
+      }
     }
     
+    console.log('Weekly checklist update completed successfully');
     res.json({
       success: true,
       message: '週次チェックリストが更新されました'
     });
   } catch (error) {
     console.error('週次チェックリスト更新エラー:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
       error: error.message
