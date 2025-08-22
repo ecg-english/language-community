@@ -79,6 +79,7 @@ const Class1ManagementPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [addStudentDialog, setAddStudentDialog] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   // フォーム状態
   const [studentName, setStudentName] = useState('');
@@ -149,6 +150,9 @@ const Class1ManagementPage: React.FC = () => {
         console.log('講師数:', instructors.length, instructors);
         console.log('Class1 Members数:', class1Members.length, class1Members);
       }
+      
+      // データ取得完了
+      setDataLoaded(true);
     } catch (error: any) {
       console.error('データ取得エラー:', error);
       setError('データの取得に失敗しました');
@@ -243,10 +247,7 @@ const Class1ManagementPage: React.FC = () => {
     console.log('getInstructors called, users state:', users);
     const instructors = users.filter(user => {
       const role = user.role?.trim();
-      return role === 'ECG講師' || role === 'JCG講師' || 
-             role === 'ecg講師' || role === 'jcg講師' ||
-             role === 'ECG講師 ' || role === 'JCG講師 ' ||
-             role === ' ECG講師' || role === ' JCG講師';
+      return role === 'ECG講師' || role === 'JCG講師';
     });
     console.log('Filtered instructors:', instructors);
     return instructors;
@@ -256,10 +257,7 @@ const Class1ManagementPage: React.FC = () => {
     console.log('getClass1Members called, users state:', users);
     const members = users.filter(user => {
       const role = user.role?.trim();
-      return role === 'Class1 Members' || 
-             role === 'class1 members' ||
-             role === 'Class1 Members ' || 
-             role === ' Class1 Members';
+      return role === 'Class1 Members';
     });
     console.log('Filtered Class1 Members:', members);
     return members;
@@ -293,12 +291,13 @@ const Class1ManagementPage: React.FC = () => {
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setAddStudentDialog(true)}
+          disabled={!dataLoaded}
           sx={{ 
-            backgroundColor: 'secondary.main',
-            '&:hover': { backgroundColor: 'secondary.dark' }
+            backgroundColor: dataLoaded ? 'secondary.main' : 'grey.500',
+            '&:hover': { backgroundColor: dataLoaded ? 'secondary.dark' : 'grey.600' }
           }}
         >
-          生徒を追加
+          {dataLoaded ? '生徒を追加' : '読み込み中...'}
         </Button>
       </Box>
 
@@ -485,9 +484,20 @@ const Class1ManagementPage: React.FC = () => {
                   onChange={(e) => setStudentName(e.target.value)}
                   label="Class1 Members"
                 >
-                  {(() => {
+                  {users.length === 0 ? (
+                    <MenuItem disabled value="">
+                      読み込み中...
+                    </MenuItem>
+                  ) : (() => {
                     const members = getClass1Members();
                     console.log('Class1 Members for dropdown:', members);
+                    if (members.length === 0) {
+                      return (
+                        <MenuItem disabled value="">
+                          Class1 Membersが見つかりません
+                        </MenuItem>
+                      );
+                    }
                     return members.map((member) => (
                       <MenuItem key={member.id} value={member.username}>
                         {member.username}
@@ -505,9 +515,20 @@ const Class1ManagementPage: React.FC = () => {
                 onChange={(e) => setSelectedInstructor(e.target.value)}
                 label="担当講師"
               >
-                {(() => {
+                {users.length === 0 ? (
+                  <MenuItem disabled value="">
+                    読み込み中...
+                  </MenuItem>
+                ) : (() => {
                   const instructors = getInstructors();
                   console.log('講師 for dropdown:', instructors);
+                  if (instructors.length === 0) {
+                    return (
+                      <MenuItem disabled value="">
+                        講師が見つかりません
+                      </MenuItem>
+                    );
+                  }
                   return instructors.map((instructor) => (
                     <MenuItem key={instructor.id} value={instructor.id}>
                       {instructor.username} ({instructor.role})
