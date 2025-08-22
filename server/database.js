@@ -555,6 +555,22 @@ const initializeDatabase = () => {
       console.log('class1_students table creation error:', error.message);
     }
 
+    // Class1週次チェックリストテーブル
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS class1_weekly_checklist (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        week_key TEXT NOT NULL,
+        student_id INTEGER NOT NULL,
+        dm_scheduled BOOLEAN DEFAULT FALSE,
+        lesson_completed BOOLEAN DEFAULT FALSE,
+        next_lesson_date TEXT,
+        lesson_completed_date TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(week_key, student_id)
+      )
+    `).run();
+
     // 注意: 新規ユーザーのデフォルトロールを「ビジター」に変更
     // 既存ユーザーのロールは変更されません
     console.log('New users will be assigned "ビジター" role by default');

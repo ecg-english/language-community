@@ -131,4 +131,68 @@ router.delete('/students/:studentId', authenticateToken, checkClass1Permission, 
   }
 });
 
+// 週次チェックリストの取得
+router.get('/weekly-checklist/:weekKey', checkClass1Permission, async (req, res) => {
+  try {
+    const { weekKey } = req.params;
+    
+    const checklist = db.prepare(`
+      SELECT * FROM class1_weekly_checklist 
+      WHERE week_key = ?
+    `).all(weekKey);
+    
+    res.json({
+      success: true,
+      checklist: checklist
+    });
+  } catch (error) {
+    console.error('週次チェックリスト取得エラー:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// 週次チェックリストの更新
+router.put('/weekly-checklist/:weekKey/:studentId', checkClass1Permission, async (req, res) => {
+  try {
+    const { weekKey, studentId } = req.params;
+    const { dm_scheduled, lesson_completed, next_lesson_date, lesson_completed_date } = req.body;
+    
+    // 既存データを確認
+    const existing = db.prepare(`
+      SELECT * FROM class1_weekly_checklist 
+      WHERE week_key = ? AND student_id = ?
+    `).get(weekKey, studentId);
+    
+    if (existing) {
+      // 更新
+      db.prepare(`
+        UPDATE class1_weekly_checklist 
+        SET dm_scheduled = ?, lesson_completed = ?, next_lesson_date = ?, lesson_completed_date = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE week_key = ? AND student_id = ?
+      `).run(dm_scheduled, lesson_completed, next_lesson_date, lesson_completed_date, weekKey, studentId);
+    } else {
+      // 新規作成
+      db.prepare(`
+        INSERT INTO class1_weekly_checklist 
+        (week_key, student_id, dm_scheduled, lesson_completed, next_lesson_date, lesson_completed_date)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).run(weekKey, studentId, dm_scheduled, lesson_completed, next_lesson_date, lesson_completed_date);
+    }
+    
+    res.json({
+      success: true,
+      message: '週次チェックリストが更新されました'
+    });
+  } catch (error) {
+    console.error('週次チェックリスト更新エラー:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 module.exports = router; 

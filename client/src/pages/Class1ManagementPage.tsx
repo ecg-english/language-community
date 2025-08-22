@@ -97,6 +97,125 @@ const Class1ManagementPage: React.FC = () => {
     lesson_completed_date?: string;
   }}}>({});
 
+  // 現在の週を正しく計算する関数
+  const getCurrentWeek = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    
+    // 年の最初の日を取得
+    const firstDayOfYear = new Date(year, 0, 1);
+    
+    // 現在の日付と年の最初の日の差を計算
+    const daysDiff = Math.floor((now.getTime() - firstDayOfYear.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // 週数を計算（年の最初の週を第1週とする）
+    const weekNumber = Math.ceil((daysDiff + firstDayOfYear.getDay() + 1) / 7);
+    
+    return `${year}-W${weekNumber.toString().padStart(2, '0')}`;
+  };
+
+  // 週の範囲を取得する関数
+  const getWeekRange = (weekString: string) => {
+    const [year, week] = weekString.split('-W');
+    const yearNum = parseInt(year);
+    const weekNum = parseInt(week);
+    
+    // 年の最初の日を取得
+    const firstDayOfYear = new Date(yearNum, 0, 1);
+    
+    // 第1週の開始日を計算
+    const firstWeekStart = new Date(firstDayOfYear);
+    const dayOfWeek = firstDayOfYear.getDay();
+    firstWeekStart.setDate(firstDayOfYear.getDate() - dayOfWeek);
+    
+    // 指定された週の開始日を計算
+    const targetWeekStart = new Date(firstWeekStart);
+    targetWeekStart.setDate(firstWeekStart.getDate() + (weekNum - 1) * 7);
+    
+    // 週の終了日を計算
+    const targetWeekEnd = new Date(targetWeekStart);
+    targetWeekEnd.setDate(targetWeekStart.getDate() + 6);
+    
+    return {
+      start: targetWeekStart.toISOString().split('T')[0],
+      end: targetWeekEnd.toISOString().split('T')[0]
+    };
+  };
+
+  // 週次データを永続化する関数
+  const saveWeeklyData = (data: any) => {
+    try {
+      localStorage.setItem('class1_weekly_data', JSON.stringify(data));
+    } catch (error) {
+      console.error('週次データの保存に失敗しました:', error);
+    }
+  };
+
+  // 週次データを読み込む関数
+  const loadWeeklyData = () => {
+    try {
+      const saved = localStorage.getItem('class1_weekly_data');
+      return saved ? JSON.parse(saved) : {};
+    } catch (error) {
+      console.error('週次データの読み込みに失敗しました:', error);
+      return {};
+    }
+  };
+
+  // データベースから週次データを取得
+  const fetchWeeklyData = async (weekKey: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/class1/weekly-checklist/${weekKey}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      
+      if (response.data.success) {
+        const checklistData = response.data.checklist;
+        const weekData: {[studentId: number]: any} = {};
+        
+        checklistData.forEach((item: any) => {
+          weekData[item.student_id] = {
+            dm_scheduled: item.dm_scheduled === 1,
+            lesson_completed: item.lesson_completed === 1,
+            next_lesson_date: item.next_lesson_date || '',
+            lesson_completed_date: item.lesson_completed_date || ''
+          };
+        });
+        
+        return weekData;
+      }
+      return {};
+    } catch (error) {
+      console.error('週次データの取得に失敗しました:', error);
+      return {};
+    }
+  };
+
+  // データベースに週次データを保存
+  const saveWeeklyDataToDB = async (weekKey: string, studentId: number, data: any) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/class1/weekly-checklist/${weekKey}/${studentId}`,
+        {
+          dm_scheduled: data.dm_scheduled,
+          lesson_completed: data.lesson_completed,
+          next_lesson_date: data.next_lesson_date,
+          lesson_completed_date: data.lesson_completed_date
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+    } catch (error) {
+      console.error('週次データの保存に失敗しました:', error);
+    }
+  };
+
   // フォーム状態
   const [studentName, setStudentName] = useState('');
   const [selectedInstructor, setSelectedInstructor] = useState('');
@@ -108,13 +227,44 @@ const Class1ManagementPage: React.FC = () => {
   const hasPermission = user?.role === 'ECG講師' || user?.role === 'JCG講師' || user?.role === 'サーバー管理者';
 
   useEffect(() => {
-    if (!hasPermission) {
-      navigate('/');
-      return;
-    }
-    setCurrentWeek(getCurrentWeek());
     fetchData();
-  }, [hasPermission, navigate]);
+    // 現在の週を設定
+    const currentWeekString = getCurrentWeek();
+    setCurrentWeek(currentWeekString);
+    
+    // データベースから週次データを取得
+    const loadWeeklyDataFromDB = async () => {
+      const dbData = await fetchWeeklyData(currentWeekString);
+      setWeeklyData(prev => ({
+        ...prev,
+        [currentWeekString]: dbData
+      }));
+    };
+    
+    loadWeeklyDataFromDB();
+  }, []);
+
+  // 週が変更されたときにデータベースから読み込み
+  useEffect(() => {
+    if (currentWeek) {
+      const loadWeeklyDataFromDB = async () => {
+        const dbData = await fetchWeeklyData(currentWeek);
+        setWeeklyData(prev => ({
+          ...prev,
+          [currentWeek]: dbData
+        }));
+      };
+      
+      loadWeeklyDataFromDB();
+    }
+  }, [currentWeek]);
+
+  // 週次データが変更されたときに永続化
+  useEffect(() => {
+    if (Object.keys(weeklyData).length > 0) {
+      saveWeeklyData(weeklyData);
+    }
+  }, [weeklyData]);
 
   const fetchData = async () => {
     try {
@@ -310,7 +460,6 @@ const Class1ManagementPage: React.FC = () => {
   };
 
   const getClass1Members = () => {
-    console.log('getClass1Members called, users state:', users);
     const members = users.filter(user => {
       const role = user.role?.trim();
       return role === 'Class1 Members';
@@ -319,37 +468,7 @@ const Class1ManagementPage: React.FC = () => {
     return members;
   };
 
-  // 週次チェックリスト用のヘルパー関数
-  const getCurrentWeek = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const week = Math.ceil((now.getDate() + new Date(year, now.getMonth(), 1).getDay()) / 7);
-    return `${year}-W${week.toString().padStart(2, '0')}`;
-  };
-
-  const getWeekRange = (weekString: string) => {
-    const [year, week] = weekString.split('-W');
-    const yearNum = parseInt(year);
-    const weekNum = parseInt(week);
-    
-    // その年の最初の日曜日を基準に計算
-    const firstDayOfYear = new Date(yearNum, 0, 1);
-    const firstSunday = new Date(firstDayOfYear);
-    firstSunday.setDate(firstDayOfYear.getDate() + (7 - firstDayOfYear.getDay()) % 7);
-    
-    // 指定週の開始日（月曜日）
-    const weekStart = new Date(firstSunday);
-    weekStart.setDate(firstSunday.getDate() + (weekNum - 1) * 7 + 1);
-    
-    // 指定週の終了日（日曜日）
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
-    
-    return {
-      start: weekStart.toISOString().split('T')[0],
-      end: weekEnd.toISOString().split('T')[0]
-    };
-  };
+  // 週次チェックリスト用のヘルパー関数（既存の関数を削除し、上記の新しい関数を使用）
 
   const getFilteredStudents = () => {
     if (selectedInstructorFilter === 'all') {
@@ -399,13 +518,21 @@ const Class1ManagementPage: React.FC = () => {
         updatedStudentData.lesson_completed = !!value;
       }
 
-      return {
+      const newWeeklyData = {
         ...prev,
         [currentWeek]: {
           ...weekData,
           [studentId]: updatedStudentData
         }
       };
+
+      // ローカルストレージに永続化
+      saveWeeklyData(newWeeklyData);
+      
+      // データベースにも保存
+      saveWeeklyDataToDB(currentWeek, studentId, updatedStudentData);
+
+      return newWeeklyData;
     });
   };
 
@@ -476,9 +603,16 @@ const Class1ManagementPage: React.FC = () => {
               <IconButton 
                 onClick={() => {
                   const [year, week] = currentWeek.split('-W');
-                  const prevWeek = parseInt(week) - 1;
-                  if (prevWeek >= 1) {
-                    setCurrentWeek(`${year}-W${prevWeek.toString().padStart(2, '0')}`);
+                  const yearNum = parseInt(year);
+                  const weekNum = parseInt(week);
+                  
+                  if (weekNum > 1) {
+                    // 同じ年の中で前の週
+                    setCurrentWeek(`${yearNum}-W${(weekNum - 1).toString().padStart(2, '0')}`);
+                  } else {
+                    // 前の年の最後の週
+                    const prevYear = yearNum - 1;
+                    setCurrentWeek(`${prevYear}-W52`);
                   }
                 }}
               >
@@ -496,9 +630,16 @@ const Class1ManagementPage: React.FC = () => {
               <IconButton 
                 onClick={() => {
                   const [year, week] = currentWeek.split('-W');
-                  const nextWeek = parseInt(week) + 1;
-                  if (nextWeek <= 53) {
-                    setCurrentWeek(`${year}-W${nextWeek.toString().padStart(2, '0')}`);
+                  const yearNum = parseInt(year);
+                  const weekNum = parseInt(week);
+                  
+                  if (weekNum < 52) {
+                    // 同じ年の中で次の週
+                    setCurrentWeek(`${yearNum}-W${(weekNum + 1).toString().padStart(2, '0')}`);
+                  } else {
+                    // 次の年の最初の週
+                    const nextYear = yearNum + 1;
+                    setCurrentWeek(`${nextYear}-W01`);
                   }
                 }}
               >
