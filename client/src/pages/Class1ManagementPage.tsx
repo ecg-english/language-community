@@ -133,7 +133,9 @@ const Class1ManagementPage: React.FC = () => {
         // 全ユーザーのロールを確認
         console.log('全ユーザーのロール一覧:', usersResponse.data.users.map((user: any) => ({
           username: user.username,
-          role: user.role
+          role: user.role,
+          roleLength: user.role.length,
+          roleCharCodes: Array.from(user.role as string).map((char: string) => char.charCodeAt(0))
         })));
         
         // 講師とClass1 Membersの数を確認
@@ -239,16 +241,26 @@ const Class1ManagementPage: React.FC = () => {
 
   const getInstructors = () => {
     console.log('getInstructors called, users state:', users);
-    const instructors = users.filter(user => 
-      user.role === 'ECG講師' || user.role === 'JCG講師'
-    );
+    const instructors = users.filter(user => {
+      const role = user.role?.trim();
+      return role === 'ECG講師' || role === 'JCG講師' || 
+             role === 'ecg講師' || role === 'jcg講師' ||
+             role === 'ECG講師 ' || role === 'JCG講師 ' ||
+             role === ' ECG講師' || role === ' JCG講師';
+    });
     console.log('Filtered instructors:', instructors);
     return instructors;
   };
 
   const getClass1Members = () => {
     console.log('getClass1Members called, users state:', users);
-    const members = users.filter(user => user.role === 'Class1 Members');
+    const members = users.filter(user => {
+      const role = user.role?.trim();
+      return role === 'Class1 Members' || 
+             role === 'class1 members' ||
+             role === 'Class1 Members ' || 
+             role === ' Class1 Members';
+    });
     console.log('Filtered Class1 Members:', members);
     return members;
   };
