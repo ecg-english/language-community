@@ -185,7 +185,7 @@ router.put('/weekly-checklist/:weekKey/:studentId', authenticateToken, checkClas
       body: req.body 
     });
     
-    // パラメータの検証
+    // パラメータの検証と型変換
     if (!weekKey || !studentId) {
       console.error('Missing required parameters:', { weekKey, studentId });
       return res.status(400).json({
@@ -193,6 +193,28 @@ router.put('/weekly-checklist/:weekKey/:studentId', authenticateToken, checkClas
         error: '週キーと生徒IDは必須です'
       });
     }
+    
+    // studentIdを整数に変換
+    const studentIdInt = parseInt(studentId, 10);
+    if (isNaN(studentIdInt)) {
+      console.error('Invalid studentId:', studentId);
+      return res.status(400).json({
+        success: false,
+        error: '無効な生徒IDです'
+      });
+    }
+    
+    // boolean値を0/1に変換
+    const dmScheduledInt = dm_scheduled ? 1 : 0;
+    const lessonCompletedInt = lesson_completed ? 1 : 0;
+    
+    console.log('Converted values:', {
+      studentIdInt,
+      dmScheduledInt,
+      lessonCompletedInt,
+      next_lesson_date,
+      lesson_completed_date
+    });
     
     // テーブルが存在するかチェック
     console.log('Checking if table exists...');
@@ -234,7 +256,7 @@ router.put('/weekly-checklist/:weekKey/:studentId', authenticateToken, checkClas
     const existing = db.prepare(`
       SELECT * FROM class1_weekly_checklist 
       WHERE week_key = ? AND student_id = ?
-    `).get(weekKey, studentId);
+    `).get(weekKey, studentIdInt);
     
     console.log('Existing data check result:', existing);
     
@@ -246,7 +268,7 @@ router.put('/weekly-checklist/:weekKey/:studentId', authenticateToken, checkClas
           UPDATE class1_weekly_checklist 
           SET dm_scheduled = ?, lesson_completed = ?, next_lesson_date = ?, lesson_completed_date = ?, updated_at = CURRENT_TIMESTAMP
           WHERE week_key = ? AND student_id = ?
-        `).run(dm_scheduled, lesson_completed, next_lesson_date, lesson_completed_date, weekKey, studentId);
+        `).run(dmScheduledInt, lessonCompletedInt, next_lesson_date, lesson_completed_date, weekKey, studentIdInt);
         
         console.log('Update result:', updateResult);
         console.log('Updated existing weekly checklist entry');
@@ -265,7 +287,7 @@ router.put('/weekly-checklist/:weekKey/:studentId', authenticateToken, checkClas
           INSERT INTO class1_weekly_checklist 
           (week_key, student_id, dm_scheduled, lesson_completed, next_lesson_date, lesson_completed_date)
           VALUES (?, ?, ?, ?, ?, ?)
-        `).run(weekKey, studentId, dm_scheduled, lesson_completed, next_lesson_date, lesson_completed_date);
+        `).run(weekKey, studentIdInt, dmScheduledInt, lessonCompletedInt, next_lesson_date, lesson_completed_date);
         
         console.log('Insert result:', insertResult);
         console.log('Created new weekly checklist entry');

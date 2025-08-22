@@ -182,8 +182,8 @@ const Class1ManagementPage: React.FC = () => {
         
         checklistData.forEach((item: any) => {
           weekData[item.student_id] = {
-            dm_scheduled: item.dm_scheduled === 1,
-            lesson_completed: item.lesson_completed === 1,
+            dm_scheduled: Boolean(item.dm_scheduled),
+            lesson_completed: Boolean(item.lesson_completed),
             next_lesson_date: item.next_lesson_date || '',
             lesson_completed_date: item.lesson_completed_date || ''
           };
