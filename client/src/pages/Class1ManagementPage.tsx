@@ -165,6 +165,7 @@ const Class1ManagementPage: React.FC = () => {
   // データベースから週次データを取得
   const fetchWeeklyData = async (weekKey: string) => {
     try {
+      console.log('週次データ取得開始:', weekKey);
       const token = localStorage.getItem('token');
       const response = await axios.get(
         `${process.env.REACT_APP_API_URL}/api/class1/weekly-checklist/${weekKey}`,
@@ -172,6 +173,8 @@ const Class1ManagementPage: React.FC = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+      
+      console.log('週次データAPI応答:', response.data);
       
       if (response.data.success) {
         const checklistData = response.data.checklist;
@@ -186,8 +189,10 @@ const Class1ManagementPage: React.FC = () => {
           };
         });
         
+        console.log('処理された週次データ:', weekData);
         return weekData;
       }
+      console.log('週次データ取得成功、データなし');
       return {};
     } catch (error) {
       console.error('週次データの取得に失敗しました:', error);
@@ -198,8 +203,9 @@ const Class1ManagementPage: React.FC = () => {
   // データベースに週次データを保存
   const saveWeeklyDataToDB = async (weekKey: string, studentId: number, data: any) => {
     try {
+      console.log('週次データ保存開始:', { weekKey, studentId, data });
       const token = localStorage.getItem('token');
-      await axios.put(
+      const response = await axios.put(
         `${process.env.REACT_APP_API_URL}/api/class1/weekly-checklist/${weekKey}/${studentId}`,
         {
           dm_scheduled: data.dm_scheduled,
@@ -211,6 +217,8 @@ const Class1ManagementPage: React.FC = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+      
+      console.log('週次データ保存成功:', response.data);
     } catch (error) {
       console.error('週次データの保存に失敗しました:', error);
     }
@@ -227,28 +235,42 @@ const Class1ManagementPage: React.FC = () => {
   const hasPermission = user?.role === 'ECG講師' || user?.role === 'JCG講師' || user?.role === 'サーバー管理者';
 
   useEffect(() => {
-    fetchData();
-    // 現在の週を設定
-    const currentWeekString = getCurrentWeek();
-    setCurrentWeek(currentWeekString);
-    
-    // データベースから週次データを取得
-    const loadWeeklyDataFromDB = async () => {
+    const initializeData = async () => {
+      console.log('初期化開始');
+      
+      // 現在の週を設定
+      const currentWeekString = getCurrentWeek();
+      console.log('現在の週:', currentWeekString);
+      setCurrentWeek(currentWeekString);
+      
+      // 基本データを取得
+      await fetchData();
+      
+      // データベースから週次データを取得
+      console.log('週次データ取得開始');
       const dbData = await fetchWeeklyData(currentWeekString);
-      setWeeklyData(prev => ({
-        ...prev,
-        [currentWeekString]: dbData
-      }));
+      console.log('取得した週次データ:', dbData);
+      
+      setWeeklyData(prev => {
+        const newData = {
+          ...prev,
+          [currentWeekString]: dbData
+        };
+        console.log('設定する週次データ:', newData);
+        return newData;
+      });
     };
     
-    loadWeeklyDataFromDB();
+    initializeData();
   }, []);
 
   // 週が変更されたときにデータベースから読み込み
   useEffect(() => {
     if (currentWeek) {
+      console.log('週変更検知:', currentWeek);
       const loadWeeklyDataFromDB = async () => {
         const dbData = await fetchWeeklyData(currentWeek);
+        console.log('週変更時のデータ:', dbData);
         setWeeklyData(prev => ({
           ...prev,
           [currentWeek]: dbData
@@ -491,15 +513,27 @@ const Class1ManagementPage: React.FC = () => {
 
   const getStudentWeeklyData = (studentId: number) => {
     const weekData = weeklyData[currentWeek] || {};
-    return weekData[studentId] || {
+    const studentData = weekData[studentId] || {
       dm_scheduled: false,
       lesson_completed: false,
       next_lesson_date: '',
       lesson_completed_date: ''
     };
+    
+    console.log('getStudentWeeklyData:', { 
+      studentId, 
+      currentWeek, 
+      weekData, 
+      studentData,
+      weeklyDataKeys: Object.keys(weeklyData)
+    });
+    
+    return studentData;
   };
 
   const updateStudentWeeklyData = (studentId: number, field: string, value: any) => {
+    console.log('updateStudentWeeklyData呼び出し:', { studentId, field, value, currentWeek });
+    
     setWeeklyData(prev => {
       const weekData = prev[currentWeek] || {};
       const studentData = weekData[studentId] || {
@@ -508,6 +542,8 @@ const Class1ManagementPage: React.FC = () => {
         next_lesson_date: '',
         lesson_completed_date: ''
       };
+
+      console.log('現在の学生データ:', studentData);
 
       // フィールドに応じてブール値も更新
       let updatedStudentData = { ...studentData, [field]: value };
@@ -518,6 +554,8 @@ const Class1ManagementPage: React.FC = () => {
         updatedStudentData.lesson_completed = !!value;
       }
 
+      console.log('更新後の学生データ:', updatedStudentData);
+
       const newWeeklyData = {
         ...prev,
         [currentWeek]: {
@@ -525,6 +563,8 @@ const Class1ManagementPage: React.FC = () => {
           [studentId]: updatedStudentData
         }
       };
+
+      console.log('新しい週次データ:', newWeeklyData);
 
       // ローカルストレージに永続化
       saveWeeklyData(newWeeklyData);
