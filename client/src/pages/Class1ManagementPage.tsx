@@ -705,30 +705,37 @@ const Class1ManagementPage: React.FC = () => {
           return;
         }
 
-        // 次回レッスン予定日
-        if (studentData.next_lesson_date) {
-          const dateKey = studentData.next_lesson_date;
-          if (!events[dateKey]) events[dateKey] = [];
-          
-          events[dateKey].push({
-            studentId,
-            studentName: student.name,
-            type: 'scheduled',
-            date: dateKey
-          });
-        }
-
-        // レッスン実施日
+        // 同じ生徒の同じ日付での重複を避けるため、まず実施済みをチェック
         if (studentData.lesson_completed_date) {
           const dateKey = studentData.lesson_completed_date;
           if (!events[dateKey]) events[dateKey] = [];
           
-          events[dateKey].push({
-            studentId,
-            studentName: student.name,
-            type: 'completed',
-            date: dateKey
-          });
+          // 同じ生徒が既に存在するかチェック
+          const existingIndex = events[dateKey].findIndex(e => e.studentId === studentId);
+          if (existingIndex === -1) {
+            events[dateKey].push({
+              studentId,
+              studentName: student.name,
+              type: 'completed',
+              date: dateKey
+            });
+          }
+        }
+        // 次回レッスン予定日（実施済みでない場合のみ）
+        else if (studentData.next_lesson_date) {
+          const dateKey = studentData.next_lesson_date;
+          if (!events[dateKey]) events[dateKey] = [];
+          
+          // 同じ生徒が既に存在するかチェック
+          const existingIndex = events[dateKey].findIndex(e => e.studentId === studentId);
+          if (existingIndex === -1) {
+            events[dateKey].push({
+              studentId,
+              studentName: student.name,
+              type: 'scheduled',
+              date: dateKey
+            });
+          }
         }
       });
     });
