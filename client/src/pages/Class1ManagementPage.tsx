@@ -102,23 +102,31 @@ const Class1ManagementPage: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
+      setError(null);
       const token = localStorage.getItem('token');
       
+      console.log('API URL:', process.env.REACT_APP_API_URL);
+      console.log('Token exists:', !!token);
+      
       // 生徒データを取得
+      console.log('Fetching students data...');
       const studentsResponse = await axios.get(
         `${process.env.REACT_APP_API_URL}/api/class1/students`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+      console.log('Students response received:', studentsResponse.status);
 
       // ユーザーデータを取得
+      console.log('Fetching users data...');
       const usersResponse = await axios.get(
         `${process.env.REACT_APP_API_URL}/api/auth/users`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+      console.log('Users response received:', usersResponse.status);
 
       console.log('生徒データレスポンス:', studentsResponse.data);
       console.log('ユーザーデータレスポンス:', usersResponse.data);
@@ -126,7 +134,10 @@ const Class1ManagementPage: React.FC = () => {
       if (studentsResponse.data.success) {
         setStudents(studentsResponse.data.students);
         console.log('生徒データ設定完了:', studentsResponse.data.students);
+      } else {
+        console.error('Students API returned success: false', studentsResponse.data);
       }
+      
       if (usersResponse.data.success) {
         setUsers(usersResponse.data.users);
         console.log('ユーザーデータ設定完了:', usersResponse.data.users);
@@ -149,13 +160,23 @@ const Class1ManagementPage: React.FC = () => {
         
         console.log('講師数:', instructors.length, instructors);
         console.log('Class1 Members数:', class1Members.length, class1Members);
+      } else {
+        console.error('Users API returned success: false', usersResponse.data);
       }
       
       // データ取得完了
       setDataLoaded(true);
+      console.log('Data loading completed');
     } catch (error: any) {
       console.error('データ取得エラー:', error);
-      setError('データの取得に失敗しました');
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        url: error.config?.url
+      });
+      setError(`データの取得に失敗しました: ${error.message}`);
+      setDataLoaded(false);
     } finally {
       setLoading(false);
     }
