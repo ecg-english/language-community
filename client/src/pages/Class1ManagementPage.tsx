@@ -130,6 +130,13 @@ const Class1ManagementPage: React.FC = () => {
 
       console.log('生徒データレスポンス:', studentsResponse.data);
       console.log('ユーザーデータレスポンス:', usersResponse.data);
+      console.log('ユーザーデータレスポンス詳細:', {
+        hasSuccess: 'success' in usersResponse.data,
+        successValue: usersResponse.data.success,
+        hasUsers: 'users' in usersResponse.data,
+        usersLength: usersResponse.data.users?.length,
+        dataKeys: Object.keys(usersResponse.data)
+      });
 
       // 生徒データの処理
       if (studentsResponse.data && studentsResponse.data.success) {
@@ -140,13 +147,13 @@ const Class1ManagementPage: React.FC = () => {
         setStudents([]); // 空配列を設定
       }
       
-      // ユーザーデータの処理
-      if (usersResponse.data && usersResponse.data.success) {
-        setUsers(usersResponse.data.users || []);
+      // ユーザーデータの処理（successフィールドに関係なくデータを設定）
+      if (usersResponse.data && usersResponse.data.users && Array.isArray(usersResponse.data.users)) {
+        setUsers(usersResponse.data.users);
         console.log('ユーザーデータ設定完了:', usersResponse.data.users);
         
         // 全ユーザーのロールを確認
-        const users = usersResponse.data.users || [];
+        const users = usersResponse.data.users;
         console.log('全ユーザーのロール一覧:', users.map((user: any) => ({
           username: user.username,
           role: user.role,
@@ -164,8 +171,14 @@ const Class1ManagementPage: React.FC = () => {
         
         console.log('講師数:', instructors.length, instructors);
         console.log('Class1 Members数:', class1Members.length, class1Members);
+        
+        // データ設定成功ログ
+        console.log('ユーザーデータ正常設定 - users state length:', users.length);
+      } else if (usersResponse.data && usersResponse.data.success) {
+        setUsers(usersResponse.data.users || []);
+        console.log('ユーザーデータ設定完了（successベース）:', usersResponse.data.users);
       } else {
-        console.error('Users API returned success: false', usersResponse.data);
+        console.error('Users API returned unexpected format:', usersResponse.data);
         setUsers([]); // 空配列を設定
       }
       
