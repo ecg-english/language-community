@@ -216,18 +216,22 @@ if (process.env.NODE_ENV === 'production') {
 // マイグレーション実行
 const runMigrations = () => {
   try {
-    console.log('Running database migrations...');
+    console.log('=== データベースマイグレーション開始 ===');
+    console.log('1. fix_database_now を実行中...');
     require('./fix_database_now');
+    console.log('2. fix_survey_table を実行中...');
     require('./fix_survey_table');
+    console.log('3. fix_survey_table_structure を実行中...');
     require('./fix_survey_table_structure');
-    console.log('Migrations completed successfully');
+    console.log('=== データベースマイグレーション完了 ===');
   } catch (error) {
-    console.error('Migration failed:', error);
+    console.error('❌ マイグレーション失敗:', error);
     // マイグレーションが失敗してもサーバーは起動させる
   }
 };
 
 // サーバー起動前にマイグレーションを実行
+console.log('サーバー起動前のマイグレーションを実行中...');
 runMigrations();
 
 app.listen(PORT, () => {
