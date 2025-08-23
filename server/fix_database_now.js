@@ -38,9 +38,9 @@ const fixDatabaseNow = () => {
     if (!memberNumberColumn) {
       console.log('❌ member_number column missing - adding it now...');
       
-      // member_numberカラムを追加
+      // member_numberカラムを追加（UNIQUE制約なしで追加）
       db.prepare(`
-        ALTER TABLE class1_students ADD COLUMN member_number TEXT UNIQUE
+        ALTER TABLE class1_students ADD COLUMN member_number TEXT
       `).run();
       
       console.log('✅ member_number column added successfully');
