@@ -50,6 +50,15 @@ router.get('/current-month', authenticateToken, checkClass1MembersPermission, (r
     const now = new Date();
     const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     
+    // ユーザーIDを使って生徒のIDを取得
+    const student = db.prepare(`
+      SELECT id FROM class1_students WHERE instructor_id = ?
+    `).get(userId);
+    
+    if (!student) {
+      return res.json({ success: true, survey: null });
+    }
+    
     const survey = db.prepare(`
       SELECT 
         satisfaction_rating,
@@ -62,8 +71,8 @@ router.get('/current-month', authenticateToken, checkClass1MembersPermission, (r
         submitted_at,
         member_number
       FROM surveys
-      WHERE user_id = ? AND month = ?
-    `).get(userId, currentMonth);
+      WHERE member_number = ? AND month = ?
+    `).get(student.id, currentMonth);
 
     if (survey) {
       // next_month_goalsをJSONから配列に変換
@@ -101,9 +110,9 @@ router.post('/submit', authenticateToken, checkClass1MembersPermission, (req, re
       return res.status(400).json({ success: false, message: '会員番号は必須です' });
     }
 
-    // 会員番号で生徒を確認
+    // IDを会員番号として使用して生徒を確認
     const student = db.prepare(`
-      SELECT id, name FROM class1_students WHERE member_number = ?
+      SELECT id, name FROM class1_students WHERE id = ?
     `).get(member_number);
 
     if (!student) {
