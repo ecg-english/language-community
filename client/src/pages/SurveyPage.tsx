@@ -319,7 +319,8 @@ const SurveyPage: React.FC = () => {
                 marks
                 valueLabelDisplay="auto"
                 sx={{ 
-                  width: 'calc(100% - 70px)',
+                  width: 'calc(100% - 80px)',
+                  maxWidth: 'calc(100% - 80px)',
                   '& .MuiSlider-track': {
                     background: 'linear-gradient(90deg, #f44336 0%, #ff9800 20%, #ffeb3b 40%, #8bc34a 60%, #4caf50 80%, #2e7d32 100%)',
                   height: 8,
@@ -351,7 +352,8 @@ const SurveyPage: React.FC = () => {
               />
               <Box
                 sx={{
-                  minWidth: 50,
+                  minWidth: 60,
+                  width: 60,
                   height: 40,
                   backgroundColor: (() => {
                     const score = surveyData.recommendation_score;
