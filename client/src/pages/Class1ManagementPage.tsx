@@ -417,6 +417,11 @@ const Class1ManagementPage: React.FC = () => {
       if (studentsResponse.data && studentsResponse.data.success) {
         setStudents(studentsResponse.data.students || []);
         console.log('生徒データ設定完了:', studentsResponse.data.students);
+        // 会員番号のデバッグ情報
+        const students = studentsResponse.data.students || [];
+        students.forEach((student: any) => {
+          console.log(`Student: ${student.name}, Member Number: ${student.member_number || 'NULL'}`);
+        });
       } else {
         console.error('Students API returned success: false', studentsResponse.data);
         setStudents([]); // 空配列を設定
