@@ -367,8 +367,9 @@ const SurveyPage: React.FC = () => {
                   },
                 },
               }}
-              
-              {/* 数字ボックスを下に配置 */}
+            />
+            
+            {/* 数字ボックスを下に配置 */}
               <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
                 <Box
                   sx={{
