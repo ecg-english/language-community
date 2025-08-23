@@ -192,8 +192,8 @@ const Class1ManagementPage: React.FC = () => {
     }
     const now = new Date();
     const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    // GitHub Pages + HashRouterの場合は#/を使用
-    const surveyUrl = `${window.location.origin}/#/survey/${currentMonth}/${memberNumber}`;
+    // GitHub Pages + HashRouterの場合は#/を使用（リポジトリ名を含む）
+    const surveyUrl = `${window.location.origin}/language-community/#/survey/${currentMonth}/${memberNumber}`;
     
     // クリップボードにコピー
     navigator.clipboard.writeText(surveyUrl).then(() => {
