@@ -67,6 +67,38 @@ const createSurveyTable = () => {
 // テーブル作成を実行
 createSurveyTable();
 
+// 月別アンケートデータを取得（認証不要）
+router.get('/month/:month/:memberNumber', (req, res) => {
+  try {
+    const { month, memberNumber } = req.params;
+    
+    const survey = db.prepare(`
+      SELECT 
+        satisfaction_rating,
+        recommendation_score,
+        instructor_feedback,
+        lesson_feedback,
+        next_month_goals,
+        other_comments,
+        completed,
+        submitted_at,
+        member_number
+      FROM surveys
+      WHERE member_number = ? AND month = ?
+    `).get(memberNumber, month);
+
+    if (survey) {
+      // next_month_goalsを配列に変換
+      survey.next_month_goals = survey.next_month_goals ? JSON.parse(survey.next_month_goals) : [];
+    }
+
+    res.json({ success: true, survey });
+  } catch (error) {
+    console.error('月別アンケートデータ取得エラー:', error);
+    res.status(500).json({ success: false, message: 'アンケートデータの取得に失敗しました' });
+  }
+});
+
 // 現在月のアンケートデータを取得
 router.get('/current-month', authenticateToken, checkClass1MembersPermission, (req, res) => {
   try {
@@ -225,6 +257,111 @@ router.post('/submit', authenticateToken, checkClass1MembersPermission, (req, re
     res.json({ success: true, message: 'アンケートを送信しました' });
   } catch (error) {
     console.error('アンケート送信エラー:', error);
+    res.status(500).json({ success: false, message: 'アンケートの送信に失敗しました' });
+  }
+});
+
+// 月別アンケート送信（認証不要）
+router.post('/month/:month/:memberNumber', (req, res) => {
+  try {
+    const { month, memberNumber } = req.params;
+    const {
+      satisfaction_rating,
+      recommendation_score,
+      instructor_feedback,
+      lesson_feedback,
+      next_month_goals,
+      other_comments,
+      completed
+    } = req.body;
+
+    // 会員番号で生徒を確認
+    const student = db.prepare(`
+      SELECT id FROM class1_students WHERE id = ?
+    `).get(memberNumber);
+
+    if (!student) {
+      return res.status(404).json({ success: false, message: '生徒が見つかりません' });
+    }
+
+    const nextMonthGoalsJson = JSON.stringify(next_month_goals || []);
+
+    // 既存データを確認
+    const existing = db.prepare(`
+      SELECT id FROM surveys
+      WHERE member_number = ? AND month = ?
+    `).get(memberNumber, month);
+
+    if (existing) {
+      // 既存データを更新
+      db.prepare(`
+        UPDATE surveys
+        SET
+          satisfaction_rating = ?,
+          recommendation_score = ?,
+          instructor_feedback = ?,
+          lesson_feedback = ?,
+          next_month_goals = ?,
+          other_comments = ?,
+          completed = ?,
+          submitted_at = CURRENT_TIMESTAMP,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE member_number = ? AND month = ?
+      `).run(
+        satisfaction_rating,
+        recommendation_score,
+        instructor_feedback || '',
+        lesson_feedback || '',
+        nextMonthGoalsJson,
+        other_comments || '',
+        completed ? 1 : 0,
+        memberNumber,
+        month
+      );
+    } else {
+      // 新規データを作成
+      db.prepare(`
+        INSERT INTO surveys (
+          member_number, month, satisfaction_rating, recommendation_score,
+          instructor_feedback, lesson_feedback, next_month_goals,
+          other_comments, completed, submitted_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      `).run(
+        memberNumber,
+        month,
+        satisfaction_rating,
+        recommendation_score,
+        instructor_feedback || '',
+        lesson_feedback || '',
+        nextMonthGoalsJson,
+        other_comments || '',
+        completed ? 1 : 0
+      );
+    }
+
+    // マネージャーページ用の月次データも更新
+    const existingMonthlyData = db.prepare(`
+      SELECT id FROM manager_monthly_data 
+      WHERE student_id = ? AND month = ?
+    `).get(student.id, month);
+
+    if (existingMonthlyData) {
+      db.prepare(`
+        UPDATE manager_monthly_data 
+        SET survey_completed = ?, survey_answers = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE student_id = ? AND month = ?
+      `).run(1, JSON.stringify(req.body), student.id, month);
+    } else {
+      db.prepare(`
+        INSERT INTO manager_monthly_data (student_id, month, survey_completed, survey_answers)
+        VALUES (?, ?, ?, ?)
+      `).run(student.id, month, 1, JSON.stringify(req.body));
+    }
+
+    res.json({ success: true, message: 'アンケートを送信しました' });
+  } catch (error) {
+    console.error('月別アンケート送信エラー:', error);
     res.status(500).json({ success: false, message: 'アンケートの送信に失敗しました' });
   }
 });

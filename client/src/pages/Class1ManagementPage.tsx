@@ -184,6 +184,31 @@ const Class1ManagementPage: React.FC = () => {
     }
   };
 
+  // アンケートURL生成関数
+  const generateSurveyUrl = (memberNumber: string | null) => {
+    if (!memberNumber) {
+      alert('会員番号が設定されていません');
+      return;
+    }
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const surveyUrl = `${window.location.origin}/survey/${currentMonth}/${memberNumber}`;
+    
+    // クリップボードにコピー
+    navigator.clipboard.writeText(surveyUrl).then(() => {
+      alert(`アンケートURLをクリップボードにコピーしました:\n${surveyUrl}`);
+    }).catch(() => {
+      // クリップボードAPIが使えない場合は手動コピー
+      const textArea = document.createElement('textarea');
+      textArea.value = surveyUrl;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert(`アンケートURLをクリップボードにコピーしました:\n${surveyUrl}`);
+    });
+  };
+
   // データベースから週次データを取得
   const fetchWeeklyData = async (weekKey: string) => {
     try {
@@ -1035,12 +1060,22 @@ const Class1ManagementPage: React.FC = () => {
                               </Typography>
                             </Box>
                           </Box>
-                          <IconButton
-                            color="error"
-                            onClick={() => handleDeleteStudent(student.id)}
-                          >
-                            <DeleteIcon />
-                          </IconButton>
+                          <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() => generateSurveyUrl(student.member_number || student.id.toString())}
+                              sx={{ fontSize: '0.75rem' }}
+                            >
+                              アンケートURL生成
+                            </Button>
+                            <IconButton
+                              color="error"
+                              onClick={() => handleDeleteStudent(student.id)}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Box>
                         </Box>
 
                         {/* DMで次回レッスン日を調整 */}

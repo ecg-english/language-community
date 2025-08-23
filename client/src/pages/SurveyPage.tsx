@@ -25,7 +25,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../contexts/ThemeContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 
 interface SurveyData {
@@ -45,6 +45,7 @@ const SurveyPage: React.FC = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
   const { isDarkMode } = useTheme();
+  const { month, memberNumber } = useParams<{ month: string; memberNumber: string }>();
 
   const [surveyData, setSurveyData] = useState<SurveyData>({
     member_number: '',
@@ -78,23 +79,31 @@ const SurveyPage: React.FC = () => {
   ];
 
   useEffect(() => {
-    if (!hasPermission) {
-      navigate('/');
-      return;
+    // 月別URLの場合は権限チェックをスキップ
+    if (month && memberNumber) {
+      setCurrentMonth(month);
+      setSurveyData(prev => ({ ...prev, member_number: memberNumber }));
+      fetchSurveyDataForMonth(month, memberNumber);
+    } else {
+      // 通常のアンケートページの場合
+      if (!hasPermission) {
+        navigate('/');
+        return;
+      }
+
+      // 現在の年月を設定
+      const now = new Date();
+      const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      setCurrentMonth(currentMonthStr);
+
+      // ローカルストレージから回答済み状態を確認（バックアップ用）
+      const submittedKey = `survey_submitted_${currentMonthStr}`;
+      const isSubmittedThisMonth = localStorage.getItem(submittedKey) === 'true';
+      setIsSubmitted(isSubmittedThisMonth);
+
+      fetchSurveyData();
     }
-
-    // 現在の年月を設定
-    const now = new Date();
-    const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    setCurrentMonth(currentMonthStr);
-
-    // ローカルストレージから回答済み状態を確認（バックアップ用）
-    const submittedKey = `survey_submitted_${currentMonthStr}`;
-    const isSubmittedThisMonth = localStorage.getItem(submittedKey) === 'true';
-    setIsSubmitted(isSubmittedThisMonth);
-
-    fetchSurveyData();
-  }, [hasPermission, navigate]);
+  }, [hasPermission, navigate, month, memberNumber]);
 
   const fetchSurveyData = async () => {
     try {
@@ -138,6 +147,42 @@ const SurveyPage: React.FC = () => {
     }
   };
 
+  const fetchSurveyDataForMonth = async (month: string, memberNumber: string) => {
+    try {
+      setLoading(true);
+      
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/survey/month/${month}/${memberNumber}`
+      );
+
+      if (response.data.success) {
+        if (response.data.survey) {
+          setSurveyData(response.data.survey);
+          setIsSubmitted(true);
+        } else {
+          // 新しいアンケート
+          setSurveyData(prev => ({ 
+            ...prev, 
+            member_number: memberNumber,
+            completed: false 
+          }));
+          setIsSubmitted(false);
+        }
+      }
+    } catch (error) {
+      console.error('月別アンケートデータ取得エラー:', error);
+      // 新しいアンケートとして設定
+      setSurveyData(prev => ({ 
+        ...prev, 
+        member_number: memberNumber,
+        completed: false 
+      }));
+      setIsSubmitted(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSatisfactionChange = (event: React.SyntheticEvent, value: number | null) => {
     setSurveyData(prev => ({ ...prev, satisfaction_rating: value || 0 }));
   };
@@ -159,20 +204,45 @@ const SurveyPage: React.FC = () => {
     try {
       setSubmitting(true);
       setError(null);
+      setSuccess(null);
+
+      // バリデーション
+      if (!surveyData.member_number.trim()) {
+        setError('会員番号を入力してください');
+        return;
+      }
+
+      if (surveyData.satisfaction_rating === 0) {
+        setError('満足度を評価してください');
+        return;
+      }
+
+      let response;
       
-      const token = localStorage.getItem('token');
-      
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/survey/submit`,
-        {
-          ...surveyData,
-          month: currentMonth,
-          completed: true,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      if (month && memberNumber) {
+        // 月別URLの場合は認証不要のAPIを使用
+        response = await axios.post(
+          `${process.env.REACT_APP_API_URL}/api/survey/month/${month}/${memberNumber}`,
+          {
+            ...surveyData,
+            completed: true
+          }
+        );
+      } else {
+        // 通常のアンケートページの場合は認証付きAPIを使用
+        const token = localStorage.getItem('token');
+        response = await axios.post(
+          `${process.env.REACT_APP_API_URL}/api/survey/submit`,
+          {
+            ...surveyData,
+            month: currentMonth,
+            completed: true,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+      }
 
       if (response.data.success) {
         setSuccess(t('surveySubmitted'));
@@ -183,9 +253,9 @@ const SurveyPage: React.FC = () => {
         localStorage.setItem(submittedKey, 'true');
         setIsSubmitted(true);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('アンケート送信エラー:', error);
-      setError(t('surveyError'));
+      setError(error.response?.data?.message || t('surveyError'));
     } finally {
       setSubmitting(false);
     }
@@ -196,7 +266,8 @@ const SurveyPage: React.FC = () => {
     return `${year}年${month}月`;
   };
 
-  if (!hasPermission) {
+  // 月別URLの場合は権限チェックをスキップ
+  if (!month && !hasPermission) {
     return null;
   }
 
@@ -273,7 +344,7 @@ const SurveyPage: React.FC = () => {
               sx={{ mb: 1 }}
             />
             <Typography variant="caption" color="text.secondary">
-              {t('memberNumberHelp')}
+              {month && memberNumber ? 'URLから自動設定されましたが、確認のため入力してください' : t('memberNumberHelp')}
             </Typography>
           </Box>
 
