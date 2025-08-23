@@ -560,7 +560,7 @@ const Class1ManagementPage: React.FC = () => {
     console.log('getInstructors called, users state:', users);
     const instructors = users.filter(user => {
       const role = user.role?.trim();
-      return role === 'ECG講師' || role === 'JCG講師';
+      return role === 'ECG講師' || role === 'JCG講師' || role === 'サーバー管理者';
     });
     console.log('Filtered instructors:', instructors);
     return instructors;
