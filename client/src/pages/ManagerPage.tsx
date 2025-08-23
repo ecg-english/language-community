@@ -448,17 +448,26 @@ const ManagerPage: React.FC = () => {
                         >
                           {student.name}
                         </Typography>
-                        {student.member_number && (
-                          <Typography variant="caption" color="text.secondary" sx={{ mb: 1 }}>
-                            会員番号: {student.member_number}
-                          </Typography>
-                        )}
-                        <Chip 
-                          label={`講師: ${instructor?.username || 'Unknown'}`}
-                          size="small"
-                          variant="outlined"
-                          sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
-                        />
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                          <Chip 
+                            label={`講師: ${instructor?.username || 'Unknown'}`}
+                            size="small"
+                            variant="outlined"
+                            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                          />
+                          {student.member_number && (
+                            <Chip 
+                              label={`会員番号: ${student.member_number}`}
+                              size="small"
+                              variant="outlined"
+                              sx={{ 
+                                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                                backgroundColor: 'primary.light',
+                                color: 'primary.contrastText'
+                              }}
+                            />
+                          )}
+                        </Box>
                       </Box>
                     </Box>
                     

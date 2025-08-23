@@ -988,14 +988,16 @@ const Class1ManagementPage: React.FC = () => {
                             <Typography variant="h6" sx={{ fontWeight: 600 }}>
                               {student.name || `生徒${index + 1}`}
                             </Typography>
-                            {student.member_number && (
-                              <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5 }}>
-                                会員番号: {student.member_number}
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                              <Typography variant="body2" color="text.secondary">
+                                講師: {getInstructorName(student.instructor_id)}
                               </Typography>
-                            )}
-                            <Typography variant="body2" color="text.secondary">
-                              講師: {getInstructorName(student.instructor_id)}
-                            </Typography>
+                              {student.member_number && (
+                                <Typography variant="body2" color="text.secondary">
+                                  会員番号: {student.member_number}
+                                </Typography>
+                              )}
+                            </Box>
                           </Box>
                           <IconButton
                             color="error"
