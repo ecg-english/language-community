@@ -146,18 +146,18 @@ router.post('/submit', authenticateToken, checkClass1MembersPermission, (req, re
     // next_month_goalsをJSON文字列に変換
     const nextMonthGoalsJson = JSON.stringify(next_month_goals || []);
 
-    // 既存データを確認（IDを会員番号として使用）
+    // 既存データを確認（user_idとmonthで確認）
     const existing = db.prepare(`
       SELECT id FROM surveys 
-      WHERE member_number = ? AND month = ?
-    `).get(member_number, month);
+      WHERE user_id = ? AND month = ?
+    `).get(userId, month);
 
     if (existing) {
       // 既存データを更新
       db.prepare(`
         UPDATE surveys 
         SET 
-          user_id = ?,
+          member_number = ?,
           satisfaction_rating = ?,
           recommendation_score = ?,
           instructor_feedback = ?,
@@ -167,9 +167,9 @@ router.post('/submit', authenticateToken, checkClass1MembersPermission, (req, re
           completed = ?,
           submitted_at = CURRENT_TIMESTAMP,
           updated_at = CURRENT_TIMESTAMP
-        WHERE member_number = ? AND month = ?
+        WHERE user_id = ? AND month = ?
       `).run(
-        userId,
+        member_number,
         satisfaction_rating,
         recommendation_score,
         instructor_feedback || '',
@@ -177,7 +177,7 @@ router.post('/submit', authenticateToken, checkClass1MembersPermission, (req, re
         nextMonthGoalsJson,
         other_comments || '',
         completed ? 1 : 0,
-        member_number,
+        userId,
         month
       );
     } else {
