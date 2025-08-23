@@ -88,7 +88,7 @@ const SurveyPage: React.FC = () => {
     const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     setCurrentMonth(currentMonthStr);
 
-    // ローカルストレージから回答済み状態を確認
+    // ローカルストレージから回答済み状態を確認（バックアップ用）
     const submittedKey = `survey_submitted_${currentMonthStr}`;
     const isSubmittedThisMonth = localStorage.getItem(submittedKey) === 'true';
     setIsSubmitted(isSubmittedThisMonth);
@@ -111,6 +111,13 @@ const SurveyPage: React.FC = () => {
       if (response.data.success) {
         if (response.data.survey) {
           setSurveyData(response.data.survey);
+          // サーバーサイドにデータがある場合は回答済みとして設定
+          setIsSubmitted(true);
+        } else {
+          // サーバーサイドにデータがない場合はローカルストレージを確認
+          const submittedKey = `survey_submitted_${currentMonth}`;
+          const isSubmittedThisMonth = localStorage.getItem(submittedKey) === 'true';
+          setIsSubmitted(isSubmittedThisMonth);
         }
       }
     } catch (error) {
