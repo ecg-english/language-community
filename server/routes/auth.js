@@ -739,7 +739,7 @@ router.delete('/users/:userId', authenticateToken, requireAdmin, (req, res) => {
 });
 
 // ユーザー一覧を取得（Class1管理用）
-router.get('/users', authenticateToken, (req, res) => {
+router.get('/users/class1', authenticateToken, (req, res) => {
   try {
     const userRole = req.user.role;
     

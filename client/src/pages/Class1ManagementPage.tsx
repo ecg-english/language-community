@@ -395,7 +395,7 @@ const Class1ManagementPage: React.FC = () => {
       // ユーザーデータを取得
       console.log('Fetching users data...');
       const usersResponse = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/auth/users`,
+        `${process.env.REACT_APP_API_URL}/api/auth/users/class1`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
