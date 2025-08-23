@@ -49,6 +49,7 @@ import axios from 'axios';
 interface Student {
   id: number;
   name: string;
+  member_number?: string;
   instructor_id: number;
   instructor_name: string;
   email?: string;
@@ -447,6 +448,11 @@ const ManagerPage: React.FC = () => {
                         >
                           {student.name}
                         </Typography>
+                        {student.member_number && (
+                          <Typography variant="caption" color="text.secondary" sx={{ mb: 1 }}>
+                            会員番号: {student.member_number}
+                          </Typography>
+                        )}
                         <Chip 
                           label={`講師: ${instructor?.username || 'Unknown'}`}
                           size="small"

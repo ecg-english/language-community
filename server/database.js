@@ -540,6 +540,7 @@ const initializeDatabase = () => {
         CREATE TABLE IF NOT EXISTS class1_students (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT NOT NULL,
+          member_number TEXT UNIQUE,
           instructor_id INTEGER NOT NULL,
           email TEXT,
           memo TEXT,

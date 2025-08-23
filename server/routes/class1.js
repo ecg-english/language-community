@@ -56,6 +56,13 @@ router.get('/students', authenticateToken, checkClass1Permission, async (req, re
   }
 });
 
+// 会員番号を生成する関数
+const generateMemberNumber = () => {
+  const timestamp = Date.now().toString();
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  return `C1${timestamp.slice(-6)}${random}`;
+};
+
 // 生徒を追加
 router.post('/students', authenticateToken, checkClass1Permission, async (req, res) => {
   try {
@@ -66,16 +73,20 @@ router.post('/students', authenticateToken, checkClass1Permission, async (req, r
       return res.status(400).json({ success: false, message: '生徒名と担当講師は必須です' });
     }
 
+    // 会員番号を生成
+    const memberNumber = generateMemberNumber();
+
     const result = db.prepare(`
-      INSERT INTO class1_students (name, instructor_id, memo, email, created_at)
-      VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
-    `).run(name, instructor_id, memo || null, email || null);
+      INSERT INTO class1_students (name, member_number, instructor_id, memo, email, created_at)
+      VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    `).run(name, memberNumber, instructor_id, memo || null, email || null);
 
     console.log('Student added successfully:', result.lastInsertRowid);
     res.json({ 
       success: true, 
       message: '生徒を追加しました',
-      studentId: result.lastInsertRowid 
+      studentId: result.lastInsertRowid,
+      memberNumber: memberNumber
     });
   } catch (error) {
     console.error('生徒追加エラー:', error);

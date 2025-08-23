@@ -29,6 +29,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 interface SurveyData {
+  member_number: string;
   satisfaction_rating: number;
   recommendation_score: number;
   instructor_feedback: string;
@@ -46,6 +47,7 @@ const SurveyPage: React.FC = () => {
   const { isDarkMode } = useTheme();
 
   const [surveyData, setSurveyData] = useState<SurveyData>({
+    member_number: '',
     satisfaction_rating: 0,
     recommendation_score: 5,
     instructor_feedback: '',
@@ -65,13 +67,13 @@ const SurveyPage: React.FC = () => {
 
   // 来月学びたいことの選択肢
   const nextMonthGoals = [
-    '会話スキルを伸ばしたい',
-    '文法の正確さを高めたい',
-    '語彙を増やしたい',
-    '発音を改善したい',
-    'リスニングを鍛えたい',
-    '試験対策(英検/TOEICなど)',
-    '文化についてもっと学びたい',
+    t('conversationSkills'),
+    t('grammarAccuracy'),
+    t('vocabulary'),
+    t('pronunciation'),
+    t('listening'),
+    t('examPreparation'),
+    t('culture'),
   ];
 
   useEffect(() => {
@@ -109,6 +111,7 @@ const SurveyPage: React.FC = () => {
       console.error('アンケートデータ取得エラー:', error);
       // エラーが404の場合は新しい月なので空のデータを設定
       setSurveyData({
+        member_number: '',
         satisfaction_rating: 0,
         recommendation_score: 5,
         instructor_feedback: '',
@@ -159,12 +162,12 @@ const SurveyPage: React.FC = () => {
       );
 
       if (response.data.success) {
-        setSuccess('アンケートを送信しました。ありがとうございます！');
+        setSuccess(t('surveySubmitted'));
         setSurveyData(prev => ({ ...prev, completed: true, submitted_at: new Date().toISOString() }));
       }
     } catch (error) {
       console.error('アンケート送信エラー:', error);
-      setError('アンケートの送信に失敗しました。もう一度お試しください。');
+      setError(t('surveyError'));
     } finally {
       setSubmitting(false);
     }
@@ -196,14 +199,14 @@ const SurveyPage: React.FC = () => {
           <CardContent sx={{ textAlign: 'center', py: 6 }}>
             <CheckCircleIcon sx={{ fontSize: 64, color: 'success.main', mb: 2 }} />
             <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
-              {formatMonthDisplay(currentMonth)}のアンケートは実施済みです
+              {t('surveyCompleted', { month: formatMonthDisplay(currentMonth) })}
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-              ご協力いただき、ありがとうございました。
+              {t('surveyCompletedDescription')}
             </Typography>
             {surveyData.submitted_at && (
               <Typography variant="caption" color="text.secondary">
-                送信日時: {new Date(surveyData.submitted_at).toLocaleString('ja-JP')}
+                {t('submissionTime')}: {new Date(surveyData.submitted_at).toLocaleString('ja-JP')}
               </Typography>
             )}
           </CardContent>
@@ -217,7 +220,7 @@ const SurveyPage: React.FC = () => {
       {/* ヘッダー */}
       <Box sx={{ textAlign: 'center', mb: 4 }}>
         <Typography variant="h4" component="h1" sx={{ fontWeight: 600, mb: 1 }}>
-          {formatMonthDisplay(currentMonth)} | フィードバック
+          {formatMonthDisplay(currentMonth)} | {t('feedback')}
         </Typography>
         <Typography variant="body1" color="text.secondary">
           講師やレッスンについてのご意見をお聞かせください
@@ -238,10 +241,28 @@ const SurveyPage: React.FC = () => {
 
       <Card>
         <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
+          {/* 会員番号入力 */}
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+              {t('memberNumber')}*
+            </Typography>
+            <TextField
+              fullWidth
+              value={surveyData.member_number}
+              onChange={(e) => setSurveyData(prev => ({ ...prev, member_number: e.target.value }))}
+              placeholder={t('memberNumberPlaceholder')}
+              variant="outlined"
+              sx={{ mb: 1 }}
+            />
+            <Typography variant="caption" color="text.secondary">
+              {t('memberNumberHelp')}
+            </Typography>
+          </Box>
+
           {/* 満足度評価 */}
           <Box sx={{ mb: 4 }}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-              現状の講師に対する満足度*
+              {t('satisfactionRating')}
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
               <Rating
@@ -252,6 +273,23 @@ const SurveyPage: React.FC = () => {
                 sx={{
                   '& .MuiRating-iconFilled': {
                     color: 'warning.main',
+                    animation: 'glow 2s ease-in-out infinite alternate, rotate 0.6s ease-in-out',
+                    '@keyframes glow': {
+                      '0%': {
+                        filter: 'drop-shadow(0 0 5px #ff9800)',
+                      },
+                      '100%': {
+                        filter: 'drop-shadow(0 0 20px #ff9800) drop-shadow(0 0 30px #ff9800)',
+                      },
+                    },
+                    '@keyframes rotate': {
+                      '0%': { transform: 'rotate(0deg)' },
+                      '100%': { transform: 'rotate(360deg)' },
+                    },
+                  },
+                  '& .MuiRating-iconHover': {
+                    transform: 'scale(1.2)',
+                    transition: 'transform 0.2s ease-in-out',
                   },
                 }}
               />
@@ -260,7 +298,7 @@ const SurveyPage: React.FC = () => {
               </Typography>
             </Box>
             <Typography variant="caption" color="text.secondary">
-              1: 非常に不満 ~ 5: 非常に満足
+              {t('satisfactionDescription')}
             </Typography>
           </Box>
 
@@ -269,7 +307,7 @@ const SurveyPage: React.FC = () => {
           {/* 推奨意向 */}
           <Box sx={{ mb: 4 }}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-              このサービスを友人に勧めたいと思いますか?*
+              {t('recommendationQuestion')}
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
               <Slider
@@ -280,26 +318,70 @@ const SurveyPage: React.FC = () => {
                 step={1}
                 marks
                 valueLabelDisplay="auto"
-                sx={{ flex: 1 }}
+                sx={{ 
+                  flex: 1,
+                  '& .MuiSlider-track': {
+                    background: 'linear-gradient(90deg, #f44336 0%, #ff9800 20%, #ffeb3b 40%, #8bc34a 60%, #4caf50 80%, #2e7d32 100%)',
+                  height: 8,
+                  borderRadius: 4,
+                  border: 'none',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                },
+                '& .MuiSlider-thumb': {
+                  width: 24,
+                  height: 24,
+                  backgroundColor: '#fff',
+                  border: '3px solid #1976d2',
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
+                  '&:hover': {
+                    boxShadow: '0 6px 12px rgba(0,0,0,0.4)',
+                    transform: 'scale(1.1)',
+                  },
+                  transition: 'all 0.2s ease-in-out',
+                },
+                '& .MuiSlider-mark': {
+                  backgroundColor: '#bfbfbf',
+                  height: 8,
+                  width: 1,
+                  '&.MuiSlider-markActive': {
+                    backgroundColor: 'currentColor',
+                  },
+                },
+              }}
               />
               <Box
                 sx={{
-                  minWidth: 40,
-                  height: 32,
-                  backgroundColor: 'success.main',
+                  minWidth: 50,
+                  height: 40,
+                  backgroundColor: (() => {
+                    const score = surveyData.recommendation_score;
+                    if (score <= 1) return '#f44336'; // 赤
+                    if (score <= 3) return '#ff9800'; // オレンジ
+                    if (score <= 5) return '#ffeb3b'; // 黄色
+                    if (score <= 7) return '#8bc34a'; // 黄緑
+                    if (score <= 9) return '#4caf50'; // 緑
+                    return '#2e7d32'; // 深緑
+                  })(),
                   color: 'white',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  borderRadius: 1,
-                  fontWeight: 600,
+                  borderRadius: 2,
+                  fontWeight: 700,
+                  fontSize: '1.2rem',
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+                  transition: 'all 0.3s ease-in-out',
+                  '&:hover': {
+                    transform: 'scale(1.05)',
+                    boxShadow: '0 6px 12px rgba(0,0,0,0.3)',
+                  },
                 }}
               >
                 {surveyData.recommendation_score}
               </Box>
             </Box>
             <Typography variant="caption" color="text.secondary">
-              0 (全く勧めない) ~ 10 (強く勧めたい)
+              {t('recommendationDescription')}
             </Typography>
           </Box>
 
@@ -308,10 +390,10 @@ const SurveyPage: React.FC = () => {
           {/* フィードバック */}
           <Box sx={{ mb: 4 }}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-              講師に対するフィードバック
+              {t('instructorFeedback')}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              例:説明がわかりやすかった/もっと会話量を増やしてほしい
+              {t('instructorFeedbackExample')}
             </Typography>
             <TextField
               fullWidth
@@ -319,17 +401,17 @@ const SurveyPage: React.FC = () => {
               rows={4}
               value={surveyData.instructor_feedback}
               onChange={(e) => setSurveyData(prev => ({ ...prev, instructor_feedback: e.target.value }))}
-              placeholder="講師についてのご意見をお聞かせください"
+              placeholder={t('instructorFeedbackPlaceholder')}
               variant="outlined"
             />
           </Box>
 
           <Box sx={{ mb: 4 }}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-              レッスン内容に関するフィードバック
+              {t('lessonFeedback')}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              例:発音練習を追加したい/宿題の量を調整してほしい
+              {t('lessonFeedbackExample')}
             </Typography>
             <TextField
               fullWidth
@@ -337,7 +419,7 @@ const SurveyPage: React.FC = () => {
               rows={4}
               value={surveyData.lesson_feedback}
               onChange={(e) => setSurveyData(prev => ({ ...prev, lesson_feedback: e.target.value }))}
-              placeholder="レッスン内容についてのご意見をお聞かせください"
+              placeholder={t('lessonFeedbackPlaceholder')}
               variant="outlined"
             />
           </Box>
@@ -347,7 +429,7 @@ const SurveyPage: React.FC = () => {
           {/* 来月学びたいこと */}
           <Box sx={{ mb: 4 }}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-              来月学びたいこと
+              {t('nextMonthGoals')}
             </Typography>
             <FormGroup>
               {nextMonthGoals.map((goal) => (
@@ -371,10 +453,10 @@ const SurveyPage: React.FC = () => {
           {/* その他 */}
           <Box sx={{ mb: 4 }}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-              その他 (自由記述)
+              {t('otherComments')}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              例:海外旅行で困らない接客英語を練習したい
+              {t('otherCommentsExample')}
             </Typography>
             <TextField
               fullWidth
@@ -382,7 +464,7 @@ const SurveyPage: React.FC = () => {
               rows={4}
               value={surveyData.other_comments}
               onChange={(e) => setSurveyData(prev => ({ ...prev, other_comments: e.target.value }))}
-              placeholder="その他のご意見やご要望があればお聞かせください"
+              placeholder={t('otherCommentsPlaceholder')}
               variant="outlined"
             />
           </Box>
@@ -394,18 +476,18 @@ const SurveyPage: React.FC = () => {
               size="large"
               startIcon={<SendIcon />}
               onClick={handleSubmit}
-              disabled={submitting || surveyData.satisfaction_rating === 0}
+              disabled={submitting || surveyData.satisfaction_rating === 0 || !surveyData.member_number}
               sx={{ 
                 minWidth: 200,
                 py: 1.5,
                 px: 4
               }}
             >
-              {submitting ? '送信中...' : 'アンケートを送信'}
+              {submitting ? t('submitting') : t('submitSurvey')}
             </Button>
-            {surveyData.satisfaction_rating === 0 && (
+            {(surveyData.satisfaction_rating === 0 || !surveyData.member_number) && (
               <Typography variant="caption" color="error" sx={{ display: 'block', mt: 1 }}>
-                * 満足度評価は必須項目です
+                {t('requiredFields')}
               </Typography>
             )}
           </Box>

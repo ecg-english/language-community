@@ -53,6 +53,7 @@ import axios from 'axios';
 interface Student {
   id: number;
   name: string;
+  member_number?: string;
   instructor_id: number;
   instructor_name: string;
   email?: string;
@@ -987,6 +988,11 @@ const Class1ManagementPage: React.FC = () => {
                             <Typography variant="h6" sx={{ fontWeight: 600 }}>
                               {student.name || `生徒${index + 1}`}
                             </Typography>
+                            {student.member_number && (
+                              <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5 }}>
+                                会員番号: {student.member_number}
+                              </Typography>
+                            )}
                             <Typography variant="body2" color="text.secondary">
                               講師: {getInstructorName(student.instructor_id)}
                             </Typography>

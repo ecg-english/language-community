@@ -19,6 +19,7 @@ const createSurveyTable = () => {
       CREATE TABLE IF NOT EXISTS surveys (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
+        member_number TEXT NOT NULL,
         month TEXT NOT NULL,
         satisfaction_rating INTEGER NOT NULL,
         recommendation_score INTEGER NOT NULL,
@@ -30,7 +31,7 @@ const createSurveyTable = () => {
         submitted_at DATETIME,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(user_id, month)
+        UNIQUE(member_number, month)
       )
     `).run();
     console.log('surveysテーブルが作成されました');
@@ -58,7 +59,8 @@ router.get('/current-month', authenticateToken, checkClass1MembersPermission, (r
         next_month_goals,
         other_comments,
         completed,
-        submitted_at
+        submitted_at,
+        member_number
       FROM surveys
       WHERE user_id = ? AND month = ?
     `).get(userId, currentMonth);
@@ -81,6 +83,7 @@ router.post('/submit', authenticateToken, checkClass1MembersPermission, (req, re
     const userId = req.user.userId;
     const {
       month,
+      member_number,
       satisfaction_rating,
       recommendation_score,
       instructor_feedback,
@@ -94,20 +97,34 @@ router.post('/submit', authenticateToken, checkClass1MembersPermission, (req, re
       return res.status(400).json({ success: false, message: '満足度評価は必須です' });
     }
 
+    if (!member_number) {
+      return res.status(400).json({ success: false, message: '会員番号は必須です' });
+    }
+
+    // 会員番号で生徒を確認
+    const student = db.prepare(`
+      SELECT id, name FROM class1_students WHERE member_number = ?
+    `).get(member_number);
+
+    if (!student) {
+      return res.status(400).json({ success: false, message: '会員番号が見つかりません' });
+    }
+
     // next_month_goalsをJSON文字列に変換
     const nextMonthGoalsJson = JSON.stringify(next_month_goals || []);
 
     // 既存データを確認
     const existing = db.prepare(`
       SELECT id FROM surveys 
-      WHERE user_id = ? AND month = ?
-    `).get(userId, month);
+      WHERE member_number = ? AND month = ?
+    `).get(member_number, month);
 
     if (existing) {
       // 既存データを更新
       db.prepare(`
         UPDATE surveys 
         SET 
+          user_id = ?,
           satisfaction_rating = ?,
           recommendation_score = ?,
           instructor_feedback = ?,
@@ -117,8 +134,9 @@ router.post('/submit', authenticateToken, checkClass1MembersPermission, (req, re
           completed = ?,
           submitted_at = CURRENT_TIMESTAMP,
           updated_at = CURRENT_TIMESTAMP
-        WHERE user_id = ? AND month = ?
+        WHERE member_number = ? AND month = ?
       `).run(
+        userId,
         satisfaction_rating,
         recommendation_score,
         instructor_feedback || '',
@@ -126,20 +144,21 @@ router.post('/submit', authenticateToken, checkClass1MembersPermission, (req, re
         nextMonthGoalsJson,
         other_comments || '',
         completed ? 1 : 0,
-        userId,
+        member_number,
         month
       );
     } else {
       // 新規データを作成
       db.prepare(`
         INSERT INTO surveys (
-          user_id, month, satisfaction_rating, recommendation_score,
+          user_id, member_number, month, satisfaction_rating, recommendation_score,
           instructor_feedback, lesson_feedback, next_month_goals,
           other_comments, completed, submitted_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       `).run(
         userId,
+        member_number,
         month,
         satisfaction_rating,
         recommendation_score,
@@ -152,28 +171,22 @@ router.post('/submit', authenticateToken, checkClass1MembersPermission, (req, re
     }
 
     // マネージャーページ用の月次データも更新
-    const student = db.prepare(`
-      SELECT id FROM class1_students WHERE user_id = ?
-    `).get(userId);
+    const existingMonthlyData = db.prepare(`
+      SELECT id FROM manager_monthly_data 
+      WHERE student_id = ? AND month = ?
+    `).get(student.id, month);
 
-    if (student) {
-      const existingMonthlyData = db.prepare(`
-        SELECT id FROM manager_monthly_data 
+    if (existingMonthlyData) {
+      db.prepare(`
+        UPDATE manager_monthly_data 
+        SET survey_completed = ?, survey_answers = ?, updated_at = CURRENT_TIMESTAMP
         WHERE student_id = ? AND month = ?
-      `).get(student.id, month);
-
-      if (existingMonthlyData) {
-        db.prepare(`
-          UPDATE manager_monthly_data 
-          SET survey_completed = ?, survey_answers = ?, updated_at = CURRENT_TIMESTAMP
-          WHERE student_id = ? AND month = ?
-        `).run(1, JSON.stringify(req.body), student.id, month);
-      } else {
-        db.prepare(`
-          INSERT INTO manager_monthly_data (student_id, month, survey_completed, survey_answers)
-          VALUES (?, ?, ?, ?)
-        `).run(student.id, month, 1, JSON.stringify(req.body));
-      }
+      `).run(1, JSON.stringify(req.body), student.id, month);
+    } else {
+      db.prepare(`
+        INSERT INTO manager_monthly_data (student_id, month, survey_completed, survey_answers)
+        VALUES (?, ?, ?, ?)
+      `).run(student.id, month, 1, JSON.stringify(req.body));
     }
 
     res.json({ success: true, message: 'アンケートを送信しました' });
@@ -197,6 +210,7 @@ router.get('/month/:month', authenticateToken, (req, res) => {
       SELECT 
         s.id,
         s.user_id,
+        s.member_number,
         s.month,
         s.satisfaction_rating,
         s.recommendation_score,
@@ -210,7 +224,7 @@ router.get('/month/:month', authenticateToken, (req, res) => {
         cs.name as student_name
       FROM surveys s
       LEFT JOIN users u ON s.user_id = u.id
-      LEFT JOIN class1_students cs ON s.user_id = cs.user_id
+      LEFT JOIN class1_students cs ON s.member_number = cs.member_number
       WHERE s.month = ?
       ORDER BY s.submitted_at DESC
     `).all(month);
