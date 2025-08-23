@@ -349,11 +349,11 @@ const ManagerPage: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="lg" sx={{ mt: { xs: 2, sm: 4 }, mb: { xs: 2, sm: 4 }, px: { xs: 2, sm: 3 } }}>
       {/* ヘッダー */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <SchoolIcon sx={{ mr: 2, color: 'primary.main', fontSize: 32 }} />
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: { xs: 2, sm: 3 } }}>
+        <SchoolIcon sx={{ mr: 2, color: 'primary.main', fontSize: { xs: 28, sm: 32 } }} />
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 600, fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>
           マネージャー
         </Typography>
       </Box>
@@ -365,30 +365,37 @@ const ManagerPage: React.FC = () => {
       )}
 
       {/* 月切り替え */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 3 }}>
-        <IconButton onClick={() => changeMonth('prev')}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: { xs: 2, sm: 3 } }}>
+        <IconButton onClick={() => changeMonth('prev')} size="small">
           <ArrowBackIcon />
         </IconButton>
-        <Typography variant="h6" sx={{ mx: 2, minWidth: '120px', textAlign: 'center' }}>
+        <Typography variant="h6" sx={{ 
+          mx: 2, 
+          minWidth: { xs: '100px', sm: '120px' }, 
+          textAlign: 'center',
+          fontSize: { xs: '1rem', sm: '1.25rem' }
+        }}>
           {formatMonthDisplay(currentMonth)}
         </Typography>
-        <IconButton onClick={() => changeMonth('next')}>
+        <IconButton onClick={() => changeMonth('next')} size="small">
           <ArrowForwardIcon />
         </IconButton>
       </Box>
 
       {/* タブ */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: { xs: 2, sm: 3 } }}>
         <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
           <Tab 
             icon={<PersonIcon />} 
             label="生徒一覧" 
             iconPosition="start"
+            sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
           />
           <Tab 
             icon={<SchoolIcon />} 
             label="講師一覧" 
             iconPosition="start"
+            sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
           />
         </Tabs>
       </Box>
@@ -396,8 +403,8 @@ const ManagerPage: React.FC = () => {
       {/* 生徒一覧タブ */}
       {activeTab === 0 && (
         <Card>
-          <CardContent>
-            <Typography variant="h6" sx={{ mb: 2 }}>
+          <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+            <Typography variant="h6" sx={{ mb: { xs: 1, sm: 2 }, fontSize: { xs: '1.125rem', sm: '1.25rem' } }}>
               生徒一覧
             </Typography>
             <List>
@@ -412,67 +419,102 @@ const ManagerPage: React.FC = () => {
                       border: isDarkMode ? '1px solid #333' : '1px solid #e0e0e0',
                       borderRadius: 1,
                       mb: 1,
+                      flexDirection: 'column',
+                      alignItems: 'stretch',
                       '&:hover': {
                         backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)'
                       }
                     }}
                   >
-                    <ListItemText
-                      primary={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <Typography 
-                            variant="h6" 
-                            sx={{ 
-                              cursor: 'pointer',
-                              '&:hover': { color: 'primary.main' }
-                            }}
-                            onClick={() => handleEditStudent(student)}
-                          >
-                            {student.name}
-                          </Typography>
-                          <Chip 
-                            label={`講師: ${instructor?.username || 'Unknown'}`}
-                            size="small"
-                            variant="outlined"
-                          />
-                        </Box>
-                      }
-                      secondary={student.email || student.memo}
-                    />
-                    <ListItemSecondaryAction>
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Button
-                          variant={monthlyData.payment_status ? "contained" : "outlined"}
-                          color={monthlyData.payment_status ? "success" : "inherit"}
-                          startIcon={<PaymentIcon />}
-                          onClick={() => handlePaymentToggle(student.id)}
-                          sx={{
-                            backgroundColor: monthlyData.payment_status ? 'success.main' : 'transparent',
-                            color: monthlyData.payment_status ? 'white' : 'text.secondary',
-                            '&:hover': {
-                              backgroundColor: monthlyData.payment_status ? 'success.dark' : 'action.hover'
-                            }
+                    {/* 生徒情報行 */}
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'space-between',
+                      width: '100%',
+                      mb: 1
+                    }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                        <Typography 
+                          variant="h6" 
+                          sx={{ 
+                            cursor: 'pointer',
+                            '&:hover': { color: 'primary.main' },
+                            fontSize: { xs: '1rem', sm: '1.25rem' }
                           }}
+                          onClick={() => handleEditStudent(student)}
                         >
-                          {monthlyData.payment_status ? '入金済み' : '未入金'}
-                        </Button>
-                        <Button
-                          variant={monthlyData.survey_completed ? "contained" : "outlined"}
-                          color={monthlyData.survey_completed ? "info" : "inherit"}
-                          startIcon={<AssignmentIcon />}
-                          onClick={() => handleShowSurvey(student)}
-                          sx={{
-                            backgroundColor: monthlyData.survey_completed ? 'info.main' : 'transparent',
-                            color: monthlyData.survey_completed ? 'white' : 'text.secondary',
-                            '&:hover': {
-                              backgroundColor: monthlyData.survey_completed ? 'info.dark' : 'action.hover'
-                            }
-                          }}
-                        >
-                          アンケート回答
-                        </Button>
+                          {student.name}
+                        </Typography>
+                        <Chip 
+                          label={`講師: ${instructor?.username || 'Unknown'}`}
+                          size="small"
+                          variant="outlined"
+                          sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                        />
                       </Box>
-                    </ListItemSecondaryAction>
+                    </Box>
+                    
+                    {/* 生徒詳細情報 */}
+                    {(student.email || student.memo) && (
+                      <Typography 
+                        variant="body2" 
+                        color="text.secondary" 
+                        sx={{ 
+                          mb: 2,
+                          fontSize: { xs: '0.875rem', sm: '1rem' }
+                        }}
+                      >
+                        {student.email || student.memo}
+                      </Typography>
+                    )}
+                    
+                    {/* ボタン行 */}
+                    <Box sx={{ 
+                      display: 'flex', 
+                      gap: 1,
+                      flexWrap: 'wrap',
+                      justifyContent: { xs: 'stretch', sm: 'flex-start' }
+                    }}>
+                      <Button
+                        variant={monthlyData.payment_status ? "contained" : "outlined"}
+                        color={monthlyData.payment_status ? "success" : "inherit"}
+                        startIcon={<PaymentIcon />}
+                        onClick={() => handlePaymentToggle(student.id)}
+                        size="small"
+                        sx={{
+                          backgroundColor: monthlyData.payment_status ? 'success.main' : 'transparent',
+                          color: monthlyData.payment_status ? 'white' : 'text.secondary',
+                          flex: { xs: 1, sm: 'none' },
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                          minWidth: { xs: 'auto', sm: '120px' },
+                          '&:hover': {
+                            backgroundColor: monthlyData.payment_status ? 'success.dark' : 'action.hover'
+                          }
+                        }}
+                      >
+                        {monthlyData.payment_status ? '入金済み' : '未入金'}
+                      </Button>
+                      <Button
+                        variant={monthlyData.survey_completed ? "contained" : "outlined"}
+                        color={monthlyData.survey_completed ? "info" : "inherit"}
+                        startIcon={<AssignmentIcon />}
+                        onClick={() => handleShowSurvey(student)}
+                        size="small"
+                        sx={{
+                          backgroundColor: monthlyData.survey_completed ? 'info.main' : 'transparent',
+                          color: monthlyData.survey_completed ? 'white' : 'text.secondary',
+                          flex: { xs: 1, sm: 'none' },
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                          minWidth: { xs: 'auto', sm: '120px' },
+                          '&:hover': {
+                            backgroundColor: monthlyData.survey_completed ? 'info.dark' : 'action.hover'
+                          }
+                        }}
+                      >
+                        アンケート回答
+                      </Button>
+                    </Box>
                   </ListItem>
                 );
               })}
@@ -484,8 +526,8 @@ const ManagerPage: React.FC = () => {
       {/* 講師一覧タブ */}
       {activeTab === 1 && (
         <Card>
-          <CardContent>
-            <Typography variant="h6" sx={{ mb: 2 }}>
+          <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+            <Typography variant="h6" sx={{ mb: { xs: 1, sm: 2 }, fontSize: { xs: '1.125rem', sm: '1.25rem' } }}>
               講師一覧
             </Typography>
             <List>
