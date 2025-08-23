@@ -455,18 +455,18 @@ const ManagerPage: React.FC = () => {
                             variant="outlined"
                             sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
                           />
-                          {student.member_number && (
-                            <Chip 
-                              label={`会員番号: ${student.member_number}`}
-                              size="small"
-                              variant="outlined"
-                              sx={{ 
-                                fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                                backgroundColor: 'primary.light',
-                                color: 'primary.contrastText'
-                              }}
-                            />
-                          )}
+                                   {student.member_number && (
+           <Chip
+             label={`会員番号: ${student.member_number}`}
+             size="small"
+             variant="outlined"
+             sx={{
+               fontSize: { xs: '0.75rem', sm: '0.875rem' },
+               backgroundColor: 'primary.light',
+               color: 'primary.contrastText'
+             }}
+           />
+         )}
                         </Box>
                       </Box>
                     </Box>

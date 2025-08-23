@@ -1031,7 +1031,7 @@ const Class1ManagementPage: React.FC = () => {
                                 講師: {getInstructorName(student.instructor_id)}
                               </Typography>
                               <Typography variant="body2" color="text.secondary">
-                                会員番号: {student.member_number || '未設定'} (ID: {student.id})
+                                会員番号: {student.member_number || '未設定'}
                               </Typography>
                             </Box>
                           </Box>
