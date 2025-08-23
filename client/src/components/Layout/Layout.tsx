@@ -377,22 +377,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </MenuItem>
         )}
 
-        {user?.role === 'Class1 Members' && (
-          <MenuItem
-            onClick={() => navigate('/survey')}
-            sx={{
-              py: 1.5,
-              '&:hover': {
-                backgroundColor: 'rgba(30, 64, 175, 0.04)',
-              },
-            }}
-          >
-            <AssignmentIcon sx={{ mr: 2, color: 'info.main' }} />
-            <Typography variant="body2" fontWeight={500}>
-              アンケート
-            </Typography>
-          </MenuItem>
-        )}
+
 
         {user?.role !== 'ビジター' && (
           <MenuItem

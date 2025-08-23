@@ -96,11 +96,6 @@ const App: React.FC = () => {
                       <ManagerPage />
                     </ProtectedRoute>
                   } />
-                  <Route path="/survey" element={
-                    <ProtectedRoute>
-                      <SurveyPage />
-                    </ProtectedRoute>
-                  } />
                   <Route path="/survey/:month" element={<SurveyPage />} />
                   <Route path="/" element={<Navigate to="/community" replace />} />
                 </Routes>
