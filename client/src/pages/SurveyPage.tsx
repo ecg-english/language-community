@@ -45,7 +45,7 @@ const SurveyPage: React.FC = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
   const { isDarkMode } = useTheme();
-  const { month, memberNumber } = useParams<{ month: string; memberNumber: string }>();
+  const { month } = useParams<{ month: string }>();
 
   const [surveyData, setSurveyData] = useState<SurveyData>({
     member_number: '',
@@ -80,10 +80,9 @@ const SurveyPage: React.FC = () => {
 
   useEffect(() => {
     // 月別URLの場合は権限チェックをスキップ
-    if (month && memberNumber) {
+    if (month) {
       setCurrentMonth(month);
-      setSurveyData(prev => ({ ...prev, member_number: memberNumber }));
-      fetchSurveyDataForMonth(month, memberNumber);
+      fetchSurveyDataForMonth(month);
     } else {
       // 通常のアンケートページの場合
       if (!hasPermission) {
@@ -103,7 +102,7 @@ const SurveyPage: React.FC = () => {
 
       fetchSurveyData();
     }
-  }, [hasPermission, navigate, month, memberNumber]);
+  }, [hasPermission, navigate, month]);
 
   const fetchSurveyData = async () => {
     try {
@@ -147,12 +146,12 @@ const SurveyPage: React.FC = () => {
     }
   };
 
-  const fetchSurveyDataForMonth = async (month: string, memberNumber: string) => {
+  const fetchSurveyDataForMonth = async (month: string) => {
     try {
       setLoading(true);
       
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/survey/month/${month}/${memberNumber}`
+        `${process.env.REACT_APP_API_URL}/api/survey/month/${month}`
       );
 
       if (response.data.success) {
@@ -163,7 +162,6 @@ const SurveyPage: React.FC = () => {
           // 新しいアンケート
           setSurveyData(prev => ({ 
             ...prev, 
-            member_number: memberNumber,
             completed: false 
           }));
           setIsSubmitted(false);
@@ -174,7 +172,6 @@ const SurveyPage: React.FC = () => {
       // 新しいアンケートとして設定
       setSurveyData(prev => ({ 
         ...prev, 
-        member_number: memberNumber,
         completed: false 
       }));
       setIsSubmitted(false);
@@ -219,10 +216,10 @@ const SurveyPage: React.FC = () => {
 
       let response;
       
-      if (month && memberNumber) {
+      if (month) {
         // 月別URLの場合は認証不要のAPIを使用
         response = await axios.post(
-          `${process.env.REACT_APP_API_URL}/api/survey/month/${month}/${memberNumber}`,
+          `${process.env.REACT_APP_API_URL}/api/survey/month/${month}`,
           {
             ...surveyData,
             completed: true
@@ -344,7 +341,7 @@ const SurveyPage: React.FC = () => {
               sx={{ mb: 1 }}
             />
             <Typography variant="caption" color="text.secondary">
-              {month && memberNumber ? 'URLから自動設定されましたが、確認のため入力してください' : t('memberNumberHelp')}
+              {month ? '月別アンケートです。会員番号を入力してください' : t('memberNumberHelp')}
             </Typography>
           </Box>
 

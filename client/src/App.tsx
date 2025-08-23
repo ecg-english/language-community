@@ -101,7 +101,7 @@ const App: React.FC = () => {
                       <SurveyPage />
                     </ProtectedRoute>
                   } />
-                  <Route path="/survey/:month/:memberNumber" element={<SurveyPage />} />
+                  <Route path="/survey/:month" element={<SurveyPage />} />
                   <Route path="/" element={<Navigate to="/community" replace />} />
                 </Routes>
               </Layout>

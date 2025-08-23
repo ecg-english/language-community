@@ -68,31 +68,12 @@ const createSurveyTable = () => {
 createSurveyTable();
 
 // 月別アンケートデータを取得（認証不要）
-router.get('/month/:month/:memberNumber', (req, res) => {
+router.get('/month/:month', (req, res) => {
   try {
-    const { month, memberNumber } = req.params;
+    const { month } = req.params;
     
-    const survey = db.prepare(`
-      SELECT 
-        satisfaction_rating,
-        recommendation_score,
-        instructor_feedback,
-        lesson_feedback,
-        next_month_goals,
-        other_comments,
-        completed,
-        submitted_at,
-        member_number
-      FROM surveys
-      WHERE member_number = ? AND month = ?
-    `).get(memberNumber, month);
-
-    if (survey) {
-      // next_month_goalsを配列に変換
-      survey.next_month_goals = survey.next_month_goals ? JSON.parse(survey.next_month_goals) : [];
-    }
-
-    res.json({ success: true, survey });
+    // 月別アンケートの場合は空のデータを返す（新規作成用）
+    res.json({ success: true, survey: null });
   } catch (error) {
     console.error('月別アンケートデータ取得エラー:', error);
     res.status(500).json({ success: false, message: 'アンケートデータの取得に失敗しました' });
@@ -262,9 +243,10 @@ router.post('/submit', authenticateToken, checkClass1MembersPermission, (req, re
 });
 
 // 月別アンケート送信（認証不要）
-router.post('/month/:month/:memberNumber', (req, res) => {
+router.post('/month/:month', (req, res) => {
   try {
-    const { month, memberNumber } = req.params;
+    const { month } = req.params;
+    const { member_number } = req.body;
     const {
       satisfaction_rating,
       recommendation_score,
@@ -278,7 +260,7 @@ router.post('/month/:month/:memberNumber', (req, res) => {
     // 会員番号で生徒を確認
     const student = db.prepare(`
       SELECT id FROM class1_students WHERE id = ?
-    `).get(memberNumber);
+    `).get(member_number);
 
     if (!student) {
       return res.status(404).json({ success: false, message: '生徒が見つかりません' });
@@ -290,7 +272,7 @@ router.post('/month/:month/:memberNumber', (req, res) => {
     const existing = db.prepare(`
       SELECT id FROM surveys
       WHERE member_number = ? AND month = ?
-    `).get(memberNumber, month);
+    `).get(member_number, month);
 
     if (existing) {
       // 既存データを更新
@@ -315,7 +297,7 @@ router.post('/month/:month/:memberNumber', (req, res) => {
         nextMonthGoalsJson,
         other_comments || '',
         completed ? 1 : 0,
-        memberNumber,
+        member_number,
         month
       );
     } else {
@@ -328,7 +310,7 @@ router.post('/month/:month/:memberNumber', (req, res) => {
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       `).run(
-        memberNumber,
+        member_number,
         month,
         satisfaction_rating,
         recommendation_score,
