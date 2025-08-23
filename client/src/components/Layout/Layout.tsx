@@ -27,6 +27,7 @@ import {
   Menu as MenuIcon,
   Bookmark as BookmarkIcon,
   School as SchoolIcon,
+  Assignment as AssignmentIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -372,6 +373,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <SchoolIcon sx={{ mr: 2, color: 'warning.main' }} />
             <Typography variant="body2" fontWeight={500}>
               Class1 レッスン管理
+            </Typography>
+          </MenuItem>
+        )}
+
+        {user?.role === 'Class1 Members' && (
+          <MenuItem
+            onClick={() => navigate('/survey')}
+            sx={{
+              py: 1.5,
+              '&:hover': {
+                backgroundColor: 'rgba(30, 64, 175, 0.04)',
+              },
+            }}
+          >
+            <AssignmentIcon sx={{ mr: 2, color: 'info.main' }} />
+            <Typography variant="body2" fontWeight={500}>
+              アンケート
             </Typography>
           </MenuItem>
         )}

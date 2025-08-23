@@ -20,6 +20,7 @@ import MonthlyHistoryPage from './pages/MonthlyHistoryPage';
 import VocabularyPage from './pages/VocabularyPage';
 import Class1ManagementPage from './pages/Class1ManagementPage';
 import ManagerPage from './pages/ManagerPage';
+import SurveyPage from './pages/SurveyPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 
@@ -93,6 +94,11 @@ const App: React.FC = () => {
                   <Route path="/manager" element={
                     <ProtectedRoute>
                       <ManagerPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/survey" element={
+                    <ProtectedRoute>
+                      <SurveyPage />
                     </ProtectedRoute>
                   } />
                   <Route path="/" element={<Navigate to="/community" replace />} />

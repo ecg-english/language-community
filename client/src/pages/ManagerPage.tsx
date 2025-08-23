@@ -39,6 +39,7 @@ import {
   ArrowForward as ArrowForwardIcon,
   Close as CloseIcon,
 } from '@mui/icons-material';
+import { Rating } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../contexts/ThemeContext';
@@ -619,16 +620,104 @@ const ManagerPage: React.FC = () => {
             <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
               {formatMonthDisplay(currentMonth)}のアンケート回答内容
             </Typography>
-            <TextField
-              fullWidth
-              multiline
-              rows={10}
-              value={selectedStudentForSurvey ? getStudentMonthlyData(selectedStudentForSurvey.id).survey_answers || '' : ''}
-              placeholder="アンケート回答がまだありません..."
-              InputProps={{
-                readOnly: true,
-              }}
-            />
+            {(() => {
+              const surveyData = selectedStudentForSurvey ? getStudentMonthlyData(selectedStudentForSurvey.id).survey_answers : null;
+              if (!surveyData) {
+                return (
+                  <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                    アンケート回答がまだありません...
+                  </Typography>
+                );
+              }
+
+              try {
+                const parsedData = JSON.parse(surveyData);
+                return (
+                  <Box sx={{ space: 2 }}>
+                    {/* 満足度評価 */}
+                    <Box sx={{ mb: 3 }}>
+                      <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+                        満足度評価
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Rating value={parsedData.satisfaction_rating} readOnly size="small" />
+                        <Typography variant="body2">
+                          {parsedData.satisfaction_rating}/5
+                        </Typography>
+                      </Box>
+                    </Box>
+
+                    {/* 推奨意向 */}
+                    <Box sx={{ mb: 3 }}>
+                      <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+                        推奨意向
+                      </Typography>
+                      <Typography variant="body2">
+                        {parsedData.recommendation_score}/10
+                      </Typography>
+                    </Box>
+
+                    {/* 講師フィードバック */}
+                    {parsedData.instructor_feedback && (
+                      <Box sx={{ mb: 3 }}>
+                        <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+                          講師に対するフィードバック
+                        </Typography>
+                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                          {parsedData.instructor_feedback}
+                        </Typography>
+                      </Box>
+                    )}
+
+                    {/* レッスンフィードバック */}
+                    {parsedData.lesson_feedback && (
+                      <Box sx={{ mb: 3 }}>
+                        <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+                          レッスン内容に関するフィードバック
+                        </Typography>
+                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                          {parsedData.lesson_feedback}
+                        </Typography>
+                      </Box>
+                    )}
+
+                    {/* 来月学びたいこと */}
+                    {parsedData.next_month_goals && parsedData.next_month_goals.length > 0 && (
+                      <Box sx={{ mb: 3 }}>
+                        <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+                          来月学びたいこと
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                          {parsedData.next_month_goals.map((goal: string, index: number) => (
+                            <Typography key={index} variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
+                              • {goal}
+                            </Typography>
+                          ))}
+                        </Box>
+                      </Box>
+                    )}
+
+                    {/* その他 */}
+                    {parsedData.other_comments && (
+                      <Box sx={{ mb: 3 }}>
+                        <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+                          その他
+                        </Typography>
+                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                          {parsedData.other_comments}
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
+                );
+              } catch (error) {
+                return (
+                  <Typography variant="body1" color="error" sx={{ textAlign: 'center', py: 4 }}>
+                    アンケートデータの読み込みに失敗しました
+                  </Typography>
+                );
+              }
+            })()}
           </Box>
         </DialogContent>
         <DialogActions>
