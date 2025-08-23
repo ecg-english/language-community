@@ -374,6 +374,23 @@ const Class1ManagementPage: React.FC = () => {
     }
   }, [weeklyData, selectedInstructorCalendar, students]);
 
+  // studentsステートの変更を監視
+  useEffect(() => {
+    console.log('=== STUDENTS STATE CHANGED ===');
+    console.log('Current students state:', students);
+    console.log('Students length:', students.length);
+    students.forEach((student: any, index: number) => {
+      console.log(`State Student ${index + 1}:`, {
+        name: student.name,
+        member_number: student.member_number,
+        member_number_type: typeof student.member_number,
+        has_member_number: !!student.member_number,
+        instructor_id: student.instructor_id
+      });
+    });
+    console.log('=== END STUDENTS STATE DEBUG ===');
+  }, [students]);
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -414,14 +431,30 @@ const Class1ManagementPage: React.FC = () => {
       });
 
       // 生徒データの処理
+      console.log('=== STUDENTS API RESPONSE DEBUG ===');
+      console.log('Full studentsResponse:', studentsResponse);
+      console.log('studentsResponse.data:', studentsResponse.data);
+      console.log('studentsResponse.data.success:', studentsResponse.data?.success);
+      console.log('studentsResponse.data.students:', studentsResponse.data?.students);
+      
       if (studentsResponse.data && studentsResponse.data.success) {
-        setStudents(studentsResponse.data.students || []);
-        console.log('生徒データ設定完了:', studentsResponse.data.students);
-        // 会員番号のデバッグ情報
         const students = studentsResponse.data.students || [];
-        students.forEach((student: any) => {
-          console.log(`Student: ${student.name}, Member Number: ${student.member_number || 'NULL'}`);
+        console.log('Setting students array:', students);
+        setStudents(students);
+        console.log('生徒データ設定完了:', students);
+        
+        // 会員番号のデバッグ情報
+        console.log('=== MEMBER NUMBER DEBUG ===');
+        students.forEach((student: any, index: number) => {
+          console.log(`Student ${index + 1}:`, {
+            name: student.name,
+            member_number: student.member_number,
+            member_number_type: typeof student.member_number,
+            has_member_number: !!student.member_number,
+            instructor_id: student.instructor_id
+          });
         });
+        console.log('=== END MEMBER NUMBER DEBUG ===');
       } else {
         console.error('Students API returned success: false', studentsResponse.data);
         setStudents([]); // 空配列を設定
@@ -998,7 +1031,7 @@ const Class1ManagementPage: React.FC = () => {
                                 講師: {getInstructorName(student.instructor_id)}
                               </Typography>
                               <Typography variant="body2" color="text.secondary">
-                                会員番号: {student.member_number || '未設定'}
+                                会員番号: {student.member_number || '未設定'} (ID: {student.id})
                               </Typography>
                             </Box>
                           </Box>

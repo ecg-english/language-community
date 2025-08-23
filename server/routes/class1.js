@@ -92,7 +92,12 @@ router.get('/students', authenticateToken, checkClass1Permission, async (req, re
     });
     console.log('=== END DETAILED DATA ===');
     
-    res.json({ success: true, students });
+    const response = { success: true, students };
+    console.log('=== API RESPONSE BEING SENT ===');
+    console.log('Response object:', JSON.stringify(response, null, 2));
+    console.log('=== END API RESPONSE ===');
+    
+    res.json(response);
   } catch (error) {
     console.error('生徒一覧取得エラー:', error);
     res.status(500).json({ success: false, message: '生徒一覧の取得に失敗しました: ' + error.message });
