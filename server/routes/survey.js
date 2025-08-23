@@ -23,23 +23,23 @@ const createSurveyTable = () => {
     if (!tableExists) {
       // テーブルが存在しない場合は作成
       db.prepare(`
-        CREATE TABLE surveys (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          user_id INTEGER NOT NULL,
-          member_number TEXT NOT NULL,
-          month TEXT NOT NULL,
-          satisfaction_rating INTEGER NOT NULL,
-          recommendation_score INTEGER NOT NULL,
-          instructor_feedback TEXT,
-          lesson_feedback TEXT,
-          next_month_goals TEXT,
-          other_comments TEXT,
-          completed BOOLEAN DEFAULT 0,
-          submitted_at DATETIME,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          UNIQUE(member_number, month)
-        )
+              CREATE TABLE surveys (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        member_number TEXT NOT NULL,
+        month TEXT NOT NULL,
+        satisfaction_rating INTEGER NOT NULL,
+        recommendation_score INTEGER NOT NULL,
+        instructor_feedback TEXT,
+        lesson_feedback TEXT,
+        next_month_goals TEXT,
+        other_comments TEXT,
+        completed BOOLEAN DEFAULT 0,
+        submitted_at DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(member_number, month)
+      )
       `).run();
       console.log('surveysテーブルが作成されました');
     } else {
