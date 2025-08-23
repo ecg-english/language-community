@@ -443,7 +443,7 @@ const ManagerPage: React.FC = () => {
                       <Box sx={{ display: 'flex', gap: 1 }}>
                         <Button
                           variant={monthlyData.payment_status ? "contained" : "outlined"}
-                          color={monthlyData.payment_status ? "success" : "default"}
+                          color={monthlyData.payment_status ? "success" : "inherit"}
                           startIcon={<PaymentIcon />}
                           onClick={() => handlePaymentToggle(student.id)}
                           sx={{
@@ -458,7 +458,7 @@ const ManagerPage: React.FC = () => {
                         </Button>
                         <Button
                           variant={monthlyData.survey_completed ? "contained" : "outlined"}
-                          color={monthlyData.survey_completed ? "info" : "default"}
+                          color={monthlyData.survey_completed ? "info" : "inherit"}
                           startIcon={<AssignmentIcon />}
                           onClick={() => handleShowSurvey(student)}
                           sx={{
