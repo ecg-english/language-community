@@ -884,6 +884,9 @@ const Class1ManagementPage: React.FC = () => {
         <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
           <Tab label="生徒管理" icon={<PersonIcon />} />
           <Tab label="カレンダー" icon={<CalendarIcon />} />
+          {hasPermission && (
+            <Tab label="マネージャー" icon={<SchoolIcon />} />
+          )}
         </Tabs>
       </Paper>
 
@@ -1536,6 +1539,25 @@ const Class1ManagementPage: React.FC = () => {
           </Box>
         </DialogContent>
       </Dialog>
+
+      {/* マネージャータブ */}
+      {activeTab === 2 && hasPermission && (
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <Typography variant="h5" sx={{ mb: 2 }}>
+            マネージャー機能
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            サーバー管理者専用の管理機能です。
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={() => navigate('/manager')}
+            startIcon={<SchoolIcon />}
+          >
+            マネージャーページを開く
+          </Button>
+        </Box>
+      )}
     </Container>
   );
 };

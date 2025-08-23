@@ -19,6 +19,7 @@ import EventDetailPage from './pages/EventDetailPage';
 import MonthlyHistoryPage from './pages/MonthlyHistoryPage';
 import VocabularyPage from './pages/VocabularyPage';
 import Class1ManagementPage from './pages/Class1ManagementPage';
+import ManagerPage from './pages/ManagerPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 
@@ -87,6 +88,11 @@ const App: React.FC = () => {
                   <Route path="/class1-management" element={
                     <ProtectedRoute>
                       <Class1ManagementPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/manager" element={
+                    <ProtectedRoute>
+                      <ManagerPage />
                     </ProtectedRoute>
                   } />
                   <Route path="/" element={<Navigate to="/community" replace />} />

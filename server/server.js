@@ -144,6 +144,7 @@ app.use('/api/posts', require('./routes/posts'));
 app.use('/api/events', require('./routes/events'));
 app.use('/api/study-log', require('./routes/studyLog'));
 app.use('/api/class1', require('./routes/class1'));
+app.use('/api/manager', require('./routes/manager'));
 
 // ファイルアップロード用ルート
 app.post('/api/upload/avatar', upload.single('avatar'), (req, res) => {

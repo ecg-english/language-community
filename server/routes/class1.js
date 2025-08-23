@@ -115,6 +115,34 @@ router.put('/students/:studentId/lesson-date', authenticateToken, checkClass1Per
   }
 });
 
+// 生徒情報を更新
+router.put('/students/:studentId', authenticateToken, checkClass1Permission, async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const { name, instructor_id, email, memo } = req.body;
+
+    if (!name || !instructor_id) {
+      return res.status(400).json({ success: false, message: '生徒名と担当講師は必須です' });
+    }
+
+    const result = db.prepare(`
+      UPDATE class1_students 
+      SET name = ?, instructor_id = ?, email = ?, memo = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(name, instructor_id, email || null, memo || null, studentId);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ success: false, message: '生徒が見つかりません' });
+    }
+
+    console.log('Student updated successfully:', studentId);
+    res.json({ success: true, message: '生徒情報を更新しました' });
+  } catch (error) {
+    console.error('生徒更新エラー:', error);
+    res.status(500).json({ success: false, message: '生徒情報の更新に失敗しました: ' + error.message });
+  }
+});
+
 // 生徒を削除
 router.delete('/students/:studentId', authenticateToken, checkClass1Permission, async (req, res) => {
   try {
