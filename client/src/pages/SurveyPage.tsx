@@ -319,7 +319,7 @@ const SurveyPage: React.FC = () => {
                 marks
                 valueLabelDisplay="auto"
                 sx={{ 
-                  flex: 1,
+                  width: 'calc(100% - 70px)',
                   '& .MuiSlider-track': {
                     background: 'linear-gradient(90deg, #f44336 0%, #ff9800 20%, #ffeb3b 40%, #8bc34a 60%, #4caf50 80%, #2e7d32 100%)',
                   height: 8,

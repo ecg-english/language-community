@@ -15,26 +15,50 @@ const checkClass1MembersPermission = (req, res, next) => {
 // アンケートテーブルの作成
 const createSurveyTable = () => {
   try {
-    db.prepare(`
-      CREATE TABLE IF NOT EXISTS surveys (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        member_number TEXT NOT NULL,
-        month TEXT NOT NULL,
-        satisfaction_rating INTEGER NOT NULL,
-        recommendation_score INTEGER NOT NULL,
-        instructor_feedback TEXT,
-        lesson_feedback TEXT,
-        next_month_goals TEXT,
-        other_comments TEXT,
-        completed BOOLEAN DEFAULT 0,
-        submitted_at DATETIME,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(member_number, month)
-      )
-    `).run();
-    console.log('surveysテーブルが作成されました');
+    // テーブルが存在するかチェック
+    const tableExists = db.prepare(`
+      SELECT name FROM sqlite_master WHERE type='table' AND name='surveys'
+    `).get();
+    
+    if (!tableExists) {
+      // テーブルが存在しない場合は作成
+      db.prepare(`
+        CREATE TABLE surveys (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          member_number TEXT NOT NULL,
+          month TEXT NOT NULL,
+          satisfaction_rating INTEGER NOT NULL,
+          recommendation_score INTEGER NOT NULL,
+          instructor_feedback TEXT,
+          lesson_feedback TEXT,
+          next_month_goals TEXT,
+          other_comments TEXT,
+          completed BOOLEAN DEFAULT 0,
+          submitted_at DATETIME,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(member_number, month)
+        )
+      `).run();
+      console.log('surveysテーブルが作成されました');
+    } else {
+      // テーブルが存在する場合はmember_numberカラムを追加
+      const columns = db.prepare(`
+        PRAGMA table_info(surveys)
+      `).all();
+      
+      const memberNumberColumn = columns.find(col => col.name === 'member_number');
+      
+      if (!memberNumberColumn) {
+        db.prepare(`
+          ALTER TABLE surveys ADD COLUMN member_number TEXT NOT NULL DEFAULT ''
+        `).run();
+        console.log('surveysテーブルにmember_numberカラムを追加しました');
+      } else {
+        console.log('surveysテーブルのmember_numberカラムは既に存在します');
+      }
+    }
   } catch (error) {
     console.error('surveysテーブル作成エラー:', error);
   }
@@ -122,7 +146,7 @@ router.post('/submit', authenticateToken, checkClass1MembersPermission, (req, re
     // next_month_goalsをJSON文字列に変換
     const nextMonthGoalsJson = JSON.stringify(next_month_goals || []);
 
-    // 既存データを確認
+    // 既存データを確認（IDを会員番号として使用）
     const existing = db.prepare(`
       SELECT id FROM surveys 
       WHERE member_number = ? AND month = ?
