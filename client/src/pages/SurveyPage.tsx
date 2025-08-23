@@ -61,6 +61,7 @@ const SurveyPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = useState<string>('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   // 権限チェック
   const hasPermission = user?.role === 'Class1 Members';
@@ -86,6 +87,11 @@ const SurveyPage: React.FC = () => {
     const now = new Date();
     const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     setCurrentMonth(currentMonthStr);
+
+    // ローカルストレージから回答済み状態を確認
+    const submittedKey = `survey_submitted_${currentMonthStr}`;
+    const isSubmittedThisMonth = localStorage.getItem(submittedKey) === 'true';
+    setIsSubmitted(isSubmittedThisMonth);
 
     fetchSurveyData();
   }, [hasPermission, navigate]);
@@ -164,6 +170,11 @@ const SurveyPage: React.FC = () => {
       if (response.data.success) {
         setSuccess(t('surveySubmitted'));
         setSurveyData(prev => ({ ...prev, completed: true, submitted_at: new Date().toISOString() }));
+        
+        // ローカルストレージに回答済み状態を保存
+        const submittedKey = `survey_submitted_${currentMonth}`;
+        localStorage.setItem(submittedKey, 'true');
+        setIsSubmitted(true);
       }
     } catch (error) {
       console.error('アンケート送信エラー:', error);
@@ -192,7 +203,7 @@ const SurveyPage: React.FC = () => {
     );
   }
 
-  if (surveyData.completed) {
+  if (surveyData.completed || isSubmitted) {
     return (
       <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
         <Card>
@@ -309,7 +320,8 @@ const SurveyPage: React.FC = () => {
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
               {t('recommendationQuestion')}
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+            <Box sx={{ mb: 1 }}>
+              {/* スライダー */}
               <Slider
                 value={surveyData.recommendation_score}
                 onChange={handleRecommendationChange}
@@ -319,8 +331,7 @@ const SurveyPage: React.FC = () => {
                 marks
                 valueLabelDisplay="auto"
                 sx={{ 
-                  width: 'calc(100% - 80px)',
-                  maxWidth: 'calc(100% - 80px)',
+                  width: '100%',
                   '& .MuiSlider-track': {
                     background: 'linear-gradient(90deg, #f44336 0%, #ff9800 20%, #ffeb3b 40%, #8bc34a 60%, #4caf50 80%, #2e7d32 100%)',
                   height: 8,
@@ -349,37 +360,40 @@ const SurveyPage: React.FC = () => {
                   },
                 },
               }}
-              />
-              <Box
-                sx={{
-                  minWidth: 60,
-                  width: 60,
-                  height: 40,
-                  backgroundColor: (() => {
-                    const score = surveyData.recommendation_score;
-                    if (score <= 1) return '#f44336'; // 赤
-                    if (score <= 3) return '#ff9800'; // オレンジ
-                    if (score <= 5) return '#ffeb3b'; // 黄色
-                    if (score <= 7) return '#8bc34a'; // 黄緑
-                    if (score <= 9) return '#4caf50'; // 緑
-                    return '#2e7d32'; // 深緑
-                  })(),
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: 2,
-                  fontWeight: 700,
-                  fontSize: '1.2rem',
-                  boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-                  transition: 'all 0.3s ease-in-out',
-                  '&:hover': {
-                    transform: 'scale(1.05)',
-                    boxShadow: '0 6px 12px rgba(0,0,0,0.3)',
-                  },
-                }}
-              >
-                {surveyData.recommendation_score}
+              
+              {/* 数字ボックスを下に配置 */}
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                <Box
+                  sx={{
+                    minWidth: 60,
+                    width: 60,
+                    height: 40,
+                    backgroundColor: (() => {
+                      const score = surveyData.recommendation_score;
+                      if (score <= 1) return '#f44336'; // 赤
+                      if (score <= 3) return '#ff9800'; // オレンジ
+                      if (score <= 5) return '#ffeb3b'; // 黄色
+                      if (score <= 7) return '#8bc34a'; // 黄緑
+                      if (score <= 9) return '#4caf50'; // 緑
+                      return '#2e7d32'; // 深緑
+                    })(),
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: 2,
+                    fontWeight: 700,
+                    fontSize: '1.2rem',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+                    transition: 'all 0.3s ease-in-out',
+                    '&:hover': {
+                      transform: 'scale(1.05)',
+                      boxShadow: '0 6px 12px rgba(0,0,0,0.3)',
+                    },
+                  }}
+                >
+                  {surveyData.recommendation_score}
+                </Box>
               </Box>
             </Box>
             <Typography variant="caption" color="text.secondary">
