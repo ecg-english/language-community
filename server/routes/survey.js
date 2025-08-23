@@ -25,7 +25,7 @@ const createSurveyTable = () => {
       db.prepare(`
               CREATE TABLE surveys (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
+        user_id INTEGER,
         member_number TEXT NOT NULL,
         month TEXT NOT NULL,
         satisfaction_rating INTEGER NOT NULL,
@@ -43,7 +43,7 @@ const createSurveyTable = () => {
       `).run();
       console.log('surveysテーブルが作成されました');
     } else {
-      // テーブルが存在する場合はmember_numberカラムを追加
+      // テーブルが存在する場合はカラムを確認・追加
       const columns = db.prepare(`
         PRAGMA table_info(surveys)
       `).all();
@@ -57,6 +57,16 @@ const createSurveyTable = () => {
         console.log('surveysテーブルにmember_numberカラムを追加しました');
       } else {
         console.log('surveysテーブルのmember_numberカラムは既に存在します');
+      }
+
+      // user_idカラムをNULL許可に変更（既存のテーブルの場合）
+      try {
+        db.prepare(`
+          ALTER TABLE surveys MODIFY COLUMN user_id INTEGER
+        `).run();
+        console.log('surveysテーブルのuser_idカラムをNULL許可に変更しました');
+      } catch (error) {
+        console.log('user_idカラムの変更は不要です:', error.message);
       }
     }
   } catch (error) {
@@ -301,14 +311,14 @@ router.post('/month/:month', (req, res) => {
         month
       );
     } else {
-      // 新規データを作成
+      // 新規データを作成（user_idはNULLで設定）
       db.prepare(`
         INSERT INTO surveys (
-          member_number, month, satisfaction_rating, recommendation_score,
+          user_id, member_number, month, satisfaction_rating, recommendation_score,
           instructor_feedback, lesson_feedback, next_month_goals,
           other_comments, completed, submitted_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       `).run(
         member_number,
         month,

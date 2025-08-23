@@ -219,6 +219,7 @@ const runMigrations = () => {
     console.log('Running database migrations...');
     require('./fix_database_now');
     require('./fix_survey_table');
+    require('./fix_survey_table_structure');
     console.log('Migrations completed successfully');
   } catch (error) {
     console.error('Migration failed:', error);
