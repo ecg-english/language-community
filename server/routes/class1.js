@@ -79,15 +79,18 @@ router.get('/students', authenticateToken, checkClass1Permission, async (req, re
     const students = db.prepare(query).all();
 
     console.log('Students found:', students.length);
-    console.log('Students data with member_number:', students.map(s => ({
-      id: s.id,
-      name: s.name,
-      member_number: s.member_number,
-      instructor_name: s.instructor_name
-    })));
-    
-    // member_numberカラムの存在確認ログ
     console.log('member_number column exists:', columnExists);
+    console.log('=== DETAILED STUDENT DATA ===');
+    students.forEach((s, index) => {
+      console.log(`Student ${index + 1}:`, {
+        id: s.id,
+        name: s.name,
+        member_number: s.member_number,
+        member_number_type: typeof s.member_number,
+        instructor_name: s.instructor_name
+      });
+    });
+    console.log('=== END DETAILED DATA ===');
     
     res.json({ success: true, students });
   } catch (error) {

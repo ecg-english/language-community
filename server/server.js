@@ -217,7 +217,7 @@ if (process.env.NODE_ENV === 'production') {
 const runMigrations = () => {
   try {
     console.log('Running database migrations...');
-    require('./force_migrate_member_number');
+    require('./fix_member_numbers_now');
     console.log('Migrations completed successfully');
   } catch (error) {
     console.error('Migration failed:', error);
