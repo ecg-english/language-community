@@ -308,6 +308,13 @@ const Class1ManagementPage: React.FC = () => {
     const initializeData = async () => {
       console.log('初期化開始');
       
+      // 権限チェック
+      if (!hasPermission) {
+        console.log('権限がありません。データ取得をスキップします。');
+        setLoading(false);
+        return;
+      }
+      
       // 現在の週を設定
       const currentWeekString = getCurrentWeek();
       console.log('現在の週:', currentWeekString);
@@ -325,7 +332,7 @@ const Class1ManagementPage: React.FC = () => {
     };
     
     initializeData();
-  }, []);
+  }, [hasPermission]);
 
   // 週が変更されたときにデータベースから読み込み
   useEffect(() => {
@@ -795,7 +802,40 @@ const Class1ManagementPage: React.FC = () => {
   };
 
   if (!hasPermission) {
-    return null;
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '400px',
+          textAlign: 'center'
+        }}>
+          <SchoolIcon sx={{ color: 'error.main', fontSize: 64, mb: 2 }} />
+          <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
+            アクセス権限がありません
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+            このページにアクセスするには、以下のいずれかの権限が必要です：
+          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 3 }}>
+            <Typography variant="body2" color="text.secondary">
+              • サーバー管理者
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • ECG講師
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • JCG講師
+            </Typography>
+          </Box>
+          <Typography variant="body2" color="text.secondary">
+            現在の権限: {user?.role || '未設定'}
+          </Typography>
+        </Box>
+      </Container>
+    );
   }
 
   if (loading) {
