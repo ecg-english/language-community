@@ -34,6 +34,7 @@ router.get('/students', authenticateToken, checkClass1Permission, async (req, re
       SELECT 
         s.id,
         s.name,
+        s.member_number,
         s.instructor_id,
         u.username as instructor_name,
         s.email,
@@ -56,11 +57,25 @@ router.get('/students', authenticateToken, checkClass1Permission, async (req, re
   }
 });
 
-// 会員番号を生成する関数
+// 会員番号を生成する関数（英数3文字）
 const generateMemberNumber = () => {
-  const timestamp = Date.now().toString();
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  return `C1${timestamp.slice(-6)}${random}`;
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < 3; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  
+  // 既存の会員番号と重複しないかチェック
+  const existing = db.prepare(`
+    SELECT member_number FROM class1_students WHERE member_number = ?
+  `).get(result);
+  
+  if (existing) {
+    // 重複した場合は再帰的に新しい番号を生成
+    return generateMemberNumber();
+  }
+  
+  return result;
 };
 
 // 生徒を追加
