@@ -30,24 +30,53 @@ router.get('/students', authenticateToken, checkClass1Permission, async (req, re
       return res.json({ success: true, students: [] });
     }
     
-    const students = db.prepare(`
-      SELECT 
-        s.id,
-        s.name,
-        s.member_number,
-        s.instructor_id,
-        u.username as instructor_name,
-        s.email,
-        s.memo,
-        s.next_lesson_date,
-        s.lesson_completed_date,
-        CASE WHEN s.next_lesson_date IS NOT NULL THEN 1 ELSE 0 END as dm_scheduled,
-        CASE WHEN s.lesson_completed_date IS NOT NULL THEN 1 ELSE 0 END as lesson_completed,
-        s.created_at
-      FROM class1_students s
-      LEFT JOIN users u ON s.instructor_id = u.id
-      ORDER BY s.created_at DESC
-    `).all();
+    // まずmember_numberカラムが存在するかチェック
+    const columnExists = db.prepare(`
+      PRAGMA table_info(class1_students)
+    `).all().some(column => column.name === 'member_number');
+
+    let query;
+    if (columnExists) {
+      query = `
+        SELECT 
+          s.id,
+          s.name,
+          s.member_number,
+          s.instructor_id,
+          u.username as instructor_name,
+          s.email,
+          s.memo,
+          s.next_lesson_date,
+          s.lesson_completed_date,
+          CASE WHEN s.next_lesson_date IS NOT NULL THEN 1 ELSE 0 END as dm_scheduled,
+          CASE WHEN s.lesson_completed_date IS NOT NULL THEN 1 ELSE 0 END as lesson_completed,
+          s.created_at
+        FROM class1_students s
+        LEFT JOIN users u ON s.instructor_id = u.id
+        ORDER BY s.created_at DESC
+      `;
+    } else {
+      query = `
+        SELECT 
+          s.id,
+          s.name,
+          NULL as member_number,
+          s.instructor_id,
+          u.username as instructor_name,
+          s.email,
+          s.memo,
+          s.next_lesson_date,
+          s.lesson_completed_date,
+          CASE WHEN s.next_lesson_date IS NOT NULL THEN 1 ELSE 0 END as dm_scheduled,
+          CASE WHEN s.lesson_completed_date IS NOT NULL THEN 1 ELSE 0 END as lesson_completed,
+          s.created_at
+        FROM class1_students s
+        LEFT JOIN users u ON s.instructor_id = u.id
+        ORDER BY s.created_at DESC
+      `;
+    }
+
+    const students = db.prepare(query).all();
 
     console.log('Students found:', students.length);
     res.json({ success: true, students });
@@ -88,13 +117,27 @@ router.post('/students', authenticateToken, checkClass1Permission, async (req, r
       return res.status(400).json({ success: false, message: '生徒名と担当講師は必須です' });
     }
 
-    // 会員番号を生成
-    const memberNumber = generateMemberNumber();
+    // member_numberカラムが存在するかチェック
+    const columnExists = db.prepare(`
+      PRAGMA table_info(class1_students)
+    `).all().some(column => column.name === 'member_number');
 
-    const result = db.prepare(`
-      INSERT INTO class1_students (name, member_number, instructor_id, memo, email, created_at)
-      VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-    `).run(name, memberNumber, instructor_id, memo || null, email || null);
+    let result;
+    let memberNumber = null;
+
+    if (columnExists) {
+      // 会員番号を生成
+      memberNumber = generateMemberNumber();
+      result = db.prepare(`
+        INSERT INTO class1_students (name, member_number, instructor_id, memo, email, created_at)
+        VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      `).run(name, memberNumber, instructor_id, memo || null, email || null);
+    } else {
+      result = db.prepare(`
+        INSERT INTO class1_students (name, instructor_id, memo, email, created_at)
+        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+      `).run(name, instructor_id, memo || null, email || null);
+    }
 
     console.log('Student added successfully:', result.lastInsertRowid);
     res.json({ 

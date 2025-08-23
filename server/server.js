@@ -213,6 +213,21 @@ if (process.env.NODE_ENV === 'production') {
   }
 }
 
+// マイグレーション実行
+const runMigrations = () => {
+  try {
+    console.log('Running database migrations...');
+    require('./migrate_member_number');
+    console.log('Migrations completed successfully');
+  } catch (error) {
+    console.error('Migration failed:', error);
+    // マイグレーションが失敗してもサーバーは起動させる
+  }
+};
+
+// サーバー起動前にマイグレーションを実行
+runMigrations();
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 }); 
