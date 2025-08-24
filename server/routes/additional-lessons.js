@@ -61,7 +61,7 @@ router.get('/week/:weekKey', authenticateToken, (req, res) => {
 // 追加レッスンを作成
 router.post('/', authenticateToken, (req, res) => {
   try {
-    const { student_id, week_key, dm_scheduled, lesson_completed } = req.body;
+    const { student_id, week_key, dm_scheduled, lesson_completed, next_lesson_date, lesson_completed_date } = req.body;
     
     // 既存の追加レッスンを確認
     const existing = db.prepare(`
@@ -73,15 +73,15 @@ router.post('/', authenticateToken, (req, res) => {
       // 既存データを更新
       db.prepare(`
         UPDATE class1_additional_lessons 
-        SET dm_scheduled = ?, lesson_completed = ?, created_at = CURRENT_TIMESTAMP
+        SET dm_scheduled = ?, lesson_completed = ?, next_lesson_date = ?, lesson_completed_date = ?, created_at = CURRENT_TIMESTAMP
         WHERE student_id = ? AND week_key = ?
-      `).run(dm_scheduled ? 1 : 0, lesson_completed ? 1 : 0, student_id, week_key);
+      `).run(dm_scheduled ? 1 : 0, lesson_completed ? 1 : 0, next_lesson_date || null, lesson_completed_date || null, student_id, week_key);
     } else {
       // 新規データを作成
       db.prepare(`
-        INSERT INTO class1_additional_lessons (student_id, week_key, dm_scheduled, lesson_completed)
-        VALUES (?, ?, ?, ?)
-      `).run(student_id, week_key, dm_scheduled ? 1 : 0, lesson_completed ? 1 : 0);
+        INSERT INTO class1_additional_lessons (student_id, week_key, dm_scheduled, lesson_completed, next_lesson_date, lesson_completed_date)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).run(student_id, week_key, dm_scheduled ? 1 : 0, lesson_completed ? 1 : 0, next_lesson_date || null, lesson_completed_date || null);
     }
 
     res.json({ success: true, message: '追加レッスンを保存しました' });

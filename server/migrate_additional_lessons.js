@@ -12,6 +12,8 @@ try {
       week_key TEXT NOT NULL,
       dm_scheduled BOOLEAN DEFAULT 0,
       lesson_completed BOOLEAN DEFAULT 0,
+      next_lesson_date DATE,
+      lesson_completed_date DATE,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (student_id) REFERENCES class1_students(id)
     )

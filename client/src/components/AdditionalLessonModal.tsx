@@ -13,7 +13,8 @@ import {
   Checkbox,
   Box,
   Typography,
-  Alert
+  Alert,
+  TextField
 } from '@mui/material';
 import axios from 'axios';
 
@@ -40,6 +41,8 @@ const AdditionalLessonModal: React.FC<AdditionalLessonModalProps> = ({
   const [selectedStudent, setSelectedStudent] = useState<number | ''>('');
   const [dmScheduled, setDmScheduled] = useState(false);
   const [lessonCompleted, setLessonCompleted] = useState(false);
+  const [nextLessonDate, setNextLessonDate] = useState('');
+  const [lessonCompletedDate, setLessonCompletedDate] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -78,7 +81,9 @@ const AdditionalLessonModal: React.FC<AdditionalLessonModalProps> = ({
         student_id: selectedStudent,
         week_key: weekKey,
         dm_scheduled: dmScheduled,
-        lesson_completed: lessonCompleted
+        lesson_completed: lessonCompleted,
+        next_lesson_date: nextLessonDate,
+        lesson_completed_date: lessonCompletedDate
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -98,6 +103,8 @@ const AdditionalLessonModal: React.FC<AdditionalLessonModalProps> = ({
     setSelectedStudent('');
     setDmScheduled(false);
     setLessonCompleted(false);
+    setNextLessonDate('');
+    setLessonCompletedDate('');
     setError(null);
   };
 
@@ -136,27 +143,119 @@ const AdditionalLessonModal: React.FC<AdditionalLessonModalProps> = ({
             週: {weekKey}
           </Typography>
 
-          <FormControlLabel
-            control={
+          {/* DMで次回レッスン日を調整 */}
+          <Box sx={{ mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <Checkbox
                 checked={dmScheduled}
-                onChange={(e) => setDmScheduled(e.target.checked)}
+                disabled
+                sx={{
+                  color: 'primary.main',
+                  '&.Mui-checked': {
+                    color: 'success.main',
+                    animation: 'glow 2s ease-in-out infinite alternate',
+                    '@keyframes glow': {
+                      '0%': {
+                        boxShadow: '0 0 5px #4caf50',
+                      },
+                      '100%': {
+                        boxShadow: '0 0 20px #4caf50, 0 0 30px #4caf50',
+                      },
+                    },
+                  },
+                }}
               />
-            }
-            label="DMで次回レッスン日を調整した"
-            sx={{ mb: 1 }}
-          />
+              <Typography variant="body2">
+                DMで次回レッスン日を調整した
+              </Typography>
+            </Box>
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 4, display: 'block' }}>
+              日付を入力すると完了になります
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', ml: 4, mt: 1 }}>
+              <TextField
+                type="date"
+                size="small"
+                value={nextLessonDate}
+                onChange={(e) => {
+                  setNextLessonDate(e.target.value);
+                  setDmScheduled(!!e.target.value);
+                }}
+                sx={{ flex: 1 }}
+              />
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => {
+                  const today = new Date().toISOString().split('T')[0];
+                  setNextLessonDate(today);
+                  setDmScheduled(true);
+                }}
+              >
+                今日を設定
+              </Button>
+            </Box>
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 4, mt: 1, display: 'block' }}>
+              次回レッスン予定日を記録
+            </Typography>
+          </Box>
 
-          <FormControlLabel
-            control={
+          {/* レッスンを実施 */}
+          <Box sx={{ mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <Checkbox
                 checked={lessonCompleted}
-                onChange={(e) => setLessonCompleted(e.target.checked)}
+                disabled
+                sx={{
+                  color: 'primary.main',
+                  '&.Mui-checked': {
+                    color: 'success.main',
+                    animation: 'glow 2s ease-in-out infinite alternate',
+                    '@keyframes glow': {
+                      '0%': {
+                        boxShadow: '0 0 5px #4caf50',
+                      },
+                      '100%': {
+                        boxShadow: '0 0 20px #4caf50, 0 0 30px #4caf50',
+                      },
+                    },
+                  },
+                }}
               />
-            }
-            label="レッスンを実施した"
-            sx={{ mb: 1 }}
-          />
+              <Typography variant="body2">
+                レッスンを実施した
+              </Typography>
+            </Box>
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 4, display: 'block' }}>
+              日付を入力すると完了になります
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', ml: 4, mt: 1 }}>
+              <TextField
+                type="date"
+                size="small"
+                value={lessonCompletedDate}
+                onChange={(e) => {
+                  setLessonCompletedDate(e.target.value);
+                  setLessonCompleted(!!e.target.value);
+                }}
+                sx={{ flex: 1 }}
+              />
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => {
+                  const today = new Date().toISOString().split('T')[0];
+                  setLessonCompletedDate(today);
+                  setLessonCompleted(true);
+                }}
+              >
+                今日を設定
+              </Button>
+            </Box>
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 4, mt: 1, display: 'block' }}>
+              実施日を記録
+            </Typography>
+          </Box>
         </Box>
       </DialogContent>
       <DialogActions>
