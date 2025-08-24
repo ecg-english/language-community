@@ -90,6 +90,35 @@ router.put('/monthly-data/:month/:studentId/payment', authenticateToken, checkMa
   }
 });
 
+// 講師の月別レッスン実施数を取得
+router.get('/instructor-lessons/:month', authenticateToken, checkManagerPermission, (req, res) => {
+  try {
+    const { month } = req.params;
+    
+    // 各講師の月別レッスン実施数を取得
+    const instructorLessons = db.prepare(`
+      SELECT 
+        u.id as instructor_id,
+        u.username as instructor_name,
+        u.role as instructor_role,
+        COUNT(cs.id) as total_students,
+        COUNT(CASE WHEN wcd.lesson_completed = 1 THEN 1 END) as completed_lessons
+      FROM users u
+      LEFT JOIN class1_students cs ON u.id = cs.instructor_id
+      LEFT JOIN weekly_checklist_data wcd ON cs.id = wcd.student_id 
+        AND wcd.week_key LIKE ? || '%'
+      WHERE u.role IN ('ECG講師', 'JCG講師', 'サーバー管理者')
+      GROUP BY u.id, u.username, u.role
+      ORDER BY u.username
+    `).all(month);
+
+    res.json({ success: true, data: instructorLessons });
+  } catch (error) {
+    console.error('講師レッスン数取得エラー:', error);
+    res.status(500).json({ success: false, message: '講師レッスン数の取得に失敗しました' });
+  }
+});
+
 // アンケート状態を更新
 router.put('/monthly-data/:month/:studentId/survey', authenticateToken, checkManagerPermission, (req, res) => {
   try {

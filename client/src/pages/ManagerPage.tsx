@@ -72,6 +72,14 @@ interface MonthlyData {
   survey_answers?: string;
 }
 
+interface InstructorLessonData {
+  instructor_id: number;
+  instructor_name: string;
+  instructor_role: string;
+  total_students: number;
+  completed_lessons: number;
+}
+
 const ManagerPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -85,6 +93,7 @@ const ManagerPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [currentMonth, setCurrentMonth] = useState<string>('');
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
+  const [instructorLessonData, setInstructorLessonData] = useState<InstructorLessonData[]>([]);
   
   // ダイアログ関連
   const [editStudentDialog, setEditStudentDialog] = useState(false);
@@ -112,6 +121,7 @@ const ManagerPage: React.FC = () => {
   useEffect(() => {
     if (currentMonth) {
       fetchMonthlyData();
+      fetchInstructorLessonData();
     }
   }, [currentMonth]);
 
@@ -171,6 +181,25 @@ const ManagerPage: React.FC = () => {
       console.error('月次データ取得エラー:', error);
       // エラーが404の場合は新しい月なので空のデータを設定
       setMonthlyData([]);
+    }
+  };
+
+  const fetchInstructorLessonData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/manager/instructor-lessons/${currentMonth}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.data.success) {
+        setInstructorLessonData(response.data.data);
+      }
+    } catch (error) {
+      console.error('講師レッスン数取得エラー:', error);
+      setInstructorLessonData([]);
     }
   };
 
@@ -547,21 +576,48 @@ const ManagerPage: React.FC = () => {
               講師一覧
             </Typography>
             <List>
-              {instructors.map((instructor) => (
-                <ListItem 
-                  key={instructor.id}
-                  sx={{ 
-                    border: isDarkMode ? '1px solid #333' : '1px solid #e0e0e0',
-                    borderRadius: 1,
-                    mb: 1
-                  }}
-                >
-                  <ListItemText
-                    primary={instructor.username}
-                    secondary={`${instructor.role} - ${instructor.email}`}
-                  />
-                </ListItem>
-              ))}
+              {instructors.map((instructor) => {
+                const lessonData = instructorLessonData.find(data => data.instructor_id === instructor.id);
+                const completedLessons = lessonData?.completed_lessons || 0;
+                const totalStudents = lessonData?.total_students || 0;
+                
+                return (
+                  <ListItem 
+                    key={instructor.id}
+                    sx={{ 
+                      border: isDarkMode ? '1px solid #333' : '1px solid #e0e0e0',
+                      borderRadius: 1,
+                      mb: 1
+                    }}
+                  >
+                    <ListItemText
+                      primary={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography variant="body1" fontWeight={500}>
+                            {instructor.username}
+                          </Typography>
+                          <Chip 
+                            label={`${completedLessons}回実施`}
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                          />
+                        </Box>
+                      }
+                      secondary={
+                        <Box sx={{ mt: 1 }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {instructor.role} - {instructor.email}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            担当生徒: {totalStudents}名 | レッスン実施: {completedLessons}回
+                          </Typography>
+                        </Box>
+                      }
+                    />
+                  </ListItem>
+                );
+              })}
             </List>
           </CardContent>
         </Card>
