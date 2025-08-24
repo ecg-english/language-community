@@ -105,7 +105,7 @@ router.get('/instructor-lessons/:month', authenticateToken, checkManagerPermissi
         COUNT(CASE WHEN wcd.lesson_completed = 1 THEN 1 END) as completed_lessons
       FROM users u
       LEFT JOIN class1_students cs ON u.id = cs.instructor_id
-      LEFT JOIN weekly_checklist_data wcd ON cs.id = wcd.student_id 
+      LEFT JOIN class1_weekly_checklist wcd ON cs.id = wcd.student_id 
         AND wcd.week_key LIKE ? || '%'
       WHERE u.role IN ('ECG講師', 'JCG講師', 'サーバー管理者')
       GROUP BY u.id, u.username, u.role
