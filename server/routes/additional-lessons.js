@@ -6,6 +6,17 @@ const { authenticateToken } = require('../middleware/auth');
 // 追加レッスン一覧を取得
 router.get('/', authenticateToken, (req, res) => {
   try {
+    // テーブルが存在するかチェック
+    const tableExists = db.prepare(`
+      SELECT name FROM sqlite_master 
+      WHERE type='table' AND name='class1_additional_lessons'
+    `).get();
+    
+    if (!tableExists) {
+      console.log('class1_additional_lessonsテーブルが存在しません。空の配列を返します。');
+      return res.json({ success: true, data: [] });
+    }
+    
     const additionalLessons = db.prepare(`
       SELECT 
         al.id,
@@ -13,6 +24,8 @@ router.get('/', authenticateToken, (req, res) => {
         al.week_key,
         al.dm_scheduled,
         al.lesson_completed,
+        al.next_lesson_date,
+        al.lesson_completed_date,
         al.created_at,
         cs.name as student_name,
         u.username as instructor_name
@@ -62,6 +75,33 @@ router.get('/week/:weekKey', authenticateToken, (req, res) => {
 router.post('/', authenticateToken, (req, res) => {
   try {
     const { student_id, week_key, dm_scheduled, lesson_completed, next_lesson_date, lesson_completed_date } = req.body;
+    
+    // テーブルが存在するかチェック
+    const tableExists = db.prepare(`
+      SELECT name FROM sqlite_master 
+      WHERE type='table' AND name='class1_additional_lessons'
+    `).get();
+    
+    if (!tableExists) {
+      console.log('class1_additional_lessonsテーブルが存在しません。テーブルを作成します。');
+      
+      // テーブルを作成
+      db.prepare(`
+        CREATE TABLE class1_additional_lessons (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          student_id INTEGER NOT NULL,
+          week_key TEXT NOT NULL,
+          dm_scheduled BOOLEAN DEFAULT 0,
+          lesson_completed BOOLEAN DEFAULT 0,
+          next_lesson_date DATE,
+          lesson_completed_date DATE,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (student_id) REFERENCES class1_students(id)
+        )
+      `).run();
+      
+      console.log('✅ class1_additional_lessonsテーブルを作成しました');
+    }
     
     // 既存の追加レッスンを確認
     const existing = db.prepare(`
