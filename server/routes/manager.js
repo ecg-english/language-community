@@ -96,6 +96,11 @@ router.get('/instructor-lessons/:month', authenticateToken, checkManagerPermissi
     const { month } = req.params;
     console.log('講師レッスン数取得開始:', month);
     
+    // 月形式（2025-08）を週形式（2025-W）に変換
+    const [year, monthNum] = month.split('-');
+    const weekPattern = `${year}-W`;
+    console.log('週パターン:', weekPattern);
+    
     // デバッグ用：講師一覧を確認
     const instructors = db.prepare(`
       SELECT id, username, role FROM users 
@@ -132,7 +137,7 @@ router.get('/instructor-lessons/:month', authenticateToken, checkManagerPermissi
       WHERE u.role IN ('ECG講師', 'JCG講師', 'サーバー管理者')
       GROUP BY u.id, u.username, u.role
       ORDER BY u.username
-    `).all(month);
+    `).all(weekPattern);
     
     console.log('講師レッスン数結果:', instructorLessons);
     res.json({ success: true, data: instructorLessons });
