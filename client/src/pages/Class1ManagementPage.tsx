@@ -111,6 +111,7 @@ const Class1ManagementPage: React.FC = () => {
     studentName: string;
     type: 'scheduled' | 'completed';
     date: string;
+    source?: 'regular' | 'additional';
   }>}>({});
   
   // ポップアップ機能用の状態
@@ -789,145 +790,120 @@ const Class1ManagementPage: React.FC = () => {
     });
   };
 
-      // カレンダーイベントを生成する関数
-    const generateCalendarEvents = () => {
-      const events: {[date: string]: Array<{
-        studentId: number;
-        studentName: string;
-        type: 'scheduled' | 'completed';
-        date: string;
-      }>} = {};
+        // カレンダーイベントを生成する関数（非同期）
+  const generateCalendarEvents = async () => {
+    const events: {[date: string]: Array<{
+      studentId: number;
+      studentName: string;
+      type: 'scheduled' | 'completed';
+      date: string;
+      source: 'regular' | 'additional';
+    }>} = {};
 
-      // 全週のデータを取得
-      Object.keys(weeklyData).forEach(weekKey => {
-        const weekData = weeklyData[weekKey];
-        
-        Object.keys(weekData).forEach(studentIdStr => {
-          const studentId = parseInt(studentIdStr);
-          const studentData = weekData[studentId];
-          const student = students.find(s => s.id === studentId);
-          
-          if (!student) return;
-
-          // 講師フィルター適用
-          if (selectedInstructorCalendar !== 'all' && 
-              student.instructor_id.toString() !== selectedInstructorCalendar) {
-            return;
-          }
-
-          // レッスン実施済み日を処理
-          if (studentData.lesson_completed_date) {
-            const dateKey = studentData.lesson_completed_date;
-            if (!events[dateKey]) events[dateKey] = [];
-            
-            // 同じ生徒が既に存在するかチェック（同じ生徒の重複のみ排除）
-            const existingIndex = events[dateKey].findIndex(e => e.studentId === studentId);
-            if (existingIndex === -1) {
-              events[dateKey].push({
-                studentId,
-                studentName: student.name,
-                type: 'completed',
-                date: dateKey
-              });
-            } else {
-              // 同じ生徒が既に存在する場合、チェックマーク（実施済み）で上書き
-              events[dateKey][existingIndex] = {
-                studentId,
-                studentName: student.name,
-                type: 'completed',
-                date: dateKey
-              };
-            }
-          }
-
-          // 次回レッスン予定日を処理
-          if (studentData.next_lesson_date) {
-            const dateKey = studentData.next_lesson_date;
-            if (!events[dateKey]) events[dateKey] = [];
-            
-            // 同じ生徒が既に存在するかチェック
-            const existingIndex = events[dateKey].findIndex(e => e.studentId === studentId);
-            if (existingIndex === -1) {
-              // 同じ生徒が存在しない場合のみ追加
-              events[dateKey].push({
-                studentId,
-                studentName: student.name,
-                type: 'scheduled',
-                date: dateKey
-              });
-            }
-            // 同じ生徒が既に存在する場合は何もしない（実施済みが優先される）
-          }
+    // ヘルパー関数：イベントを安全に追加（重複処理と優先順位を考慮）
+    const addEvent = (dateKey: string, studentId: number, studentName: string, type: 'scheduled' | 'completed', source: 'regular' | 'additional') => {
+      if (!events[dateKey]) events[dateKey] = [];
+      
+      // 同じ生徒の既存イベントを検索
+      const existingIndex = events[dateKey].findIndex(e => e.studentId === studentId);
+      
+      if (existingIndex === -1) {
+        // 同じ生徒のイベントが存在しない場合、新規追加
+        events[dateKey].push({
+          studentId,
+          studentName,
+          type,
+          date: dateKey,
+          source
         });
-      });
-
-      // 追加レッスンデータを取得してカレンダーに追加
-      const fetchAdditionalLessons = async () => {
-        try {
-          const token = localStorage.getItem('token');
-          const response = await axios.get('/api/additional-lessons', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          
-          response.data.data.forEach((lesson: any) => {
-            const student = students.find(s => s.id === lesson.student_id);
-            if (!student) return;
-
-            // 講師フィルター適用
-            if (selectedInstructorCalendar !== 'all' && 
-                student.instructor_id.toString() !== selectedInstructorCalendar) {
-              return;
-            }
-
-            // 追加レッスンの実施日を処理
-            if (lesson.lesson_completed_date) {
-              const dateKey = lesson.lesson_completed_date;
-              if (!events[dateKey]) events[dateKey] = [];
-              
-              // 同じ生徒が既に存在するかチェック
-              const existingIndex = events[dateKey].findIndex(e => e.studentId === lesson.student_id);
-              if (existingIndex === -1) {
-                events[dateKey].push({
-                  studentId: lesson.student_id,
-                  studentName: lesson.student_name,
-                  type: 'completed',
-                  date: dateKey
-                });
-              }
-            }
-
-            // 追加レッスンの次回予定日を処理
-            if (lesson.next_lesson_date) {
-              const dateKey = lesson.next_lesson_date;
-              if (!events[dateKey]) events[dateKey] = [];
-              
-              // 同じ生徒が既に存在するかチェック
-              const existingIndex = events[dateKey].findIndex(e => e.studentId === lesson.student_id);
-              if (existingIndex === -1) {
-                events[dateKey].push({
-                  studentId: lesson.student_id,
-                  studentName: lesson.student_name,
-                  type: 'scheduled',
-                  date: dateKey
-                });
-              }
-            }
-          });
-        } catch (error) {
-          console.error('追加レッスン取得エラー:', error);
+      } else {
+        // 同じ生徒のイベントが存在する場合、優先順位を考慮
+        const existingEvent = events[dateKey][existingIndex];
+        
+        // 実施済み（completed）は予定（scheduled）より優先
+        if (type === 'completed' || (type === 'scheduled' && existingEvent.type !== 'completed')) {
+          events[dateKey][existingIndex] = {
+            studentId,
+            studentName,
+            type,
+            date: dateKey,
+            source
+          };
         }
-      };
-
-      // 追加レッスンデータを取得
-      fetchAdditionalLessons();
-
-      return events;
+      }
     };
 
-  // カレンダーイベントを更新する関数
-  const updateCalendarEvents = () => {
-    const events = generateCalendarEvents();
-    setCalendarEvents(events);
+    // 通常の週次データを処理
+    Object.keys(weeklyData).forEach(weekKey => {
+      const weekData = weeklyData[weekKey];
+      
+      Object.keys(weekData).forEach(studentIdStr => {
+        const studentId = parseInt(studentIdStr);
+        const studentData = weekData[studentId];
+        const student = students.find(s => s.id === studentId);
+        
+        if (!student) return;
+
+        // 講師フィルター適用
+        if (selectedInstructorCalendar !== 'all' && 
+            student.instructor_id.toString() !== selectedInstructorCalendar) {
+          return;
+        }
+
+        // レッスン実施済み日を処理
+        if (studentData.lesson_completed_date) {
+          addEvent(studentData.lesson_completed_date, studentId, student.name, 'completed', 'regular');
+        }
+
+        // 次回レッスン予定日を処理
+        if (studentData.next_lesson_date) {
+          addEvent(studentData.next_lesson_date, studentId, student.name, 'scheduled', 'regular');
+        }
+      });
+    });
+
+    // 追加レッスンデータを取得して処理
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('/api/additional-lessons', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      response.data.data.forEach((lesson: any) => {
+        const student = students.find(s => s.id === lesson.student_id);
+        if (!student) return;
+
+        // 講師フィルター適用
+        if (selectedInstructorCalendar !== 'all' && 
+            student.instructor_id.toString() !== selectedInstructorCalendar) {
+          return;
+        }
+
+        // 追加レッスンの実施日を処理
+        if (lesson.lesson_completed_date) {
+          addEvent(lesson.lesson_completed_date, lesson.student_id, lesson.student_name, 'completed', 'additional');
+        }
+
+        // 追加レッスンの次回予定日を処理
+        if (lesson.next_lesson_date) {
+          addEvent(lesson.next_lesson_date, lesson.student_id, lesson.student_name, 'scheduled', 'additional');
+        }
+      });
+    } catch (error) {
+      console.error('追加レッスン取得エラー:', error);
+    }
+
+    return events;
+  };
+
+  // カレンダーイベントを更新する関数（非同期）
+  const updateCalendarEvents = async () => {
+    try {
+      const events = await generateCalendarEvents();
+      setCalendarEvents(events);
+    } catch (error) {
+      console.error('カレンダーイベント更新エラー:', error);
+    }
   };
 
   if (!hasPermission) {
