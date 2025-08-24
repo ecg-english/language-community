@@ -128,7 +128,7 @@ router.get('/instructor-lessons/:month', authenticateToken, checkManagerPermissi
         u.id as instructor_id,
         u.username as instructor_name,
         u.role as instructor_role,
-        COUNT(cs.id) as total_students,
+        COUNT(DISTINCT cs.id) as total_students,
         COUNT(CASE WHEN wcd.lesson_completed = 1 THEN 1 END) as completed_lessons
       FROM users u
       LEFT JOIN class1_students cs ON u.id = cs.instructor_id
