@@ -15,8 +15,8 @@ try {
   if (process.env.OPENAI_API_KEY) {
     console.log('Attempting to initialize OpenAI client...');
     openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY
-    });
+  apiKey: process.env.OPENAI_API_KEY
+});
     console.log('OpenAI client initialized successfully');
     
     // 初期化テスト
@@ -111,7 +111,7 @@ Please respond warmly and clearly in English.`;
     console.log('Using model: gpt-4o-mini');
     console.log('Prompt:', prompt);
     console.log('API Key last 10 chars:', process.env.OPENAI_API_KEY ? '...' + process.env.OPENAI_API_KEY.slice(-10) : 'not set');
-    
+
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -132,7 +132,7 @@ Please respond warmly and clearly in English.`;
 
     console.log('OpenAI API response received successfully');
     console.log('Response usage:', response.usage);
-    
+
     const aiResponse = response.choices[0].message.content;
     console.log('AI response content:', aiResponse);
 
@@ -203,7 +203,7 @@ async function extractLearningTags(content, userLanguage = 'English') {
 
     console.log('Extracting tags with OpenAI API...');
     console.log('Prompt:', prompt);
-    
+
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [

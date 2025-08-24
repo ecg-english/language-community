@@ -1662,14 +1662,14 @@ const ChannelPage: React.FC = () => {
                           <Typography variant="caption" color="text.secondary">
                             {t('commentHelp')}
                           </Typography>
-                          <Button
-                            variant="contained"
-                            size="small"
-                            onClick={() => handleSubmitComment(post.id)}
-                            disabled={!newComment[post.id]?.trim()}
-                          >
-                            {t('sendComment')}
-                          </Button>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          onClick={() => handleSubmitComment(post.id)}
+                          disabled={!newComment[post.id]?.trim()}
+                        >
+                          {t('sendComment')}
+                        </Button>
                         </Box>
                       </Box>
 
@@ -1678,7 +1678,7 @@ const ChannelPage: React.FC = () => {
                         maxHeight: 'none',
                         overflow: 'visible'
                       }}>
-                        {comments[post.id]?.map((comment) => (
+                      {comments[post.id]?.map((comment) => (
                           <Paper key={comment.id} sx={{ 
                             p: { xs: 0.5, sm: 1 }, 
                             mb: 2, 
@@ -1688,30 +1688,30 @@ const ChannelPage: React.FC = () => {
                             }
                           }}>
                             <Stack direction="row" spacing={1} alignItems="flex-start">
-                              <Avatar 
+                            <Avatar 
                                 sx={{ 
                                   width: { xs: 24, sm: 32 }, 
                                   height: { xs: 24, sm: 32 },
                                   flexShrink: 0
                                 }}
-                                src={comment.avatar_url}
-                              >
-                                {comment.username.charAt(0).toUpperCase()}
-                              </Avatar>
+                              src={comment.avatar_url}
+                            >
+                              {comment.username.charAt(0).toUpperCase()}
+                            </Avatar>
                               <Box sx={{ flexGrow: 1, minWidth: 0, width: '100%' }}>
                                 <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1, flexWrap: 'wrap' }}>
                                   <Typography variant="subtitle2" fontWeight={600} sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-                                    {comment.username}
-                                  </Typography>
-                                  <Chip
-                                    label={comment.role}
-                                    size="small"
+                                  {comment.username}
+                                </Typography>
+                                <Chip
+                                  label={comment.role}
+                                  size="small"
                                     sx={{ fontSize: { xs: '0.5rem', sm: '0.7rem' } }}
-                                  />
+                                />
                                   <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
-                                    {formatDate(comment.created_at)}
-                                  </Typography>
-                                </Stack>
+                                  {formatDate(comment.created_at)}
+                                </Typography>
+                              </Stack>
                                 {comment.username === 'AI学習サポート' ? (
                                   <Box sx={{ 
                                     p: { xs: 1, sm: 2 }, 
@@ -1760,34 +1760,34 @@ const ChannelPage: React.FC = () => {
                                     </Typography>
                                   </Box>
                                 ) : (
-                                  <Typography 
-                                    variant="body2"
-                                    sx={{
-                                      whiteSpace: 'pre-wrap',
+                              <Typography 
+                                variant="body2"
+                                sx={{
+                                  whiteSpace: 'pre-wrap',
                                       wordBreak: 'break-word',
                                       fontSize: { xs: '0.75rem', sm: '0.875rem' },
                                       lineHeight: { xs: 1.6, sm: 1.7 },
                                       width: '100%',
                                       py: 0.5
-                                    }}
-                                  >
-                                    {convertUrlsToLinks(comment.content)}
-                                  </Typography>
+                                }}
+                              >
+                                {convertUrlsToLinks(comment.content)}
+                              </Typography>
                                 )}
-                              </Box>
-                              {(user?.id === comment.user_id || user?.role === 'サーバー管理者') && (
-                                <IconButton
-                                  onClick={() => handleDeleteComment(comment.id)}
-                                  size="small"
-                                  color="error"
+                            </Box>
+                            {(user?.id === comment.user_id || user?.role === 'サーバー管理者') && (
+                              <IconButton
+                                onClick={() => handleDeleteComment(comment.id)}
+                                size="small"
+                                color="error"
                                   sx={{ p: { xs: 0.5, sm: 1 }, flexShrink: 0 }}
-                                >
-                                  <DeleteIcon fontSize="small" />
-                                </IconButton>
-                              )}
-                            </Stack>
-                          </Paper>
-                        ))}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            )}
+                          </Stack>
+                        </Paper>
+                      ))}
                       </Box>
                     </Box>
                   </Collapse>

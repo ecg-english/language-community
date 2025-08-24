@@ -389,16 +389,16 @@ const SetupGuide: React.FC = () => {
                             variant="outlined"
                             size="small"
                             startIcon={<CampaignIcon />}
-                            onClick={() => {
-                              // 強制的にチェックリストを更新
-                              const updatedChecklist = checklist.map(item => 
-                                item.id === 'announcements' 
-                                  ? { ...item, completed: true }
-                                  : item
-                              );
-                              setChecklist(updatedChecklist);
-                              navigate('/channel/11');
-                            }}
+                                  onClick={() => {
+                                    // 強制的にチェックリストを更新
+                                    const updatedChecklist = checklist.map(item => 
+                                      item.id === 'announcements' 
+                                        ? { ...item, completed: true }
+                                        : item
+                                    );
+                                    setChecklist(updatedChecklist);
+                                    navigate('/channel/11');
+                                  }}
                             sx={{
                               borderRadius: 2,
                               textTransform: 'none',
@@ -411,11 +411,11 @@ const SetupGuide: React.FC = () => {
                               '& .MuiButton-startIcon': {
                                 marginRight: { xs: 0.5, sm: 0.5 },
                               },
-                            }}
-                          >
+                                  }}
+                                >
                             {t('setupGuideAnnouncements')}
                           </Button>
-                        )}
+                              )}
                       </Box>
                     }
                     secondary={

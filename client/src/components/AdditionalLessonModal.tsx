@@ -121,7 +121,7 @@ const AdditionalLessonModal: React.FC<AdditionalLessonModalProps> = ({
             <InputLabel>生徒を選択</InputLabel>
             <Select
               value={selectedStudent}
-              onChange={(e) => setSelectedStudent(e.target.value)}
+              onChange={(e) => setSelectedStudent(Number(e.target.value))}
               label="生徒を選択"
             >
               {students.map((student) => (

@@ -516,7 +516,7 @@ const EventsPage: React.FC = () => {
                       (allDayEvents.length > 0 ? 'rgba(25, 118, 210, 0.05)' : 'transparent'),
                     color: isSelected ? 'white' : 'text.primary',
                     '&:hover': canEdit ? {
-                                              backgroundColor: isSelected ? '#1976d2' : 
+                      backgroundColor: isSelected ? '#1976d2' : 
                         (allDayEvents.length > 0 ? 'rgba(25, 118, 210, 0.1)' : '#f5f5f5'),
                     } : {},
                     borderRadius: 1,
@@ -541,7 +541,7 @@ const EventsPage: React.FC = () => {
                         }
                       } else {
                         // イベントがない場合は日付選択
-                        handleDateClick(day);
+                      handleDateClick(day);
                       }
                     }
                   }}
@@ -571,13 +571,13 @@ const EventsPage: React.FC = () => {
                   }}>
                                       {/* スマホ・タブレット版: 営業日とイベントを色分け表示 */}
                   {allDayEvents.length > 0 && (
-                    <Box sx={{
-                      display: { xs: 'flex', lg: 'none' },
-                      flexDirection: 'column',
-                      alignItems: 'center',
+                      <Box sx={{
+                        display: { xs: 'flex', lg: 'none' },
+                        flexDirection: 'column',
+                        alignItems: 'center',
                       gap: 0.5,
                       width: '100%'
-                    }}>
+                      }}>
                       {/* 営業日の表示 */}
                       {allDayEvents.filter((event: any) => event.isEcgLesson).map((event: any, index: number) => {
                         const isECG = event.title.includes('ECG');
@@ -589,7 +589,7 @@ const EventsPage: React.FC = () => {
                             sx={{
                               width: 20,
                               height: 20,
-                              borderRadius: '50%',
+                          borderRadius: '50%',
                               backgroundColor: isSelected ? 'white' : (isECG ? '#4fc3f7' : '#ff9800'),
                               color: isSelected ? '#1976d2' : 'white',
                               display: 'flex',
@@ -599,7 +599,7 @@ const EventsPage: React.FC = () => {
                               fontWeight: 'bold',
                               cursor: 'pointer',
                               '&:hover': {
-                                opacity: 0.8
+                          opacity: 0.8
                               }
                             }}
                             onClick={(e) => {
@@ -666,20 +666,20 @@ const EventsPage: React.FC = () => {
                       
                       {/* 複数イベントがある場合の数表示 */}
                       {allDayEvents.length > 1 && (
-                        <Typography 
-                          variant="caption" 
-                          sx={{ 
-                            fontSize: '0.5rem',
-                            color: 'inherit',
-                            opacity: 0.7,
-                            fontWeight: 500
-                          }}
-                        >
+                          <Typography 
+                            variant="caption" 
+                            sx={{ 
+                              fontSize: '0.5rem',
+                              color: 'inherit',
+                              opacity: 0.7,
+                              fontWeight: 500
+                            }}
+                          >
                           {allDayEvents.length}
-                        </Typography>
-                      )}
-                    </Box>
-                  )}
+                          </Typography>
+                        )}
+                      </Box>
+                    )}
                     
                     {/* デスクトップ版: 従来の表示 */}
                     <Box sx={{ 
@@ -1191,9 +1191,9 @@ const EventsPage: React.FC = () => {
               >
                 Events チャンネル
               </Button>
-              <Button onClick={() => setDialogOpen(false)}>
-                Close
-              </Button>
+            <Button onClick={() => setDialogOpen(false)}>
+              Close
+            </Button>
             </>
           )}
         </DialogActions>
