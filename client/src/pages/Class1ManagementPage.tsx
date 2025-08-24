@@ -102,6 +102,7 @@ const Class1ManagementPage: React.FC = () => {
   
   // 追加レッスン用の状態
   const [additionalLessonModalOpen, setAdditionalLessonModalOpen] = useState(false);
+  const [additionalLessonsData, setAdditionalLessonsData] = useState<any[]>([]);
 
   // カレンダー機能用の状態
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
@@ -398,12 +399,19 @@ const Class1ManagementPage: React.FC = () => {
     }
   }, [weeklyData]);
 
-  // 週次データまたは講師フィルターが変更されたときにカレンダーイベントを更新
+  // 追加レッスンデータを取得
+  useEffect(() => {
+    if (students.length > 0) {
+      fetchAdditionalLessons();
+    }
+  }, [students]);
+
+  // 週次データ、追加レッスンデータ、または講師フィルターが変更されたときにカレンダーイベントを更新
   useEffect(() => {
     if (students.length > 0 && Object.keys(weeklyData).length > 0) {
       updateCalendarEvents();
     }
-  }, [weeklyData, selectedInstructorCalendar, students]);
+  }, [weeklyData, additionalLessonsData, selectedInstructorCalendar, students]);
 
   // studentsステートの変更を監視
   useEffect(() => {
@@ -790,8 +798,8 @@ const Class1ManagementPage: React.FC = () => {
     });
   };
 
-        // カレンダーイベントを生成する関数（非同期）
-  const generateCalendarEvents = async () => {
+        // カレンダーイベントを生成する関数（同期的）
+  const generateCalendarEvents = (additionalLessonsData: any[] = []) => {
     const events: {[date: string]: Array<{
       studentId: number;
       studentName: string;
@@ -862,44 +870,49 @@ const Class1ManagementPage: React.FC = () => {
       });
     });
 
-    // 追加レッスンデータを取得して処理
+    // 追加レッスンデータを処理
+    additionalLessonsData.forEach((lesson: any) => {
+      const student = students.find(s => s.id === lesson.student_id);
+      if (!student) return;
+
+      // 講師フィルター適用
+      if (selectedInstructorCalendar !== 'all' && 
+          student.instructor_id.toString() !== selectedInstructorCalendar) {
+        return;
+      }
+
+      // 追加レッスンの実施日を処理
+      if (lesson.lesson_completed_date) {
+        addEvent(lesson.lesson_completed_date, lesson.student_id, lesson.student_name, 'completed', 'additional');
+      }
+
+      // 追加レッスンの次回予定日を処理
+      if (lesson.next_lesson_date) {
+        addEvent(lesson.next_lesson_date, lesson.student_id, lesson.student_name, 'scheduled', 'additional');
+      }
+    });
+
+    return events;
+  };
+
+  // 追加レッスンデータを取得する関数
+  const fetchAdditionalLessons = async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get('/api/additional-lessons', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
-      response.data.data.forEach((lesson: any) => {
-        const student = students.find(s => s.id === lesson.student_id);
-        if (!student) return;
-
-        // 講師フィルター適用
-        if (selectedInstructorCalendar !== 'all' && 
-            student.instructor_id.toString() !== selectedInstructorCalendar) {
-          return;
-        }
-
-        // 追加レッスンの実施日を処理
-        if (lesson.lesson_completed_date) {
-          addEvent(lesson.lesson_completed_date, lesson.student_id, lesson.student_name, 'completed', 'additional');
-        }
-
-        // 追加レッスンの次回予定日を処理
-        if (lesson.next_lesson_date) {
-          addEvent(lesson.next_lesson_date, lesson.student_id, lesson.student_name, 'scheduled', 'additional');
-        }
-      });
+      setAdditionalLessonsData(response.data.data || []);
     } catch (error) {
       console.error('追加レッスン取得エラー:', error);
+      setAdditionalLessonsData([]);
     }
-
-    return events;
   };
 
-  // カレンダーイベントを更新する関数（非同期）
-  const updateCalendarEvents = async () => {
+  // カレンダーイベントを更新する関数（同期的）
+  const updateCalendarEvents = () => {
     try {
-      const events = await generateCalendarEvents();
+      const events = generateCalendarEvents(additionalLessonsData);
       setCalendarEvents(events);
     } catch (error) {
       console.error('カレンダーイベント更新エラー:', error);
@@ -1704,7 +1717,7 @@ const Class1ManagementPage: React.FC = () => {
         weekKey={currentWeek}
         onSuccess={() => {
           // 追加レッスン作成後にデータを再取得
-          fetchWeeklyData(currentWeek);
+          fetchAdditionalLessons();
         }}
       />
     </Container>
