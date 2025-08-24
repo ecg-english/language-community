@@ -94,6 +94,28 @@ router.put('/monthly-data/:month/:studentId/payment', authenticateToken, checkMa
 router.get('/instructor-lessons/:month', authenticateToken, checkManagerPermission, (req, res) => {
   try {
     const { month } = req.params;
+    console.log('講師レッスン数取得開始:', month);
+    
+    // デバッグ用：講師一覧を確認
+    const instructors = db.prepare(`
+      SELECT id, username, role FROM users 
+      WHERE role IN ('ECG講師', 'JCG講師', 'サーバー管理者')
+    `).all();
+    console.log('講師一覧:', instructors);
+    
+    // デバッグ用：生徒一覧を確認
+    const students = db.prepare(`
+      SELECT id, name, instructor_id FROM class1_students
+    `).all();
+    console.log('生徒一覧:', students);
+    
+    // デバッグ用：レッスン完了データを確認
+    const lessonData = db.prepare(`
+      SELECT student_id, week_key, lesson_completed 
+      FROM class1_weekly_checklist 
+      WHERE lesson_completed = 1
+    `).all();
+    console.log('レッスン完了データ:', lessonData);
     
     // 各講師の月別レッスン実施数を取得
     const instructorLessons = db.prepare(`
@@ -111,7 +133,8 @@ router.get('/instructor-lessons/:month', authenticateToken, checkManagerPermissi
       GROUP BY u.id, u.username, u.role
       ORDER BY u.username
     `).all(month);
-
+    
+    console.log('講師レッスン数結果:', instructorLessons);
     res.json({ success: true, data: instructorLessons });
   } catch (error) {
     console.error('講師レッスン数取得エラー:', error);
