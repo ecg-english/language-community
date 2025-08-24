@@ -49,6 +49,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import AdditionalLessonModal from '../components/AdditionalLessonModal';
 
 interface Student {
   id: number;
@@ -98,6 +99,9 @@ const Class1ManagementPage: React.FC = () => {
     next_lesson_date?: string;
     lesson_completed_date?: string;
   }}}>({});
+  
+  // 追加レッスン用の状態
+  const [additionalLessonModalOpen, setAdditionalLessonModalOpen] = useState(false);
 
   // カレンダー機能用の状態
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
@@ -1013,25 +1017,43 @@ const Class1ManagementPage: React.FC = () => {
               </IconButton>
             </Box>
             
-            {/* 講師フィルター */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-              <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                講師フィルター:
-              </Typography>
-              <FormControl sx={{ minWidth: 200 }}>
-                <Select
-                  value={selectedInstructorFilter}
-                  onChange={(e) => setSelectedInstructorFilter(e.target.value)}
-                  size="small"
-                >
-                  <MenuItem value="all">全講師</MenuItem>
-                  {getInstructors().map((instructor) => (
-                    <MenuItem key={instructor.id} value={instructor.id.toString()}>
-                      {instructor.username}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+            {/* 講師フィルターとレッスン追加ボタン */}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                  講師フィルター:
+                </Typography>
+                <FormControl sx={{ minWidth: 200 }}>
+                  <Select
+                    value={selectedInstructorFilter}
+                    onChange={(e) => setSelectedInstructorFilter(e.target.value)}
+                    size="small"
+                  >
+                    <MenuItem value="all">全講師</MenuItem>
+                    {getInstructors().map((instructor) => (
+                      <MenuItem key={instructor.id} value={instructor.id.toString()}>
+                        {instructor.username}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
+              
+              {/* レッスン追加ボタン */}
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<AddIcon />}
+                onClick={() => setAdditionalLessonModalOpen(true)}
+                sx={{ 
+                  backgroundColor: isDarkMode ? '#1976d2' : '#1976d2',
+                  '&:hover': {
+                    backgroundColor: isDarkMode ? '#1565c0' : '#1565c0'
+                  }
+                }}
+              >
+                レッスン追加
+              </Button>
             </Box>
             
             {/* 生徒チェックリスト */}
@@ -1638,6 +1660,17 @@ const Class1ManagementPage: React.FC = () => {
           </Button>
         </Box>
       )}
+
+      {/* 追加レッスンモーダル */}
+      <AdditionalLessonModal
+        open={additionalLessonModalOpen}
+        onClose={() => setAdditionalLessonModalOpen(false)}
+        weekKey={currentWeek}
+        onSuccess={() => {
+          // 追加レッスン作成後にデータを再取得
+          fetchWeeklyData(currentWeek);
+        }}
+      />
     </Container>
   );
 };

@@ -122,22 +122,27 @@ router.get('/instructor-lessons/:month', authenticateToken, checkManagerPermissi
     `).all();
     console.log('レッスン完了データ:', lessonData);
     
-    // 各講師の月別レッスン実施数を取得
+    // 各講師の月別レッスン実施数を取得（通常レッスン + 追加レッスン）
     const instructorLessons = db.prepare(`
       SELECT 
         u.id as instructor_id,
         u.username as instructor_name,
         u.role as instructor_role,
         COUNT(DISTINCT cs.id) as total_students,
-        COUNT(CASE WHEN wcd.lesson_completed = 1 THEN 1 END) as completed_lessons
+        (
+          COUNT(CASE WHEN wcd.lesson_completed = 1 THEN 1 END) + 
+          COUNT(CASE WHEN al.lesson_completed = 1 THEN 1 END)
+        ) as completed_lessons
       FROM users u
       LEFT JOIN class1_students cs ON u.id = cs.instructor_id
       LEFT JOIN class1_weekly_checklist wcd ON cs.id = wcd.student_id 
         AND wcd.week_key LIKE ? || '%'
+      LEFT JOIN class1_additional_lessons al ON cs.id = al.student_id 
+        AND al.week_key LIKE ? || '%'
       WHERE u.role IN ('ECG講師', 'JCG講師', 'サーバー管理者')
       GROUP BY u.id, u.username, u.role
       ORDER BY u.username
-    `).all(weekPattern);
+    `).all(weekPattern, weekPattern);
     
     console.log('講師レッスン数結果:', instructorLessons);
     res.json({ success: true, data: instructorLessons });

@@ -146,6 +146,7 @@ app.use('/api/study-log', require('./routes/studyLog'));
 app.use('/api/class1', require('./routes/class1'));
 app.use('/api/manager', require('./routes/manager'));
 app.use('/api/survey', require('./routes/survey'));
+app.use('/api/additional-lessons', require('./routes/additional-lessons'));
 
 // ファイルアップロード用ルート
 app.post('/api/upload/avatar', upload.single('avatar'), (req, res) => {
@@ -223,6 +224,8 @@ const runMigrations = () => {
     require('./fix_database_now');
     console.log('3. fix_survey_table を実行中...');
     require('./fix_survey_table');
+    console.log('4. migrate_additional_lessons を実行中...');
+    require('./migrate_additional_lessons');
     console.log('=== データベースマイグレーション完了 ===');
   } catch (error) {
     console.error('❌ マイグレーション失敗:', error);
