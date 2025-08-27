@@ -454,4 +454,30 @@ router.get('/weekly-checklist-all', authenticateToken, checkClass1Permission, as
   }
 });
 
+// 生徒のメモを更新
+router.put('/students/:id/memo', authenticateToken, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { memo } = req.body;
+    
+    // 生徒の存在確認
+    const student = db.prepare('SELECT id FROM class1_students WHERE id = ?').get(id);
+    if (!student) {
+      return res.status(404).json({ success: false, message: '生徒が見つかりません' });
+    }
+
+    // メモを更新
+    db.prepare(`
+      UPDATE class1_students 
+      SET memo = ?, updated_at = CURRENT_TIMESTAMP 
+      WHERE id = ?
+    `).run(memo || null, id);
+
+    res.json({ success: true, message: 'メモを更新しました' });
+  } catch (error) {
+    console.error('メモ更新エラー:', error);
+    res.status(500).json({ success: false, message: 'メモの更新に失敗しました' });
+  }
+});
+
 module.exports = router; 

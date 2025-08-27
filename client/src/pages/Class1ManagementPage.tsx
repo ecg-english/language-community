@@ -951,6 +951,27 @@ const Class1ManagementPage: React.FC = () => {
     setCalendarEditModalOpen(true);
   };
 
+  // 生徒メモ変更ハンドラー
+  const handleStudentMemoChange = async (studentId: number, memo: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`/api/class1/students/${studentId}/memo`, {
+        memo: memo
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // ローカル状態も更新
+      setStudents(prevStudents => 
+        prevStudents.map(student => 
+          student.id === studentId ? { ...student, memo } : student
+        )
+      );
+    } catch (error) {
+      console.error('メモ更新エラー:', error);
+    }
+  };
+
   // カレンダーイベントを更新する関数（同期的）
   const updateCalendarEvents = () => {
     try {
