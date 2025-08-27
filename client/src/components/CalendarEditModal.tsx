@@ -87,13 +87,21 @@ const CalendarEditModal: React.FC<CalendarEditModalProps> = ({
       
       if (eventType === 'scheduled' || eventType === 'completed') {
         // イベントを作成・更新
-        await axios.post('/api/calendar-events', {
+        console.log('カレンダーイベント送信:', {
+          student_id: selectedStudent,
+          date: date,
+          type: eventType
+        });
+        
+        const response = await axios.post('/api/calendar-events', {
           student_id: selectedStudent,
           date: date,
           type: eventType
         }, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        
+        console.log('作成/更新レスポンス:', response.data);
       }
 
       onSuccess();
@@ -113,14 +121,18 @@ const CalendarEditModal: React.FC<CalendarEditModalProps> = ({
     try {
       const token = localStorage.getItem('token');
       
-      await axios.delete('/api/calendar-events', {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await axios.delete('/api/calendar-events', {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
         data: {
           student_id: studentId,
           date: date
         }
       });
 
+      console.log('削除レスポンス:', response.data);
       onSuccess();
     } catch (error) {
       console.error('カレンダーイベント削除エラー:', error);

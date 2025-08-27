@@ -108,6 +108,7 @@ const Class1ManagementPage: React.FC = () => {
   // カレンダー操作用の状態
   const [calendarEditModalOpen, setCalendarEditModalOpen] = useState(false);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string>('');
+  const [calendarEventsData, setCalendarEventsData] = useState<any[]>([]);
 
   // カレンダー機能用の状態
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
@@ -408,15 +409,16 @@ const Class1ManagementPage: React.FC = () => {
   useEffect(() => {
     if (students.length > 0) {
       fetchAdditionalLessons();
+      fetchCalendarEvents();
     }
   }, [students]);
 
-  // 週次データ、追加レッスンデータ、または講師フィルターが変更されたときにカレンダーイベントを更新
+  // カレンダーイベントデータまたは講師フィルターが変更されたときにカレンダーイベントを更新
   useEffect(() => {
-    if (students.length > 0 && Object.keys(weeklyData).length > 0) {
+    if (students.length > 0) {
       updateCalendarEvents();
     }
-  }, [weeklyData, additionalLessonsData, selectedInstructorCalendar, students]);
+  }, [calendarEventsData, selectedInstructorCalendar, students]);
 
   // studentsステートの変更を監視
   useEffect(() => {
@@ -804,127 +806,33 @@ const Class1ManagementPage: React.FC = () => {
   };
 
         // カレンダーイベントを生成する関数（同期的）
-  const generateCalendarEvents = (additionalLessonsData: any[] = []) => {
+  const generateCalendarEvents = () => {
     const events: {[date: string]: Array<{
       studentId: number;
       studentName: string;
       type: 'scheduled' | 'completed';
       date: string;
-      source: 'regular' | 'additional';
+      source?: 'regular' | 'additional';
     }>} = {};
 
-    // ヘルパー関数：イベントを安全に追加（重複処理と優先順位を考慮）
-    const addEvent = (dateKey: string, studentId: number, studentName: string, type: 'scheduled' | 'completed', source: 'regular' | 'additional') => {
-      if (!events[dateKey]) events[dateKey] = [];
-      
-      // 同じ生徒の既存イベントを検索
-      const existingIndex = events[dateKey].findIndex(e => e.studentId === studentId);
-      
-      console.log(`[カレンダーイベント] ${dateKey} - ${studentName}(${studentId}): ${type} (${source})`);
-      if (existingIndex !== -1) {
-        const existing = events[dateKey][existingIndex];
-        console.log(`  既存: ${existing.type} (${existing.source}) → 新規: ${type} (${source})`);
-      }
-      
-      if (existingIndex === -1) {
-        // 同じ生徒のイベントが存在しない場合、新規追加
-        events[dateKey].push({
-          studentId,
-          studentName,
-          type,
-          date: dateKey,
-          source
-        });
-      } else {
-        // 同じ生徒のイベントが存在する場合、優先順位を考慮
-        const existingEvent = events[dateKey][existingIndex];
-        
-        // 優先順位制御: completed > scheduled, regular > additional
-        let shouldUpdate = false;
-        let updateReason = '';
-        
-        if (existingEvent.type === 'scheduled' && type === 'completed') {
-          // 既存が予定、新しいが実施済み → 実施済みに更新
-          shouldUpdate = true;
-          updateReason = '予定→実施済み';
-        } else if (existingEvent.type === 'completed' && type === 'completed') {
-          // 両方とも実施済み → 通常レッスンを優先（regularが後で処理されるため）
-          if (source === 'regular') {
-            shouldUpdate = true;
-            updateReason = '実施済み→実施済み(regular優先)';
-          }
-        } else if (existingEvent.type === 'scheduled' && type === 'scheduled') {
-          // 両方とも予定 → 通常レッスンを優先（regularが後で処理されるため）
-          if (source === 'regular') {
-            shouldUpdate = true;
-            updateReason = '予定→予定(regular優先)';
-          }
-        }
-        // その他のケース（completed → scheduled等）は更新しない
-        
-        if (shouldUpdate) {
-          console.log(`  → 更新: ${updateReason}`);
-          events[dateKey][existingIndex] = {
-            studentId,
-            studentName,
-            type,
-            date: dateKey,
-            source
-          };
-        } else {
-          console.log(`  → 更新しない: 既存を保持`);
-        }
-      }
-    };
-
-    // 追加レッスンデータを先に処理（優先度が低い）
-    additionalLessonsData.forEach((lesson: any) => {
-      const student = students.find(s => s.id === lesson.student_id);
-      if (!student) return;
-
+    // カレンダーイベントデータを処理
+    calendarEventsData.forEach((event: any) => {
       // 講師フィルター適用
-      if (selectedInstructorCalendar !== 'all' && 
-          student.instructor_id.toString() !== selectedInstructorCalendar) {
-        return;
-      }
-
-      // 追加レッスンの実施日を処理
-      if (lesson.lesson_completed_date) {
-        addEvent(lesson.lesson_completed_date, lesson.student_id, lesson.student_name, 'completed', 'additional');
-      }
-
-      // 追加レッスンの次回予定日を処理
-      if (lesson.next_lesson_date) {
-        addEvent(lesson.next_lesson_date, lesson.student_id, lesson.student_name, 'scheduled', 'additional');
-      }
-    });
-
-    // 通常の週次データを後で処理（優先度が高い）
-    Object.keys(weeklyData).forEach(weekKey => {
-      const weekData = weeklyData[weekKey];
-      
-      Object.keys(weekData).forEach(studentIdStr => {
-        const studentId = parseInt(studentIdStr);
-        const studentData = weekData[studentId];
-        const student = students.find(s => s.id === studentId);
-        
-        if (!student) return;
-
-        // 講師フィルター適用
-        if (selectedInstructorCalendar !== 'all' && 
-            student.instructor_id.toString() !== selectedInstructorCalendar) {
+      if (selectedInstructorCalendar !== 'all') {
+        const student = students.find(s => s.id === event.student_id);
+        if (student && student.instructor_id.toString() !== selectedInstructorCalendar) {
           return;
         }
+      }
 
-        // レッスン実施済み日を処理
-        if (studentData.lesson_completed_date) {
-          addEvent(studentData.lesson_completed_date, studentId, student.name, 'completed', 'regular');
-        }
-
-        // 次回レッスン予定日を処理
-        if (studentData.next_lesson_date) {
-          addEvent(studentData.next_lesson_date, studentId, student.name, 'scheduled', 'regular');
-        }
+      const dateKey = event.date;
+      if (!events[dateKey]) events[dateKey] = [];
+      
+      events[dateKey].push({
+        studentId: event.student_id,
+        studentName: event.student_name,
+        type: event.type,
+        date: dateKey
       });
     });
 
@@ -942,6 +850,20 @@ const Class1ManagementPage: React.FC = () => {
     } catch (error) {
       console.error('追加レッスン取得エラー:', error);
       setAdditionalLessonsData([]);
+    }
+  };
+
+  // カレンダーイベントを取得する関数
+  const fetchCalendarEvents = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('/api/calendar-events', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCalendarEventsData(response.data.data || []);
+    } catch (error) {
+      console.error('カレンダーイベント取得エラー:', error);
+      setCalendarEventsData([]);
     }
   };
 
@@ -975,7 +897,7 @@ const Class1ManagementPage: React.FC = () => {
   // カレンダーイベントを更新する関数（同期的）
   const updateCalendarEvents = () => {
     try {
-      const events = generateCalendarEvents(additionalLessonsData);
+      const events = generateCalendarEvents();
       setCalendarEvents(events);
     } catch (error) {
       console.error('カレンダーイベント更新エラー:', error);
@@ -1793,7 +1715,7 @@ const Class1ManagementPage: React.FC = () => {
         events={getEventsForDate(selectedCalendarDate)}
         onSuccess={() => {
           // カレンダー更新後にデータを再取得
-          updateCalendarEvents();
+          fetchCalendarEvents();
         }}
       />
     </Container>
