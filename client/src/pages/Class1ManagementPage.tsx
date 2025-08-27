@@ -56,6 +56,7 @@ interface Instructor {
   id: number;
   username: string;
   name: string;
+  role: string;
 }
 
 const Class1ManagementPage: React.FC = () => {
@@ -63,7 +64,14 @@ const Class1ManagementPage: React.FC = () => {
   
   // 権限チェック関数
   const hasPermission = () => {
-    return user?.role === 'ECG講師' || user?.role === 'JCG講師' || user?.role === 'サーバー管理者';
+    const role = user?.role?.trim();
+    return role === 'ECG講師' || role === 'JCG講師' || role === 'サーバー管理者';
+  };
+
+  // マネージャーページアクセス権限チェック
+  const hasManagerPermission = () => {
+    const role = user?.role?.trim();
+    return role === 'サーバー管理者';
   };
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -114,6 +122,8 @@ const Class1ManagementPage: React.FC = () => {
   const [newStudentName, setNewStudentName] = useState('');
   const [selectedNewInstructor, setSelectedNewInstructor] = useState('');
   const [newStudentMemo, setNewStudentMemo] = useState('');
+  const [isNewStudent, setIsNewStudent] = useState(true);
+  const [class1Members, setClass1Members] = useState<any[]>([]);
 
   // 現在の月を取得する関数
   const getCurrentMonth = () => {
@@ -311,10 +321,20 @@ const Class1ManagementPage: React.FC = () => {
       });
       console.log('講師データ取得成功:', instructorsResponse.data);
       const allUsers = instructorsResponse.data.users || [];
-      const instructorUsers = allUsers.filter((user: any) => 
-        user.role === 'ECG講師' || user.role === 'JCG講師'
-      );
+      const instructorUsers = allUsers.filter((user: any) => {
+        const role = user.role?.trim();
+        return role === 'ECG講師' || role === 'JCG講師' || role === 'サーバー管理者';
+      });
       setInstructors(instructorUsers);
+
+      // Class1 Membersデータを取得
+      console.log('Class1 Members取得中...');
+      const class1MembersUsers = allUsers.filter((user: any) => {
+        const role = user.role?.trim();
+        return role === 'Class1 Members';
+      });
+      setClass1Members(class1MembersUsers);
+      console.log('Class1 Members取得成功:', class1MembersUsers);
 
       setDataLoaded(true);
       console.log('=== データ取得完了 ===');
@@ -431,6 +451,7 @@ const Class1ManagementPage: React.FC = () => {
         setNewStudentName('');
         setSelectedNewInstructor('');
         setNewStudentMemo('');
+        setIsNewStudent(true);
         fetchData();
         alert('生徒を追加しました');
       }
@@ -569,7 +590,7 @@ const Class1ManagementPage: React.FC = () => {
         <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
           <Tab label="生徒管理" />
           <Tab label="カレンダー" />
-          {hasPermission() && (
+          {hasManagerPermission() && (
             <Tab label="マネージャー" />
           )}
         </Tabs>
@@ -857,14 +878,56 @@ const Class1ManagementPage: React.FC = () => {
         <DialogTitle>生徒を追加</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 1 }}>
-            <TextField
-              fullWidth
-              label="生徒名"
-              value={newStudentName}
-              onChange={(e) => setNewStudentName(e.target.value)}
-              sx={{ mb: 2 }}
-              placeholder="生徒名を入力"
-            />
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel>生徒の種類</InputLabel>
+              <Select
+                value={isNewStudent ? 'new' : 'existing'}
+                onChange={(e) => {
+                  setIsNewStudent(e.target.value === 'new');
+                  setNewStudentName('');
+                }}
+                label="生徒の種類"
+              >
+                <MenuItem value="new">新規生徒名を入力</MenuItem>
+                <MenuItem value="existing">Class1 Membersから選択</MenuItem>
+              </Select>
+            </FormControl>
+
+            {isNewStudent ? (
+              <TextField
+                fullWidth
+                label="生徒名"
+                value={newStudentName}
+                onChange={(e) => setNewStudentName(e.target.value)}
+                sx={{ mb: 2 }}
+                placeholder="生徒名を入力"
+              />
+            ) : (
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel>Class1 Members</InputLabel>
+                <Select
+                  value={newStudentName}
+                  onChange={(e) => setNewStudentName(e.target.value)}
+                  label="Class1 Members"
+                >
+                  {!dataLoaded ? (
+                    <MenuItem disabled value="">
+                      読み込み中...
+                    </MenuItem>
+                  ) : class1Members.length === 0 ? (
+                    <MenuItem disabled value="">
+                      Class1 Membersが見つかりません
+                    </MenuItem>
+                  ) : (
+                    class1Members.map((member) => (
+                      <MenuItem key={member.id} value={member.username}>
+                        {member.username}
+                      </MenuItem>
+                    ))
+                  )}
+                </Select>
+              </FormControl>
+            )}
 
             <FormControl fullWidth sx={{ mb: 2 }}>
               <InputLabel>担当講師</InputLabel>
@@ -873,11 +936,21 @@ const Class1ManagementPage: React.FC = () => {
                 onChange={(e) => setSelectedNewInstructor(e.target.value)}
                 label="担当講師"
               >
-                {instructors.map((instructor) => (
-                  <MenuItem key={instructor.id} value={instructor.id.toString()}>
-                    {instructor.name}
+                {!dataLoaded ? (
+                  <MenuItem disabled value="">
+                    読み込み中...
                   </MenuItem>
-                ))}
+                ) : instructors.length === 0 ? (
+                  <MenuItem disabled value="">
+                    講師が見つかりません
+                  </MenuItem>
+                ) : (
+                  instructors.map((instructor) => (
+                    <MenuItem key={instructor.id} value={instructor.id.toString()}>
+                      {instructor.name} ({instructor.role})
+                    </MenuItem>
+                  ))
+                )}
               </Select>
             </FormControl>
 
@@ -910,7 +983,7 @@ const Class1ManagementPage: React.FC = () => {
       </Dialog>
 
       {/* マネージャータブ */}
-      {activeTab === 2 && hasPermission() && (
+      {activeTab === 2 && hasManagerPermission() && (
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <Typography variant="h5" sx={{ mb: 2 }}>
             マネージャー機能
@@ -920,7 +993,7 @@ const Class1ManagementPage: React.FC = () => {
           </Typography>
           <Button
             variant="contained"
-            onClick={() => window.open('/manager', '_blank')}
+            onClick={() => window.open('/#/manager', '_blank')}
             startIcon={<SchoolIcon />}
           >
             マネージャーページを開く
