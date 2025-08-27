@@ -188,9 +188,11 @@ const Class1ManagementPage: React.FC = () => {
   const initializeMonthlyData = async () => {
     console.log('月別データ初期化開始 - 現在の月:', currentMonth);
     console.log('対象生徒数:', students.length);
+    console.log('生徒データ詳細:', students);
     
     if (students.length === 0) {
       console.log('生徒データがないため、初期化をスキップ');
+      console.log('students配列の状態:', students);
       return;
     }
     
@@ -328,7 +330,16 @@ const Class1ManagementPage: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       console.log('生徒データ取得成功:', studentsResponse.data);
-      setStudents(studentsResponse.data.students || []);
+      const studentsData = studentsResponse.data.students || [];
+      console.log('生徒データ詳細:', studentsData);
+      setStudents(studentsData);
+      
+      // 生徒データ設定後に月次データを初期化
+      setTimeout(async () => {
+        console.log('生徒データ設定後の月次データ初期化');
+        console.log('現在の生徒数:', studentsData.length);
+        await initializeMonthlyData();
+      }, 200);
 
       // 講師データを取得
       console.log('講師データ取得中...');
@@ -345,7 +356,13 @@ const Class1ManagementPage: React.FC = () => {
         const isInstructor = role === 'ECG講師' || role === 'JCG講師' || role === 'サーバー管理者';
         console.log(`ユーザー ${user.name} (${role}): ${isInstructor ? '講師' : '講師ではない'}`);
         return isInstructor;
-      });
+      }).map((user: any) => ({
+        id: user.id,
+        name: user.name || user.username,
+        username: user.username,
+        role: user.role,
+        email: user.email
+      }));
       console.log('フィルタリング後の講師数:', instructorUsers.length);
       console.log('講師一覧:', instructorUsers.map((i: any) => ({ id: i.id, name: i.name, role: i.role })));
       setInstructors(instructorUsers);
@@ -399,11 +416,7 @@ const Class1ManagementPage: React.FC = () => {
       // 基本データを取得
       await fetchData();
       
-      // 講師データが設定されるまで少し待つ
-      setTimeout(async () => {
-        console.log('講師データ設定後の月次データ初期化');
-        await initializeMonthlyData();
-      }, 500);
+      // データ取得完了後の処理はfetchData内で行うため、ここでは何もしない
     };
     
     initializeData();

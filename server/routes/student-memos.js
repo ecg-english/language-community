@@ -109,8 +109,14 @@ router.post('/:studentId/:month', authenticateToken, (req, res) => {
     console.log('保存パラメータ:', { studentId, month, memo });
     
     // 生徒の存在確認
-    const student = db.prepare('SELECT id FROM class1_students WHERE id = ?').get(studentId);
+    console.log('生徒ID確認:', studentId);
+    const student = db.prepare('SELECT id, name FROM class1_students WHERE id = ?').get(studentId);
     console.log('生徒確認結果:', student);
+    
+    // テーブル内の全生徒を確認
+    const allStudents = db.prepare('SELECT id, name FROM class1_students').all();
+    console.log('テーブル内の全生徒:', allStudents);
+    
     if (!student) {
       console.log('生徒が見つかりません:', studentId);
       return res.status(404).json({ success: false, message: '生徒が見つかりません' });
