@@ -109,6 +109,11 @@ const Class1ManagementPage: React.FC = () => {
   // 生徒と講師の状態
   const [students, setStudents] = useState<Student[]>([]);
   const [instructors, setInstructors] = useState<Instructor[]>([]);
+  
+  // 生徒追加用の状態
+  const [newStudentName, setNewStudentName] = useState('');
+  const [selectedNewInstructor, setSelectedNewInstructor] = useState('');
+  const [newStudentMemo, setNewStudentMemo] = useState('');
 
   // 現在の月を取得する関数
   const getCurrentMonth = () => {
@@ -389,6 +394,52 @@ const Class1ManagementPage: React.FC = () => {
     }
   };
 
+  // 生徒削除ハンドラー
+  const handleDeleteStudent = async (studentId: number) => {
+    if (!window.confirm('この生徒を削除しますか？')) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.delete(`/api/class1/students/${studentId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        fetchData();
+        alert('生徒を削除しました');
+      }
+    } catch (error: any) {
+      console.error('生徒削除エラー:', error);
+      alert('生徒の削除に失敗しました');
+    }
+  };
+
+  // 生徒追加ハンドラー
+  const handleAddStudent = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post('/api/class1/students', {
+        name: newStudentName,
+        instructor_id: parseInt(selectedNewInstructor),
+        memo: newStudentMemo
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        setAddStudentDialog(false);
+        setNewStudentName('');
+        setSelectedNewInstructor('');
+        setNewStudentMemo('');
+        fetchData();
+        alert('生徒を追加しました');
+      }
+    } catch (error: any) {
+      console.error('生徒追加エラー:', error);
+      alert('生徒の追加に失敗しました');
+    }
+  };
+
   // 月次ナビゲーション
   const handlePreviousMonth = () => {
     const [year, month] = currentMonth.split('-');
@@ -404,6 +455,33 @@ const Class1ManagementPage: React.FC = () => {
   };
 
   const handleNextMonth = () => {
+    const [year, month] = currentMonth.split('-');
+    const yearNum = parseInt(year);
+    const monthNum = parseInt(month);
+    
+    if (monthNum === 12) {
+      const nextYear = yearNum + 1;
+      setCurrentMonth(`${nextYear}-01`);
+    } else {
+      setCurrentMonth(`${yearNum}-${(monthNum + 1).toString().padStart(2, '0')}`);
+    }
+  };
+
+  // カレンダー用の月次ナビゲーション
+  const handleCalendarPreviousMonth = () => {
+    const [year, month] = currentMonth.split('-');
+    const yearNum = parseInt(year);
+    const monthNum = parseInt(month);
+    
+    if (monthNum === 1) {
+      const prevYear = yearNum - 1;
+      setCurrentMonth(`${prevYear}-12`);
+    } else {
+      setCurrentMonth(`${yearNum}-${(monthNum - 1).toString().padStart(2, '0')}`);
+    }
+  };
+
+  const handleCalendarNextMonth = () => {
     const [year, month] = currentMonth.split('-');
     const yearNum = parseInt(year);
     const monthNum = parseInt(month);
@@ -448,9 +526,18 @@ const Class1ManagementPage: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Class1 レッスン管理
-      </Typography>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h4" component="h1">
+          Class1 レッスン管理
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => setAddStudentDialog(true)}
+        >
+          生徒を追加
+        </Button>
+      </Box>
 
       {/* 月次ナビゲーション */}
       <Paper sx={{ p: 2, mb: 3 }}>
@@ -487,13 +574,7 @@ const Class1ManagementPage: React.FC = () => {
               </Select>
             </FormControl>
             
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => setAdditionalLessonModalOpen(true)}
-            >
-              レッスン追加
-            </Button>
+
           </Box>
         </Box>
       </Paper>
@@ -529,6 +610,15 @@ const Class1ManagementPage: React.FC = () => {
                            onClick={() => copySurveyUrl(student.id)}
                          >
                            <CopyIcon />
+                         </IconButton>
+                       </Tooltip>
+                       <Tooltip title="生徒を削除">
+                         <IconButton
+                           size="small"
+                           color="error"
+                           onClick={() => handleDeleteStudent(student.id)}
+                         >
+                           <DeleteIcon />
                          </IconButton>
                        </Tooltip>
                      </Box>
@@ -592,13 +682,7 @@ const Class1ManagementPage: React.FC = () => {
           <Box sx={{ mb: 3 }}>
             {/* 月ナビゲーション */}
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-              <IconButton 
-                onClick={() => {
-                  const prevMonth = new Date(currentMonth + '-01');
-                  prevMonth.setMonth(prevMonth.getMonth() - 1);
-                  setCurrentMonth(`${prevMonth.getFullYear()}-${(prevMonth.getMonth() + 1).toString().padStart(2, '0')}`);
-                }}
-              >
+              <IconButton onClick={handleCalendarPreviousMonth}>
                 <CalendarIcon />
               </IconButton>
               
@@ -606,13 +690,7 @@ const Class1ManagementPage: React.FC = () => {
                 {currentMonth.split('-')[0]}年{parseInt(currentMonth.split('-')[1])}月
               </Typography>
               
-              <IconButton 
-                onClick={() => {
-                  const nextMonth = new Date(currentMonth + '-01');
-                  nextMonth.setMonth(nextMonth.getMonth() + 1);
-                  setCurrentMonth(`${nextMonth.getFullYear()}-${(nextMonth.getMonth() + 1).toString().padStart(2, '0')}`);
-                }}
-              >
+              <IconButton onClick={handleCalendarNextMonth}>
                 <CalendarIcon />
               </IconButton>
             </Box>
@@ -785,6 +863,63 @@ const Class1ManagementPage: React.FC = () => {
           fetchAdditionalLessons();
         }}
       />
+
+      {/* 生徒追加ダイアログ */}
+      <Dialog open={addStudentDialog} onClose={() => setAddStudentDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>生徒を追加</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 1 }}>
+            <TextField
+              fullWidth
+              label="生徒名"
+              value={newStudentName}
+              onChange={(e) => setNewStudentName(e.target.value)}
+              sx={{ mb: 2 }}
+              placeholder="生徒名を入力"
+            />
+
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel>担当講師</InputLabel>
+              <Select
+                value={selectedNewInstructor}
+                onChange={(e) => setSelectedNewInstructor(e.target.value)}
+                label="担当講師"
+              >
+                {instructors.map((instructor) => (
+                  <MenuItem key={instructor.id} value={instructor.id.toString()}>
+                    {instructor.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <TextField
+              fullWidth
+              label="メモ（任意）"
+              value={newStudentMemo}
+              onChange={(e) => setNewStudentMemo(e.target.value)}
+              multiline
+              rows={2}
+              sx={{ mb: 2 }}
+              placeholder="例: 火曜午後が都合良い"
+            />
+
+            <Typography variant="caption" color="text.secondary">
+              後から編集・削除できます。
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddStudentDialog(false)}>キャンセル</Button>
+          <Button 
+            onClick={handleAddStudent} 
+            variant="contained"
+            disabled={!newStudentName || !selectedNewInstructor}
+          >
+            保存
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* カレンダー編集モーダル */}
       <CalendarEditModal
