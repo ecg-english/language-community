@@ -43,7 +43,6 @@ import {
   Edit as EditIcon
 } from '@mui/icons-material';
 import axios from 'axios';
-import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isSameMonth, isSameDay } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
 import AdditionalLessonModal from '../components/AdditionalLessonModal';
 import CalendarEditModal from '../components/CalendarEditModal';
@@ -132,26 +131,20 @@ const Class1ManagementPage: React.FC = () => {
   const [isNewStudent, setIsNewStudent] = useState(true);
   const [class1Members, setClass1Members] = useState<any[]>([]);
 
-  // 現在の月を取得する関数
+  // 現在の月を取得する関数（簡易版）
   const getCurrentMonth = () => {
     const now = new Date();
     const year = now.getFullYear();
-    const month = (now.getMonth() + 1).toString().padStart(2, '0');
-    return `${year}-${month}`;
+    const month = now.getMonth() + 1;
+    return `${year}-${String(month).padStart(2, '0')}`;
   };
 
-  // 月の範囲を取得する関数
+  // 月の範囲を取得する関数（簡易版）
   const getMonthRange = (monthString: string) => {
-    const [year, month] = monthString.split('-');
-    const yearNum = parseInt(year);
-    const monthNum = parseInt(month);
-    
-    const startDate = new Date(yearNum, monthNum - 1, 1);
-    const endDate = new Date(yearNum, monthNum, 0);
-    
+    const [year, month] = monthString.split('-').map(Number);
     return {
-      start: startDate.toISOString().split('T')[0],
-      end: endDate.toISOString().split('T')[0]
+      start: `${year}-${String(month).padStart(2, '0')}-01`,
+      end: `${year}-${String(month).padStart(2, '0')}-${new Date(year, month, 0).getDate()}`
     };
   };
 
