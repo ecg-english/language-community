@@ -1,7 +1,7 @@
 const express = require('express');
 const Database = require('better-sqlite3');
 const path = require('path');
-const authenticateToken = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 const dbPath = path.join(__dirname, '..', 'language-community.db');
