@@ -288,26 +288,40 @@ const Class1ManagementPage: React.FC = () => {
       setError(null);
       const token = localStorage.getItem('token');
       
+      console.log('=== データ取得開始 ===');
+      console.log('Token:', !!token);
+      
       // 生徒データを取得
+      console.log('生徒データ取得中...');
       const studentsResponse = await axios.get('/api/class1/students', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setStudents(studentsResponse.data.data || []);
+      console.log('生徒データ取得成功:', studentsResponse.data);
+      setStudents(studentsResponse.data.students || []);
 
       // 講師データを取得
-      const instructorsResponse = await axios.get('/api/users', {
+      console.log('講師データ取得中...');
+      const instructorsResponse = await axios.get('/api/auth/users/class1', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const allUsers = instructorsResponse.data.data || [];
+      console.log('講師データ取得成功:', instructorsResponse.data);
+      const allUsers = instructorsResponse.data.users || [];
       const instructorUsers = allUsers.filter((user: any) => 
         user.role === 'ECG講師' || user.role === 'JCG講師'
       );
       setInstructors(instructorUsers);
 
       setDataLoaded(true);
-    } catch (error) {
+      console.log('=== データ取得完了 ===');
+    } catch (error: any) {
       console.error('データ取得エラー:', error);
-      setError('データの取得に失敗しました');
+      console.error('エラー詳細:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        url: error.config?.url
+      });
+      setError(`データの取得に失敗しました: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -316,7 +330,7 @@ const Class1ManagementPage: React.FC = () => {
   // 初期化
   useEffect(() => {
     const initializeData = async () => {
-      if (!hasPermission) {
+      if (!hasPermission()) {
         console.log('権限がありません。データ取得をスキップします。');
         setLoading(false);
         return;
@@ -335,7 +349,7 @@ const Class1ManagementPage: React.FC = () => {
     };
     
     initializeData();
-  }, [hasPermission]);
+  }, []);
 
   // 月が変更されたときにメモデータを再取得
   useEffect(() => {
