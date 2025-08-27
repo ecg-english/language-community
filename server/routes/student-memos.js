@@ -69,7 +69,13 @@ router.get('/:studentId/:month', authenticateToken, (req, res) => {
     const { studentId, month } = req.params;
     
     // 生徒の存在確認
-    const student = db.prepare('SELECT id FROM class1_students WHERE id = ?').get(studentId);
+    const numericStudentId = parseInt(studentId);
+    if (isNaN(numericStudentId)) {
+      console.error('無効な生徒ID:', studentId);
+      return res.status(400).json({ success: false, message: '無効な生徒IDです' });
+    }
+    
+    const student = db.prepare('SELECT id FROM class1_students WHERE id = ?').get(numericStudentId);
     console.log('生徒確認結果:', student);
     if (!student) {
       return res.status(404).json({ success: false, message: '生徒が見つかりません' });
@@ -79,13 +85,13 @@ router.get('/:studentId/:month', authenticateToken, (req, res) => {
     const memo = db.prepare(`
       SELECT memo FROM class1_student_memos 
       WHERE student_id = ? AND month = ?
-    `).get(studentId, month);
+    `).get(numericStudentId, month);
     console.log('メモ取得結果:', memo);
 
     res.json({ 
       success: true, 
       data: { 
-        student_id: parseInt(studentId), 
+        student_id: numericStudentId, 
         month, 
         memo: memo ? memo.memo : '' 
       } 
@@ -110,7 +116,16 @@ router.post('/:studentId/:month', authenticateToken, (req, res) => {
     
     // 生徒の存在確認
     console.log('生徒ID確認:', studentId);
-    const student = db.prepare('SELECT id, name FROM class1_students WHERE id = ?').get(studentId);
+    console.log('生徒IDの型:', typeof studentId);
+    
+    // 生徒IDを数値に変換
+    const numericStudentId = parseInt(studentId);
+    if (isNaN(numericStudentId)) {
+      console.error('無効な生徒ID:', studentId);
+      return res.status(400).json({ success: false, message: '無効な生徒IDです' });
+    }
+    
+    const student = db.prepare('SELECT id, name FROM class1_students WHERE id = ?').get(numericStudentId);
     console.log('生徒確認結果:', student);
     
     // テーブル内の全生徒を確認
@@ -132,7 +147,7 @@ router.post('/:studentId/:month', authenticateToken, (req, res) => {
       VALUES (?, ?, ?, CURRENT_TIMESTAMP)
       ON CONFLICT(student_id, month) 
       DO UPDATE SET memo = ?, updated_at = CURRENT_TIMESTAMP
-    `).run(studentId, month, memo || '', memo || '');
+    `).run(numericStudentId, month, memo || '', memo || '');
     
     console.log('保存結果:', result);
 

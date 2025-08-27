@@ -168,6 +168,9 @@ const Class1ManagementPage: React.FC = () => {
   const saveStudentMemo = async (studentId: number, month: string, memo: string) => {
     try {
       console.log('メモ保存開始:', { studentId, month, memo });
+      console.log('生徒IDの型:', typeof studentId);
+      console.log('生徒IDの値:', studentId);
+      
       const token = localStorage.getItem('token');
       const response = await axios.post(`/api/student-memos/${studentId}/${month}`, {
         memo: memo
@@ -180,6 +183,7 @@ const Class1ManagementPage: React.FC = () => {
       console.error('生徒メモ保存エラー:', error);
       console.error('エラー詳細:', error.response?.data);
       console.error('エラーステータス:', error.response?.status);
+      console.error('リクエストURL:', error.config?.url);
       return false;
     }
   };
@@ -448,12 +452,25 @@ const Class1ManagementPage: React.FC = () => {
   // 生徒メモ変更ハンドラー
   const handleStudentMemoChange = async (studentId: number, memo: string) => {
     try {
-      const success = await saveStudentMemo(studentId, currentMonth, memo);
+      console.log('メモ変更ハンドラー:', { studentId, memo, currentMonth });
+      console.log('生徒IDの型:', typeof studentId);
+      
+      // 生徒IDが数値であることを確認
+      const numericStudentId = Number(studentId);
+      if (isNaN(numericStudentId)) {
+        console.error('無効な生徒ID:', studentId);
+        return;
+      }
+      
+      const success = await saveStudentMemo(numericStudentId, currentMonth, memo);
       if (success) {
         setStudentMemos(prev => ({
           ...prev,
-          [studentId]: memo
+          [numericStudentId]: memo
         }));
+        console.log('メモ保存成功、状態更新完了');
+      } else {
+        console.error('メモ保存に失敗しました');
       }
     } catch (error) {
       console.error('メモ保存エラー:', error);
