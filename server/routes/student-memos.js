@@ -63,10 +63,14 @@ const ensureMemoTable = () => {
 // 生徒の月別メモを取得
 router.get('/:studentId/:month', authenticateToken, (req, res) => {
   try {
-    console.log('メモ取得リクエスト:', req.params);
+    console.log('=== メモ取得リクエスト開始 ===');
+    console.log('リクエストパラメータ:', req.params);
     ensureMemoTable();
     
     const { studentId, month } = req.params;
+    
+    console.log('生徒ID確認:', studentId);
+    console.log('生徒IDの型:', typeof studentId);
     
     // 生徒の存在確認
     const numericStudentId = parseInt(studentId);
@@ -75,9 +79,17 @@ router.get('/:studentId/:month', authenticateToken, (req, res) => {
       return res.status(400).json({ success: false, message: '無効な生徒IDです' });
     }
     
+    console.log('数値変換後の生徒ID:', numericStudentId);
+    
+    // テーブル内の全生徒を確認（最初に実行）
+    const allStudents = db.prepare('SELECT id, name FROM class1_students').all();
+    console.log('テーブル内の全生徒:', allStudents);
+    
     const student = db.prepare('SELECT id FROM class1_students WHERE id = ?').get(numericStudentId);
     console.log('生徒確認結果:', student);
     if (!student) {
+      console.log('生徒が見つかりません:', numericStudentId);
+      console.log('利用可能な生徒ID:', allStudents.map(s => s.id));
       return res.status(404).json({ success: false, message: '生徒が見つかりません' });
     }
 
@@ -106,15 +118,15 @@ router.get('/:studentId/:month', authenticateToken, (req, res) => {
 // 生徒の月別メモを保存・更新
 router.post('/:studentId/:month', authenticateToken, (req, res) => {
   try {
-    console.log('メモ保存リクエスト:', req.params, req.body);
+    console.log('=== メモ保存リクエスト開始 ===');
+    console.log('リクエストパラメータ:', req.params);
+    console.log('リクエストボディ:', req.body);
     ensureMemoTable();
     
     const { studentId, month } = req.params;
     const { memo } = req.body;
     
     console.log('保存パラメータ:', { studentId, month, memo });
-    
-    // 生徒の存在確認
     console.log('生徒ID確認:', studentId);
     console.log('生徒IDの型:', typeof studentId);
     
@@ -125,15 +137,18 @@ router.post('/:studentId/:month', authenticateToken, (req, res) => {
       return res.status(400).json({ success: false, message: '無効な生徒IDです' });
     }
     
-    const student = db.prepare('SELECT id, name FROM class1_students WHERE id = ?').get(numericStudentId);
-    console.log('生徒確認結果:', student);
+    console.log('数値変換後の生徒ID:', numericStudentId);
     
-    // テーブル内の全生徒を確認
+    // テーブル内の全生徒を確認（最初に実行）
     const allStudents = db.prepare('SELECT id, name FROM class1_students').all();
     console.log('テーブル内の全生徒:', allStudents);
     
+    const student = db.prepare('SELECT id, name FROM class1_students WHERE id = ?').get(numericStudentId);
+    console.log('生徒確認結果:', student);
+    
     if (!student) {
-      console.log('生徒が見つかりません:', studentId);
+      console.log('生徒が見つかりません:', numericStudentId);
+      console.log('利用可能な生徒ID:', allStudents.map(s => s.id));
       return res.status(404).json({ success: false, message: '生徒が見つかりません' });
     }
 

@@ -452,8 +452,10 @@ const Class1ManagementPage: React.FC = () => {
   // 生徒メモ変更ハンドラー
   const handleStudentMemoChange = async (studentId: number, memo: string) => {
     try {
+      console.log('=== メモ変更ハンドラー開始 ===');
       console.log('メモ変更ハンドラー:', { studentId, memo, currentMonth });
       console.log('生徒IDの型:', typeof studentId);
+      console.log('生徒IDの値:', studentId);
       
       // 生徒IDが数値であることを確認
       const numericStudentId = Number(studentId);
@@ -461,6 +463,9 @@ const Class1ManagementPage: React.FC = () => {
         console.error('無効な生徒ID:', studentId);
         return;
       }
+      
+      console.log('数値変換後の生徒ID:', numericStudentId);
+      console.log('現在の生徒一覧:', students.map(s => ({ id: s.id, name: s.name })));
       
       const success = await saveStudentMemo(numericStudentId, currentMonth, memo);
       if (success) {
