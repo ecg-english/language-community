@@ -815,6 +815,12 @@ const Class1ManagementPage: React.FC = () => {
       // 同じ生徒の既存イベントを検索
       const existingIndex = events[dateKey].findIndex(e => e.studentId === studentId);
       
+      console.log(`[カレンダーイベント] ${dateKey} - ${studentName}(${studentId}): ${type} (${source})`);
+      if (existingIndex !== -1) {
+        const existing = events[dateKey][existingIndex];
+        console.log(`  既存: ${existing.type} (${existing.source}) → 新規: ${type} (${source})`);
+      }
+      
       if (existingIndex === -1) {
         // 同じ生徒のイベントが存在しない場合、新規追加
         events[dateKey].push({
@@ -828,8 +834,31 @@ const Class1ManagementPage: React.FC = () => {
         // 同じ生徒のイベントが存在する場合、優先順位を考慮
         const existingEvent = events[dateKey][existingIndex];
         
-        // 実施済み（completed）は予定（scheduled）より優先
-        if (type === 'completed' || (type === 'scheduled' && existingEvent.type !== 'completed')) {
+        // 優先順位制御: completed > scheduled, regular > additional
+        let shouldUpdate = false;
+        let updateReason = '';
+        
+        if (existingEvent.type === 'scheduled' && type === 'completed') {
+          // 既存が予定、新しいが実施済み → 実施済みに更新
+          shouldUpdate = true;
+          updateReason = '予定→実施済み';
+        } else if (existingEvent.type === 'completed' && type === 'completed') {
+          // 両方とも実施済み → 通常レッスンを優先（regularが後で処理されるため）
+          if (source === 'regular') {
+            shouldUpdate = true;
+            updateReason = '実施済み→実施済み(regular優先)';
+          }
+        } else if (existingEvent.type === 'scheduled' && type === 'scheduled') {
+          // 両方とも予定 → 通常レッスンを優先（regularが後で処理されるため）
+          if (source === 'regular') {
+            shouldUpdate = true;
+            updateReason = '予定→予定(regular優先)';
+          }
+        }
+        // その他のケース（completed → scheduled等）は更新しない
+        
+        if (shouldUpdate) {
+          console.log(`  → 更新: ${updateReason}`);
           events[dateKey][existingIndex] = {
             studentId,
             studentName,
@@ -837,11 +866,35 @@ const Class1ManagementPage: React.FC = () => {
             date: dateKey,
             source
           };
+        } else {
+          console.log(`  → 更新しない: 既存を保持`);
         }
       }
     };
 
-    // 通常の週次データを処理
+    // 追加レッスンデータを先に処理（優先度が低い）
+    additionalLessonsData.forEach((lesson: any) => {
+      const student = students.find(s => s.id === lesson.student_id);
+      if (!student) return;
+
+      // 講師フィルター適用
+      if (selectedInstructorCalendar !== 'all' && 
+          student.instructor_id.toString() !== selectedInstructorCalendar) {
+        return;
+      }
+
+      // 追加レッスンの実施日を処理
+      if (lesson.lesson_completed_date) {
+        addEvent(lesson.lesson_completed_date, lesson.student_id, lesson.student_name, 'completed', 'additional');
+      }
+
+      // 追加レッスンの次回予定日を処理
+      if (lesson.next_lesson_date) {
+        addEvent(lesson.next_lesson_date, lesson.student_id, lesson.student_name, 'scheduled', 'additional');
+      }
+    });
+
+    // 通常の週次データを後で処理（優先度が高い）
     Object.keys(weeklyData).forEach(weekKey => {
       const weekData = weeklyData[weekKey];
       
@@ -868,28 +921,6 @@ const Class1ManagementPage: React.FC = () => {
           addEvent(studentData.next_lesson_date, studentId, student.name, 'scheduled', 'regular');
         }
       });
-    });
-
-    // 追加レッスンデータを処理
-    additionalLessonsData.forEach((lesson: any) => {
-      const student = students.find(s => s.id === lesson.student_id);
-      if (!student) return;
-
-      // 講師フィルター適用
-      if (selectedInstructorCalendar !== 'all' && 
-          student.instructor_id.toString() !== selectedInstructorCalendar) {
-        return;
-      }
-
-      // 追加レッスンの実施日を処理
-      if (lesson.lesson_completed_date) {
-        addEvent(lesson.lesson_completed_date, lesson.student_id, lesson.student_name, 'completed', 'additional');
-      }
-
-      // 追加レッスンの次回予定日を処理
-      if (lesson.next_lesson_date) {
-        addEvent(lesson.next_lesson_date, lesson.student_id, lesson.student_name, 'scheduled', 'additional');
-      }
     });
 
     return events;
