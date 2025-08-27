@@ -50,6 +50,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import AdditionalLessonModal from '../components/AdditionalLessonModal';
+import CalendarEditModal from '../components/CalendarEditModal';
 
 interface Student {
   id: number;
@@ -103,6 +104,10 @@ const Class1ManagementPage: React.FC = () => {
   // 追加レッスン用の状態
   const [additionalLessonModalOpen, setAdditionalLessonModalOpen] = useState(false);
   const [additionalLessonsData, setAdditionalLessonsData] = useState<any[]>([]);
+  
+  // カレンダー操作用の状態
+  const [calendarEditModalOpen, setCalendarEditModalOpen] = useState(false);
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<string>('');
 
   // カレンダー機能用の状態
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
@@ -940,6 +945,12 @@ const Class1ManagementPage: React.FC = () => {
     }
   };
 
+  // カレンダー日付クリックハンドラー
+  const handleCalendarDateClick = (dateKey: string) => {
+    setSelectedCalendarDate(dateKey);
+    setCalendarEditModalOpen(true);
+  };
+
   // カレンダーイベントを更新する関数（同期的）
   const updateCalendarEvents = () => {
     try {
@@ -1433,12 +1444,12 @@ const Class1ManagementPage: React.FC = () => {
                         border: isDarkMode ? '1px solid #333' : '1px solid #e0e0e0',
                         backgroundColor: isToday ? (isDarkMode ? 'rgba(25, 118, 210, 0.2)' : 'rgba(25, 118, 210, 0.1)') : 'transparent',
                         position: 'relative',
-                        cursor: events.length > 0 ? 'pointer' : 'default',
+                        cursor: 'pointer',
                         '&:hover': {
-                          backgroundColor: events.length > 0 ? (isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)') : 'transparent'
+                          backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
                         }
                       }}
-                      onClick={() => handleDateClick(dateKey, events)}
+                      onClick={() => handleCalendarDateClick(dateKey)}
                       >
                         <Typography variant="body2" sx={{ 
                           fontWeight: isToday ? 600 : 400,
@@ -1749,6 +1760,19 @@ const Class1ManagementPage: React.FC = () => {
         onSuccess={() => {
           // 追加レッスン作成後にデータを再取得
           fetchAdditionalLessons();
+        }}
+      />
+
+      {/* カレンダー編集モーダル */}
+      <CalendarEditModal
+        open={calendarEditModalOpen}
+        onClose={() => setCalendarEditModalOpen(false)}
+        date={selectedCalendarDate}
+        students={students}
+        events={getEventsForDate(selectedCalendarDate)}
+        onSuccess={() => {
+          // カレンダー更新後にデータを再取得
+          updateCalendarEvents();
         }}
       />
     </Container>
