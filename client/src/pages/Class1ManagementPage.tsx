@@ -46,6 +46,7 @@ interface Student {
   id: number;
   name: string;
   instructor_id: number;
+  instructor_name: string;
   member_number: string;
   created_at: string;
   updated_at: string;
@@ -58,7 +59,12 @@ interface Instructor {
 }
 
 const Class1ManagementPage: React.FC = () => {
-  const { user, hasPermission } = useAuth();
+  const { user } = useAuth();
+  
+  // 権限チェック関数
+  const hasPermission = () => {
+    return user?.role === 'ECG講師' || user?.role === 'JCG講師' || user?.role === 'サーバー管理者';
+  };
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState(0);
@@ -553,7 +559,7 @@ const Class1ManagementPage: React.FC = () => {
       <AdditionalLessonModal
         open={additionalLessonModalOpen}
         onClose={() => setAdditionalLessonModalOpen(false)}
-        students={students}
+        weekKey={currentMonth}
         onSuccess={() => {
           fetchAdditionalLessons();
         }}
