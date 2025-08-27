@@ -349,6 +349,7 @@ const Class1ManagementPage: React.FC = () => {
       console.log('フィルタリング後の講師数:', instructorUsers.length);
       console.log('講師一覧:', instructorUsers.map((i: any) => ({ id: i.id, name: i.name, role: i.role })));
       setInstructors(instructorUsers);
+      console.log('instructors配列を設定しました:', instructorUsers);
 
       // Class1 Membersデータを取得
       console.log('Class1 Members取得中...');
@@ -613,11 +614,17 @@ const Class1ManagementPage: React.FC = () => {
                 label="講師フィルター"
               >
                 <MenuItem value="all">全講師</MenuItem>
-                {instructors.map((instructor) => (
-                  <MenuItem key={instructor.id} value={instructor.id.toString()}>
-                    {instructor.name}
+                {instructors.length === 0 ? (
+                  <MenuItem disabled value="">
+                    講師データを読み込み中...
                   </MenuItem>
-                ))}
+                ) : (
+                  instructors.map((instructor) => (
+                    <MenuItem key={instructor.id} value={instructor.id.toString()}>
+                      {instructor.name}
+                    </MenuItem>
+                  ))
+                )}
               </Select>
             </FormControl>
             
@@ -719,11 +726,17 @@ const Class1ManagementPage: React.FC = () => {
                 size="small"
               >
                 <MenuItem value="all">全講師</MenuItem>
-                {instructors.map((instructor) => (
-                  <MenuItem key={instructor.id} value={instructor.id.toString()}>
-                    {instructor.name}
+                {instructors.length === 0 ? (
+                  <MenuItem disabled value="">
+                    講師データを読み込み中...
                   </MenuItem>
-                ))}
+                ) : (
+                  instructors.map((instructor) => (
+                    <MenuItem key={instructor.id} value={instructor.id.toString()}>
+                      {instructor.name}
+                    </MenuItem>
+                  ))
+                )}
               </Select>
             </FormControl>
           </Box>
