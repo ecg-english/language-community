@@ -4,7 +4,7 @@ const path = require('path');
 const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
-const dbPath = path.join(__dirname, '..', 'database.sqlite');
+const dbPath = path.join(__dirname, '..', 'language-community.db');
 const db = new Database(dbPath);
 
 // 生徒メモテーブルの存在確認と作成
