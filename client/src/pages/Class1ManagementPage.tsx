@@ -35,7 +35,9 @@ import {
   CalendarMonth as CalendarIcon,
   Person as PersonIcon,
   School as SchoolIcon,
-  Note as NoteIcon
+  Note as NoteIcon,
+  ArrowBackIos as ArrowBackIosIcon,
+  ArrowForwardIos as ArrowForwardIosIcon
 } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
@@ -180,14 +182,20 @@ const Class1ManagementPage: React.FC = () => {
 
   // 月次データを初期化する関数
   const initializeMonthlyData = async () => {
-    const monthKey = getCurrentMonth();
-    setCurrentMonth(monthKey);
+    console.log('月別データ初期化開始 - 現在の月:', currentMonth);
+    console.log('対象生徒数:', students.length);
     
-    // 生徒のメモを取得
-    if (students.length > 0) {
-      const memoPromises = students.map(student => 
-        fetchStudentMemo(student.id, monthKey)
-      );
+    if (students.length === 0) {
+      console.log('生徒データがないため、初期化をスキップ');
+      return;
+    }
+    
+    try {
+      // 生徒のメモを取得
+      const memoPromises = students.map(student => {
+        console.log(`生徒 ${student.id} のメモを取得中...`);
+        return fetchStudentMemo(student.id, currentMonth);
+      });
       const memos = await Promise.all(memoPromises);
       
       const memoData: {[studentId: number]: string} = {};
@@ -195,6 +203,10 @@ const Class1ManagementPage: React.FC = () => {
         memoData[student.id] = memos[index];
       });
       setStudentMemos(memoData);
+      console.log('月別データ初期化完了');
+    } catch (error) {
+      console.error('月別データ初期化エラー:', error);
+      setError('月別データの初期化中にエラーが発生しました: ' + (error instanceof Error ? error.message : String(error)));
     }
   };
 
@@ -382,7 +394,7 @@ const Class1ManagementPage: React.FC = () => {
       console.log('月変更検知:', currentMonth);
       initializeMonthlyData();
     }
-  }, [currentMonth, students]);
+  }, [currentMonth]);
 
   // 追加レッスンデータを取得
   useEffect(() => {
@@ -479,6 +491,14 @@ const Class1ManagementPage: React.FC = () => {
     const newMonthString = `${newYear}-${newMonth.toString().padStart(2, '0')}`;
     console.log('新しい月:', newMonthString);
     setCurrentMonth(newMonthString);
+    
+    // データを再取得
+    setTimeout(() => {
+      initializeMonthlyData();
+      if (activeTab === 1) {
+        fetchCalendarEvents();
+      }
+    }, 100);
   };
 
   const handleNextMonth = () => {
@@ -498,6 +518,14 @@ const Class1ManagementPage: React.FC = () => {
     const newMonthString = `${newYear}-${newMonth.toString().padStart(2, '0')}`;
     console.log('新しい月:', newMonthString);
     setCurrentMonth(newMonthString);
+    
+    // データを再取得
+    setTimeout(() => {
+      initializeMonthlyData();
+      if (activeTab === 1) {
+        fetchCalendarEvents();
+      }
+    }, 100);
   };
 
   // フィルタリングされた生徒を取得
@@ -550,13 +578,13 @@ const Class1ManagementPage: React.FC = () => {
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Box display="flex" alignItems="center" gap={2}>
             <IconButton onClick={handlePreviousMonth}>
-              <CalendarIcon />
+              <ArrowBackIosIcon />
             </IconButton>
             <Typography variant="h6">
               {currentMonth} 月
             </Typography>
             <IconButton onClick={handleNextMonth}>
-              <CalendarIcon />
+              <ArrowForwardIosIcon />
             </IconButton>
             <Typography variant="body2" color="text.secondary">
               {getMonthRange(currentMonth).start} ~ {getMonthRange(currentMonth).end}
@@ -692,7 +720,7 @@ const Class1ManagementPage: React.FC = () => {
             {/* 月ナビゲーション */}
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
               <IconButton onClick={handlePreviousMonth}>
-                <CalendarIcon />
+                <ArrowBackIosIcon />
               </IconButton>
               
               <Typography variant="h6" sx={{ fontWeight: 600 }}>
@@ -700,7 +728,7 @@ const Class1ManagementPage: React.FC = () => {
               </Typography>
               
               <IconButton onClick={handleNextMonth}>
-                <CalendarIcon />
+                <ArrowForwardIosIcon />
               </IconButton>
             </Box>
 
@@ -945,11 +973,11 @@ const Class1ManagementPage: React.FC = () => {
                     講師が見つかりません
                   </MenuItem>
                 ) : (
-                  instructors.map((instructor) => (
-                    <MenuItem key={instructor.id} value={instructor.id.toString()}>
-                      {instructor.name} ({instructor.role})
-                    </MenuItem>
-                  ))
+                                     instructors.map((instructor) => (
+                     <MenuItem key={instructor.id} value={instructor.id.toString()}>
+                       {instructor.name}
+                     </MenuItem>
+                   ))
                 )}
               </Select>
             </FormControl>
