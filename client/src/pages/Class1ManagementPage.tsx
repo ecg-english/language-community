@@ -350,6 +350,12 @@ const Class1ManagementPage: React.FC = () => {
       console.log('講師一覧:', instructorUsers.map((i: any) => ({ id: i.id, name: i.name, role: i.role })));
       setInstructors(instructorUsers);
       console.log('instructors配列を設定しました:', instructorUsers);
+      
+      // 講師データ設定後にUIを強制更新
+      setTimeout(() => {
+        console.log('講師データ設定後の強制更新');
+        setInstructors([...instructorUsers]);
+      }, 100);
 
       // Class1 Membersデータを取得
       console.log('Class1 Members取得中...');
@@ -393,8 +399,11 @@ const Class1ManagementPage: React.FC = () => {
       // 基本データを取得
       await fetchData();
       
-      // 月次データを初期化
-      await initializeMonthlyData();
+      // 講師データが設定されるまで少し待つ
+      setTimeout(async () => {
+        console.log('講師データ設定後の月次データ初期化');
+        await initializeMonthlyData();
+      }, 500);
     };
     
     initializeData();
@@ -548,9 +557,13 @@ const Class1ManagementPage: React.FC = () => {
 
   // 講師名を取得
   const getInstructorName = (instructorId: number) => {
-    console.log(`講師名取得 - ID: ${instructorId}, 講師配列:`, instructors);
+    console.log(`講師名取得 - ID: ${instructorId}, 講師配列長: ${instructors.length}`);
+    console.log(`講師配列内容:`, instructors);
     const instructor = instructors.find(i => i.id === instructorId);
     console.log(`見つかった講師:`, instructor);
+    if (!instructor) {
+      console.warn(`講師ID ${instructorId} が見つかりません`);
+    }
     return instructor ? instructor.name : '不明';
   };
 

@@ -10,13 +10,38 @@ const db = new Database(dbPath);
 // 生徒メモテーブルの存在確認と作成
 const ensureMemoTable = () => {
   try {
+    console.log('メモテーブル確認開始');
+    
     // class1_studentsテーブルの存在確認
     const studentsTableExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='class1_students'").get();
+    console.log('class1_studentsテーブル確認結果:', studentsTableExists);
+    
     if (!studentsTableExists) {
       console.error('class1_studentsテーブルが存在しません');
-      throw new Error('class1_studentsテーブルが存在しません');
+      // テーブルが存在しない場合は作成を試行
+      try {
+        db.prepare(`
+          CREATE TABLE IF NOT EXISTS class1_students (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            member_number TEXT UNIQUE,
+            instructor_id INTEGER NOT NULL,
+            email TEXT,
+            memo TEXT,
+            next_lesson_date DATE,
+            lesson_completed_date DATE,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          )
+        `).run();
+        console.log('class1_studentsテーブルを作成しました');
+      } catch (createError) {
+        console.error('class1_studentsテーブル作成エラー:', createError);
+        throw new Error('class1_studentsテーブルの作成に失敗しました');
+      }
     }
     
+    // class1_student_memosテーブルの作成
     db.exec(`
       CREATE TABLE IF NOT EXISTS class1_student_memos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
