@@ -1,0 +1,114 @@
+const express = require('express');
+const Database = require('better-sqlite3');
+const path = require('path');
+const { authenticateToken } = require('../middleware/auth');
+
+const router = express.Router();
+const dbPath = path.join(__dirname, '..', 'database.sqlite');
+const db = new Database(dbPath);
+
+// 生徒メモテーブルの存在確認と作成
+const ensureMemoTable = () => {
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS class1_student_memos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        student_id INTEGER NOT NULL,
+        month TEXT NOT NULL,
+        memo TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(student_id, month),
+        FOREIGN KEY (student_id) REFERENCES class1_students(id) ON DELETE CASCADE
+      )
+    `);
+  } catch (error) {
+    console.error('メモテーブル作成エラー:', error);
+  }
+};
+
+// 生徒の月別メモを取得
+router.get('/:studentId/:month', authenticateToken, (req, res) => {
+  try {
+    ensureMemoTable();
+    
+    const { studentId, month } = req.params;
+    
+    // 生徒の存在確認
+    const student = db.prepare('SELECT id FROM class1_students WHERE id = ?').get(studentId);
+    if (!student) {
+      return res.status(404).json({ success: false, message: '生徒が見つかりません' });
+    }
+
+    // メモを取得
+    const memo = db.prepare(`
+      SELECT memo FROM class1_student_memos 
+      WHERE student_id = ? AND month = ?
+    `).get(studentId, month);
+
+    res.json({ 
+      success: true, 
+      data: { 
+        student_id: parseInt(studentId), 
+        month, 
+        memo: memo ? memo.memo : '' 
+      } 
+    });
+  } catch (error) {
+    console.error('メモ取得エラー:', error);
+    res.status(500).json({ success: false, message: 'メモの取得に失敗しました' });
+  }
+});
+
+// 生徒の月別メモを保存・更新
+router.post('/:studentId/:month', authenticateToken, (req, res) => {
+  try {
+    ensureMemoTable();
+    
+    const { studentId, month } = req.params;
+    const { memo } = req.body;
+    
+    // 生徒の存在確認
+    const student = db.prepare('SELECT id FROM class1_students WHERE id = ?').get(studentId);
+    if (!student) {
+      return res.status(404).json({ success: false, message: '生徒が見つかりません' });
+    }
+
+    // メモを保存・更新（UPSERT）
+    db.prepare(`
+      INSERT INTO class1_student_memos (student_id, month, memo, updated_at)
+      VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(student_id, month) 
+      DO UPDATE SET memo = ?, updated_at = CURRENT_TIMESTAMP
+    `).run(studentId, month, memo || '', memo || '');
+
+    res.json({ success: true, message: 'メモを保存しました' });
+  } catch (error) {
+    console.error('メモ保存エラー:', error);
+    res.status(500).json({ success: false, message: 'メモの保存に失敗しました' });
+  }
+});
+
+// 生徒の月別メモを削除
+router.delete('/:studentId/:month', authenticateToken, (req, res) => {
+  try {
+    const { studentId, month } = req.params;
+    
+    // メモを削除
+    const result = db.prepare(`
+      DELETE FROM class1_student_memos 
+      WHERE student_id = ? AND month = ?
+    `).run(studentId, month);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ success: false, message: 'メモが見つかりません' });
+    }
+
+    res.json({ success: true, message: 'メモを削除しました' });
+  } catch (error) {
+    console.error('メモ削除エラー:', error);
+    res.status(500).json({ success: false, message: 'メモの削除に失敗しました' });
+  }
+});
+
+module.exports = router; 
