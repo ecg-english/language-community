@@ -155,29 +155,60 @@ const Class1ManagementPage: React.FC = () => {
     };
   };
 
-  // 生徒メモを取得する関数
-  const fetchStudentMemo = async (studentId: number, month: string) => {
+  // 簡素化された学生メモ初期化
+  const initializeStudentMemos = async () => {
+    console.log('=== 生徒メモ初期化開始 ===');
+    console.log('現在の生徒数:', students.length);
+    
+    if (students.length === 0) {
+      console.log('生徒データが空のため、メモ初期化をスキップ');
+      return;
+    }
+
+    const newStudentMemos: { [studentId: number]: string } = {};
+    
+    for (const student of students) {
+      try {
+        console.log(`生徒 ${student.name} (ID: ${student.id}) のメモ取得開始`);
+        const memo = await getStudentMemo(student.id);
+        newStudentMemos[student.id] = memo;
+        console.log(`生徒 ${student.name} のメモ: "${memo}"`);
+      } catch (error) {
+        console.error(`生徒 ${student.name} のメモ取得エラー:`, error);
+        newStudentMemos[student.id] = '';
+      }
+    }
+    
+    console.log('全生徒メモ:', newStudentMemos);
+    setStudentMemos(newStudentMemos);
+    console.log('=== 生徒メモ初期化完了 ===');
+  };
+
+  // 生徒メモ取得（単純化）
+  const getStudentMemo = async (studentId: number): Promise<string> => {
     try {
+      console.log('メモ取得開始:', { studentId });
+      
       const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/student-memos/${studentId}/${month}`, {
+      const response = await axios.get(`/api/student-memos/${studentId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      console.log('メモ取得成功:', response.data);
       return response.data.data?.memo || '';
-    } catch (error) {
+    } catch (error: any) {
       console.error('生徒メモ取得エラー:', error);
       return '';
     }
   };
 
-  // 生徒メモを保存する関数
-  const saveStudentMemo = async (studentId: number, month: string, memo: string) => {
+  // 生徒メモ保存（単純化）
+  const saveStudentMemo = async (studentId: number, memo: string) => {
     try {
-      console.log('メモ保存開始:', { studentId, month, memo });
-      console.log('生徒IDの型:', typeof studentId);
-      console.log('生徒IDの値:', studentId);
+      console.log('メモ保存開始:', { studentId, memo });
       
       const token = localStorage.getItem('token');
-      const response = await axios.post(`/api/student-memos/${studentId}/${month}`, {
+      const response = await axios.post(`/api/student-memos/${studentId}`, {
         memo: memo
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -186,42 +217,7 @@ const Class1ManagementPage: React.FC = () => {
       return true;
     } catch (error: any) {
       console.error('生徒メモ保存エラー:', error);
-      console.error('エラー詳細:', error.response?.data);
-      console.error('エラーステータス:', error.response?.status);
-      console.error('リクエストURL:', error.config?.url);
       return false;
-    }
-  };
-
-  // 月次データを初期化する関数
-  const initializeMonthlyData = async () => {
-    console.log('月別データ初期化開始 - 現在の月:', currentMonth);
-    console.log('対象生徒数:', students.length);
-    console.log('生徒データ詳細:', students);
-    
-    if (students.length === 0) {
-      console.log('生徒データがないため、初期化をスキップ');
-      console.log('students配列の状態:', students);
-      return;
-    }
-    
-    try {
-      // 生徒のメモを取得
-      const memoPromises = students.map(student => {
-        console.log(`生徒 ${student.id} のメモを取得中...`);
-        return fetchStudentMemo(student.id, currentMonth);
-      });
-      const memos = await Promise.all(memoPromises);
-      
-      const memoData: {[studentId: number]: string} = {};
-      students.forEach((student, index) => {
-        memoData[student.id] = memos[index];
-      });
-      setStudentMemos(memoData);
-      console.log('月別データ初期化完了');
-    } catch (error) {
-      console.error('月別データ初期化エラー:', error);
-      setError('月別データの初期化中にエラーが発生しました: ' + (error instanceof Error ? error.message : String(error)));
     }
   };
 
@@ -347,7 +343,7 @@ const Class1ManagementPage: React.FC = () => {
       setTimeout(async () => {
         console.log('生徒データ設定後の月次データ初期化');
         console.log('現在の生徒数:', studentsData.length);
-        await initializeMonthlyData();
+        await initializeStudentMemos();
       }, 200);
 
       // 講師データを取得
@@ -435,7 +431,7 @@ const Class1ManagementPage: React.FC = () => {
   useEffect(() => {
     if (currentMonth && students.length > 0) {
       console.log('月変更検知:', currentMonth);
-      initializeMonthlyData();
+      initializeStudentMemos();
     }
   }, [currentMonth]);
 
@@ -454,15 +450,12 @@ const Class1ManagementPage: React.FC = () => {
     }
   }, [calendarEventsData, selectedInstructorCalendar, students]);
 
-  // 生徒メモ変更ハンドラー
+  // 生徒メモ変更ハンドラー（単純化）
   const handleStudentMemoChange = async (studentId: number, memo: string) => {
     try {
       console.log('=== メモ変更ハンドラー開始 ===');
-      console.log('メモ変更ハンドラー:', { studentId, memo, currentMonth });
-      console.log('生徒IDの型:', typeof studentId);
-      console.log('生徒IDの値:', studentId);
+      console.log('メモ変更ハンドラー:', { studentId, memo });
       
-      // 生徒IDが数値であることを確認
       const numericStudentId = Number(studentId);
       if (isNaN(numericStudentId)) {
         console.error('無効な生徒ID:', studentId);
@@ -470,9 +463,8 @@ const Class1ManagementPage: React.FC = () => {
       }
       
       console.log('数値変換後の生徒ID:', numericStudentId);
-      console.log('現在の生徒一覧:', students.map(s => ({ id: s.id, name: s.name })));
       
-      const success = await saveStudentMemo(numericStudentId, currentMonth, memo);
+      const success = await saveStudentMemo(numericStudentId, memo);
       if (success) {
         setStudentMemos(prev => ({
           ...prev,
@@ -555,7 +547,7 @@ const Class1ManagementPage: React.FC = () => {
     
     // データを再取得
     setTimeout(() => {
-      initializeMonthlyData();
+      initializeStudentMemos();
       if (activeTab === 1) {
         fetchCalendarEvents();
       }
@@ -582,7 +574,7 @@ const Class1ManagementPage: React.FC = () => {
     
     // データを再取得
     setTimeout(() => {
-      initializeMonthlyData();
+      initializeStudentMemos();
       if (activeTab === 1) {
         fetchCalendarEvents();
       }
@@ -740,7 +732,7 @@ const Class1ManagementPage: React.FC = () => {
                   <Box>
                     <Typography variant="subtitle2" gutterBottom>
                       <AssignmentIcon sx={{ fontSize: 16, mr: 0.5 }} />
-                      メモ ({currentMonth})
+                      生徒メモ
                     </Typography>
                     <TextField
                       fullWidth
