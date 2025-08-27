@@ -522,16 +522,16 @@ const Class1ManagementPage: React.FC = () => {
                         講師: {getInstructorName(student.instructor_id)} 会員番号: {student.member_number}
                       </Typography>
                     </Box>
-                    <Box display="flex" gap={1}>
-                      <Tooltip title="アンケートURL生成">
-                        <IconButton
-                          size="small"
-                          onClick={() => copySurveyUrl(student.id)}
-                        >
-                          <CopyIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
+                                         <Box display="flex" gap={1}>
+                       <Tooltip title="アンケートURL生成">
+                         <IconButton
+                           size="small"
+                           onClick={() => copySurveyUrl(student.id)}
+                         >
+                           <CopyIcon />
+                         </IconButton>
+                       </Tooltip>
+                     </Box>
                   </Box>
                   
                   <Divider sx={{ my: 2 }} />
@@ -563,9 +563,216 @@ const Class1ManagementPage: React.FC = () => {
       {/* カレンダータブ */}
       {activeTab === 1 && (
         <Box>
-          <Typography variant="h6" gutterBottom>
-            カレンダー機能は別途実装予定
+          <Typography variant="h5" sx={{ fontWeight: 600, mb: 3 }}>
+            レッスンカレンダー
           </Typography>
+
+          {/* 講師フィルター */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+            <Typography variant="body1" sx={{ fontWeight: 500 }}>
+              講師フィルター:
+            </Typography>
+            <FormControl sx={{ minWidth: 200 }}>
+              <Select
+                value={selectedInstructorCalendar}
+                onChange={(e) => setSelectedInstructorCalendar(e.target.value)}
+                size="small"
+              >
+                <MenuItem value="all">全講師</MenuItem>
+                {instructors.map((instructor) => (
+                  <MenuItem key={instructor.id} value={instructor.id.toString()}>
+                    {instructor.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+
+          {/* カレンダー */}
+          <Box sx={{ mb: 3 }}>
+            {/* 月ナビゲーション */}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+              <IconButton 
+                onClick={() => {
+                  const prevMonth = new Date(currentMonth + '-01');
+                  prevMonth.setMonth(prevMonth.getMonth() - 1);
+                  setCurrentMonth(`${prevMonth.getFullYear()}-${(prevMonth.getMonth() + 1).toString().padStart(2, '0')}`);
+                }}
+              >
+                <CalendarIcon />
+              </IconButton>
+              
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                {currentMonth.split('-')[0]}年{parseInt(currentMonth.split('-')[1])}月
+              </Typography>
+              
+              <IconButton 
+                onClick={() => {
+                  const nextMonth = new Date(currentMonth + '-01');
+                  nextMonth.setMonth(nextMonth.getMonth() + 1);
+                  setCurrentMonth(`${nextMonth.getFullYear()}-${(nextMonth.getMonth() + 1).toString().padStart(2, '0')}`);
+                }}
+              >
+                <CalendarIcon />
+              </IconButton>
+            </Box>
+
+            {/* カレンダーグリッド */}
+            <Box sx={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(7, 1fr)', 
+              gap: 1,
+              border: '1px solid #e0e0e0',
+              borderRadius: 1
+            }}>
+              {/* 曜日ヘッダー */}
+              {['日', '月', '火', '水', '木', '金', '土'].map((day) => (
+                <Box key={day} sx={{ 
+                  p: 1, 
+                  textAlign: 'center', 
+                  fontWeight: 600,
+                  backgroundColor: 'rgba(0,0,0,0.05)',
+                  borderBottom: '1px solid #e0e0e0'
+                }}>
+                  <Typography variant="body2">{day}</Typography>
+                </Box>
+              ))}
+
+              {/* カレンダー日付 */}
+              {(() => {
+                const [year, month] = currentMonth.split('-');
+                const yearNum = parseInt(year);
+                const monthNum = parseInt(month);
+                
+                const firstDay = new Date(yearNum, monthNum - 1, 1);
+                const lastDay = new Date(yearNum, monthNum, 0);
+                const daysInMonth = lastDay.getDate();
+                const firstDayOfWeek = firstDay.getDay();
+                
+                const days = [];
+                
+                // 前月の日付（空白セル）
+                for (let i = 0; i < firstDayOfWeek; i++) {
+                  days.push(
+                    <Box key={`empty-${i}`} sx={{ 
+                      p: 1, 
+                      minHeight: 60,
+                      backgroundColor: 'rgba(0,0,0,0.02)'
+                    }} />
+                  );
+                }
+                
+                // 当月の日付
+                for (let day = 1; day <= daysInMonth; day++) {
+                  const dateKey = `${yearNum}-${monthNum.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                  const events = getEventsForDate(dateKey);
+                  const isToday = new Date().toISOString().split('T')[0] === dateKey;
+                  
+                  days.push(
+                    <Box key={day} sx={{ 
+                      p: 1, 
+                      minHeight: 60,
+                      border: '1px solid #e0e0e0',
+                      backgroundColor: isToday ? 'rgba(25, 118, 210, 0.1)' : 'transparent',
+                      position: 'relative',
+                      cursor: 'pointer',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0,0,0,0.1)'
+                      }
+                    }}
+                    onClick={() => handleCalendarDateClick(dateKey)}
+                    >
+                      <Typography variant="body2" sx={{ 
+                        fontWeight: isToday ? 600 : 400,
+                        color: isToday ? 'primary.main' : 'inherit'
+                      }}>
+                        {day}
+                      </Typography>
+                      
+                      {events.length > 0 && (
+                        <Box sx={{ 
+                          position: 'absolute', 
+                          top: 2, 
+                          right: 2,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: 20,
+                          height: 20,
+                          borderRadius: '50%',
+                          backgroundColor: events.some(e => e.type === 'completed') ? 'success.main' : 'warning.main',
+                          color: 'white',
+                          fontSize: '0.75rem',
+                          fontWeight: 600
+                        }}>
+                          {events.length > 1 ? events.length : 
+                           events.some(e => e.type === 'completed') ? '✓' : '⭐'}
+                        </Box>
+                      )}
+                    </Box>
+                  );
+                }
+                
+                return days;
+              })()}
+            </Box>
+          </Box>
+
+          {/* 凡例 */}
+          <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              凡例:
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box sx={{ 
+                width: 16, 
+                height: 16, 
+                borderRadius: '50%', 
+                backgroundColor: 'success.main',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.75rem',
+                color: 'white'
+              }}>
+                ✓
+              </Box>
+              <Typography variant="body2">レッスン実施済み</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box sx={{ 
+                width: 16, 
+                height: 16, 
+                borderRadius: '50%', 
+                backgroundColor: 'warning.main',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.75rem',
+                color: 'white'
+              }}>
+                ⭐
+              </Box>
+              <Typography variant="body2">次回レッスン予定</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box sx={{ 
+                width: 16, 
+                height: 16, 
+                borderRadius: '50%', 
+                backgroundColor: 'primary.main',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.75rem',
+                color: 'white',
+                fontWeight: 600
+              }}>
+                3
+              </Box>
+              <Typography variant="body2">複数生徒</Typography>
+            </Box>
+          </Box>
         </Box>
       )}
 
