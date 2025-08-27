@@ -30,12 +30,14 @@ const ensureMemoTable = () => {
 // 生徒の月別メモを取得
 router.get('/:studentId/:month', authenticateToken, (req, res) => {
   try {
+    console.log('メモ取得リクエスト:', req.params);
     ensureMemoTable();
     
     const { studentId, month } = req.params;
     
     // 生徒の存在確認
     const student = db.prepare('SELECT id FROM class1_students WHERE id = ?').get(studentId);
+    console.log('生徒確認結果:', student);
     if (!student) {
       return res.status(404).json({ success: false, message: '生徒が見つかりません' });
     }
@@ -45,6 +47,7 @@ router.get('/:studentId/:month', authenticateToken, (req, res) => {
       SELECT memo FROM class1_student_memos 
       WHERE student_id = ? AND month = ?
     `).get(studentId, month);
+    console.log('メモ取得結果:', memo);
 
     res.json({ 
       success: true, 
@@ -56,7 +59,8 @@ router.get('/:studentId/:month', authenticateToken, (req, res) => {
     });
   } catch (error) {
     console.error('メモ取得エラー:', error);
-    res.status(500).json({ success: false, message: 'メモの取得に失敗しました' });
+    console.error('エラー詳細:', error.message);
+    res.status(500).json({ success: false, message: 'メモの取得に失敗しました', error: error.message });
   }
 });
 

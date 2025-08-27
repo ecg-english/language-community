@@ -442,56 +442,41 @@ const Class1ManagementPage: React.FC = () => {
 
   // 月次ナビゲーション
   const handlePreviousMonth = () => {
+    console.log('前月ボタンクリック - 現在の月:', currentMonth);
     const [year, month] = currentMonth.split('-');
     const yearNum = parseInt(year);
     const monthNum = parseInt(month);
     
-    if (monthNum === 1) {
-      const prevYear = yearNum - 1;
-      setCurrentMonth(`${prevYear}-12`);
-    } else {
-      setCurrentMonth(`${yearNum}-${(monthNum - 1).toString().padStart(2, '0')}`);
+    let newYear = yearNum;
+    let newMonth = monthNum - 1;
+    
+    if (newMonth === 0) {
+      newYear = yearNum - 1;
+      newMonth = 12;
     }
+    
+    const newMonthString = `${newYear}-${newMonth.toString().padStart(2, '0')}`;
+    console.log('新しい月:', newMonthString);
+    setCurrentMonth(newMonthString);
   };
 
   const handleNextMonth = () => {
+    console.log('次月ボタンクリック - 現在の月:', currentMonth);
     const [year, month] = currentMonth.split('-');
     const yearNum = parseInt(year);
     const monthNum = parseInt(month);
     
-    if (monthNum === 12) {
-      const nextYear = yearNum + 1;
-      setCurrentMonth(`${nextYear}-01`);
-    } else {
-      setCurrentMonth(`${yearNum}-${(monthNum + 1).toString().padStart(2, '0')}`);
-    }
-  };
-
-  // カレンダー用の月次ナビゲーション
-  const handleCalendarPreviousMonth = () => {
-    const [year, month] = currentMonth.split('-');
-    const yearNum = parseInt(year);
-    const monthNum = parseInt(month);
+    let newYear = yearNum;
+    let newMonth = monthNum + 1;
     
-    if (monthNum === 1) {
-      const prevYear = yearNum - 1;
-      setCurrentMonth(`${prevYear}-12`);
-    } else {
-      setCurrentMonth(`${yearNum}-${(monthNum - 1).toString().padStart(2, '0')}`);
+    if (newMonth === 13) {
+      newYear = yearNum + 1;
+      newMonth = 1;
     }
-  };
-
-  const handleCalendarNextMonth = () => {
-    const [year, month] = currentMonth.split('-');
-    const yearNum = parseInt(year);
-    const monthNum = parseInt(month);
     
-    if (monthNum === 12) {
-      const nextYear = yearNum + 1;
-      setCurrentMonth(`${nextYear}-01`);
-    } else {
-      setCurrentMonth(`${yearNum}-${(monthNum + 1).toString().padStart(2, '0')}`);
-    }
+    const newMonthString = `${newYear}-${newMonth.toString().padStart(2, '0')}`;
+    console.log('新しい月:', newMonthString);
+    setCurrentMonth(newMonthString);
   };
 
   // フィルタリングされた生徒を取得
@@ -584,6 +569,9 @@ const Class1ManagementPage: React.FC = () => {
         <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
           <Tab label="生徒管理" />
           <Tab label="カレンダー" />
+          {hasPermission() && (
+            <Tab label="マネージャー" />
+          )}
         </Tabs>
       </Box>
 
@@ -682,7 +670,7 @@ const Class1ManagementPage: React.FC = () => {
           <Box sx={{ mb: 3 }}>
             {/* 月ナビゲーション */}
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-              <IconButton onClick={handleCalendarPreviousMonth}>
+              <IconButton onClick={handlePreviousMonth}>
                 <CalendarIcon />
               </IconButton>
               
@@ -690,7 +678,7 @@ const Class1ManagementPage: React.FC = () => {
                 {currentMonth.split('-')[0]}年{parseInt(currentMonth.split('-')[1])}月
               </Typography>
               
-              <IconButton onClick={handleCalendarNextMonth}>
+              <IconButton onClick={handleNextMonth}>
                 <CalendarIcon />
               </IconButton>
             </Box>
@@ -920,6 +908,25 @@ const Class1ManagementPage: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* マネージャータブ */}
+      {activeTab === 2 && hasPermission() && (
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <Typography variant="h5" sx={{ mb: 2 }}>
+            マネージャー機能
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            サーバー管理者専用の管理機能です。
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={() => window.open('/manager', '_blank')}
+            startIcon={<SchoolIcon />}
+          >
+            マネージャーページを開く
+          </Button>
+        </Box>
+      )}
 
       {/* カレンダー編集モーダル */}
       <CalendarEditModal
