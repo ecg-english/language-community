@@ -67,29 +67,42 @@ router.get('/:studentId/:month', authenticateToken, (req, res) => {
 // 生徒の月別メモを保存・更新
 router.post('/:studentId/:month', authenticateToken, (req, res) => {
   try {
+    console.log('メモ保存リクエスト:', req.params, req.body);
     ensureMemoTable();
     
     const { studentId, month } = req.params;
     const { memo } = req.body;
     
+    console.log('保存パラメータ:', { studentId, month, memo });
+    
     // 生徒の存在確認
     const student = db.prepare('SELECT id FROM class1_students WHERE id = ?').get(studentId);
+    console.log('生徒確認結果:', student);
     if (!student) {
+      console.log('生徒が見つかりません:', studentId);
       return res.status(404).json({ success: false, message: '生徒が見つかりません' });
     }
 
+    // テーブル構造確認
+    const tableInfo = db.prepare("PRAGMA table_info(class1_student_memos)").all();
+    console.log('テーブル構造:', tableInfo);
+
     // メモを保存・更新（UPSERT）
-    db.prepare(`
+    const result = db.prepare(`
       INSERT INTO class1_student_memos (student_id, month, memo, updated_at)
       VALUES (?, ?, ?, CURRENT_TIMESTAMP)
       ON CONFLICT(student_id, month) 
       DO UPDATE SET memo = ?, updated_at = CURRENT_TIMESTAMP
     `).run(studentId, month, memo || '', memo || '');
+    
+    console.log('保存結果:', result);
 
     res.json({ success: true, message: 'メモを保存しました' });
   } catch (error) {
     console.error('メモ保存エラー:', error);
-    res.status(500).json({ success: false, message: 'メモの保存に失敗しました' });
+    console.error('エラー詳細:', error.message);
+    console.error('エラースタック:', error.stack);
+    res.status(500).json({ success: false, message: 'メモの保存に失敗しました', error: error.message });
   }
 });
 

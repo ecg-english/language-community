@@ -167,15 +167,19 @@ const Class1ManagementPage: React.FC = () => {
   // 生徒メモを保存する関数
   const saveStudentMemo = async (studentId: number, month: string, memo: string) => {
     try {
+      console.log('メモ保存開始:', { studentId, month, memo });
       const token = localStorage.getItem('token');
-      await axios.post(`/api/student-memos/${studentId}/${month}`, {
+      const response = await axios.post(`/api/student-memos/${studentId}/${month}`, {
         memo: memo
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      console.log('メモ保存成功:', response.data);
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('生徒メモ保存エラー:', error);
+      console.error('エラー詳細:', error.response?.data);
+      console.error('エラーステータス:', error.response?.status);
       return false;
     }
   };
@@ -333,10 +337,17 @@ const Class1ManagementPage: React.FC = () => {
       });
       console.log('講師データ取得成功:', instructorsResponse.data);
       const allUsers = instructorsResponse.data.users || [];
+      console.log('全ユーザー数:', allUsers.length);
+      console.log('全ユーザーのロール:', allUsers.map((u: any) => ({ name: u.name, role: u.role })));
+      
       const instructorUsers = allUsers.filter((user: any) => {
         const role = user.role?.trim();
-        return role === 'ECG講師' || role === 'JCG講師' || role === 'サーバー管理者';
+        const isInstructor = role === 'ECG講師' || role === 'JCG講師' || role === 'サーバー管理者';
+        console.log(`ユーザー ${user.name} (${role}): ${isInstructor ? '講師' : '講師ではない'}`);
+        return isInstructor;
       });
+      console.log('フィルタリング後の講師数:', instructorUsers.length);
+      console.log('講師一覧:', instructorUsers.map((i: any) => ({ id: i.id, name: i.name, role: i.role })));
       setInstructors(instructorUsers);
 
       // Class1 Membersデータを取得
@@ -536,7 +547,9 @@ const Class1ManagementPage: React.FC = () => {
 
   // 講師名を取得
   const getInstructorName = (instructorId: number) => {
+    console.log(`講師名取得 - ID: ${instructorId}, 講師配列:`, instructors);
     const instructor = instructors.find(i => i.id === instructorId);
+    console.log(`見つかった講師:`, instructor);
     return instructor ? instructor.name : '不明';
   };
 
