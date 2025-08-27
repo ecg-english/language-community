@@ -1,45 +1,49 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Container,
   Typography,
-  Box,
   Card,
   CardContent,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TextField,
   Select,
   MenuItem,
   FormControl,
   InputLabel,
+  Grid,
+  Box,
+  Paper,
+  IconButton,
   Tabs,
   Tab,
-  IconButton,
-  Chip,
-  Grid,
-  Paper,
-  Divider,
-  Alert,
   CircularProgress,
-  Fab,
-  Tooltip
+  Chip,
+  Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  SelectChangeEvent,
+  Alert,
+  Divider
 } from '@mui/material';
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
+import { 
+  Add as AddIcon, 
+  Delete as DeleteIcon, 
   ContentCopy as CopyIcon,
+  NavigateBefore as NavigateBeforeIcon,
+  NavigateNext as NavigateNextIcon,
+  Star as StarIcon,
+  CheckCircle as CheckCircleIcon,
+  Cancel as CancelIcon,
+  Group as GroupIcon,
+  Assignment as AssignmentIcon,
+  SupervisorAccount as SupervisorAccountIcon,
   CalendarMonth as CalendarIcon,
-  Person as PersonIcon,
-  School as SchoolIcon,
-  Note as NoteIcon,
-  ArrowBackIos as ArrowBackIosIcon,
-  ArrowForwardIos as ArrowForwardIosIcon
+  Edit as EditIcon
 } from '@mui/icons-material';
 import axios from 'axios';
+import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isSameMonth, isSameDay } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
 import AdditionalLessonModal from '../components/AdditionalLessonModal';
 import CalendarEditModal from '../components/CalendarEditModal';
@@ -52,6 +56,7 @@ interface Student {
   member_number: string;
   created_at: string;
   updated_at: string;
+  email?: string; // 追加
 }
 
 interface Instructor {
@@ -640,13 +645,13 @@ const Class1ManagementPage: React.FC = () => {
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Box display="flex" alignItems="center" gap={2}>
             <IconButton onClick={handlePreviousMonth}>
-              <ArrowBackIosIcon />
+              <NavigateBeforeIcon />
             </IconButton>
             <Typography variant="h6">
               {currentMonth} 月
             </Typography>
             <IconButton onClick={handleNextMonth}>
-              <ArrowForwardIosIcon />
+              <NavigateNextIcon />
             </IconButton>
             <Typography variant="body2" color="text.secondary">
               {getMonthRange(currentMonth).start} ~ {getMonthRange(currentMonth).end}
@@ -734,7 +739,7 @@ const Class1ManagementPage: React.FC = () => {
                   {/* 生徒メモ */}
                   <Box>
                     <Typography variant="subtitle2" gutterBottom>
-                      <NoteIcon sx={{ fontSize: 16, mr: 0.5 }} />
+                      <AssignmentIcon sx={{ fontSize: 16, mr: 0.5 }} />
                       メモ ({currentMonth})
                     </Typography>
                     <TextField
@@ -794,7 +799,7 @@ const Class1ManagementPage: React.FC = () => {
             {/* 月ナビゲーション */}
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
               <IconButton onClick={handlePreviousMonth}>
-                <ArrowBackIosIcon />
+                <NavigateBeforeIcon />
               </IconButton>
               
               <Typography variant="h6" sx={{ fontWeight: 600 }}>
@@ -802,7 +807,7 @@ const Class1ManagementPage: React.FC = () => {
               </Typography>
               
               <IconButton onClick={handleNextMonth}>
-                <ArrowForwardIosIcon />
+                <NavigateNextIcon />
               </IconButton>
             </Box>
 
@@ -1096,7 +1101,7 @@ const Class1ManagementPage: React.FC = () => {
           <Button
             variant="contained"
             onClick={() => window.open('/#/manager', '_blank')}
-            startIcon={<SchoolIcon />}
+            startIcon={<SupervisorAccountIcon />}
           >
             マネージャーページを開く
           </Button>
