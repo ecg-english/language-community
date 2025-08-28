@@ -39,6 +39,8 @@ router.get('/:id', (req, res) => {
   try {
     const eventId = req.params.id;
     
+    console.log('イベント詳細取得リクエスト:', { eventId });
+    
     const event = db.prepare(`
       SELECT e.*, u.username as created_by_name
       FROM events e
@@ -46,7 +48,15 @@ router.get('/:id', (req, res) => {
       WHERE e.id = ?
     `).get(eventId);
 
+    console.log('データベースから取得したイベント:', event);
+
     if (!event) {
+      console.log('イベントが見つかりません:', { eventId });
+      
+      // 全イベントの一覧をログ出力
+      const allEvents = db.prepare('SELECT id, title FROM events ORDER BY id').all();
+      console.log('データベース内の全イベント:', allEvents);
+      
       return res.status(404).json({ error: 'イベントが見つかりません' });
     }
 
@@ -56,6 +66,8 @@ router.get('/:id', (req, res) => {
       LEFT JOIN users u ON ea.user_id = u.id
       WHERE ea.event_id = ?
     `).all(eventId);
+
+    console.log('参加者データ:', { eventId, attendeeCount: attendees.length });
 
     res.json({
       ...event,
@@ -158,6 +170,46 @@ router.post('/', authenticateToken, (req, res) => {
     });
   } catch (error) {
     console.error('イベント作成エラー:', error);
+    res.status(500).json({ error: 'サーバーエラー' });
+  }
+});
+
+// テスト用イベントデータ作成（開発・テスト環境のみ）
+router.post('/create-test-event', (req, res) => {
+  try {
+    // 既存のイベントID 20を確認
+    const existingEvent = db.prepare('SELECT id FROM events WHERE id = 20').get();
+    
+    if (existingEvent) {
+      console.log('イベントID 20は既に存在します');
+      return res.json({ message: 'イベントID 20は既に存在します' });
+    }
+
+    // テスト用イベントを作成
+    const result = db.prepare(`
+      INSERT INTO events (id, title, description, event_date, start_time, end_time, location, created_by)
+      VALUES (20, 'テストイベント', 'テスト用のイベントです', '2025-09-15', '18:00', '20:00', 'ECG 神戸三宮', 1)
+    `).run();
+
+    console.log('テストイベント作成完了:', { eventId: 20, changes: result.changes });
+    
+    res.json({ 
+      message: 'テストイベントを作成しました',
+      eventId: 20
+    });
+  } catch (error) {
+    console.error('テストイベント作成エラー:', error);
+    res.status(500).json({ error: 'サーバーエラー' });
+  }
+});
+
+// 全イベント一覧取得（デバッグ用）
+router.get('/debug/all', (req, res) => {
+  try {
+    const events = db.prepare('SELECT id, title, event_date FROM events ORDER BY id').all();
+    res.json({ events });
+  } catch (error) {
+    console.error('デバッグ用イベント取得エラー:', error);
     res.status(500).json({ error: 'サーバーエラー' });
   }
 });
