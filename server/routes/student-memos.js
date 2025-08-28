@@ -97,6 +97,46 @@ const ensureStudentSync = () => {
   }
 };
 
+// 不足している生徒を補完する関数
+const ensureAllStudentsExist = (requiredStudentIds) => {
+  try {
+    console.log('=== 生徒データ補完開始 ===');
+    console.log('要求された生徒ID:', requiredStudentIds);
+    
+    let addedCount = 0;
+    
+    for (const studentId of requiredStudentIds) {
+      const numericId = parseInt(studentId);
+      if (isNaN(numericId)) continue;
+      
+      // 既存チェック
+      const existing = db.prepare('SELECT id FROM class1_students WHERE id = ?').get(numericId);
+      
+      if (!existing) {
+        // 生徒を追加
+        try {
+          const result = db.prepare(`
+            INSERT INTO class1_students (id, name, instructor_id, email, created_at, updated_at)
+            VALUES (?, ?, 1, 'auto-generated@example.com', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+          `).run(numericId, `Student-${numericId}`);
+          
+          addedCount++;
+          console.log(`✅ 不足生徒を自動追加: Student-${numericId} (ID: ${numericId})`);
+        } catch (error) {
+          console.error(`❌ 生徒追加エラー (ID: ${numericId}):`, error);
+        }
+      }
+    }
+    
+    console.log(`🎉 補完完了: ${addedCount}人の生徒を追加`);
+    console.log('=== 生徒データ補完終了 ===');
+    return addedCount;
+  } catch (error) {
+    console.error('❌ 生徒データ補完エラー:', error);
+    return 0;
+  }
+};
+
 // 生徒メモ保存 (単純化)
 router.post('/:studentId', authenticateToken, (req, res) => {
   try {
@@ -123,17 +163,29 @@ router.post('/:studentId', authenticateToken, (req, res) => {
     }
     
     // 生徒の存在確認（class1_studentsテーブルから直接確認）
-    const student = db.prepare('SELECT id, name FROM class1_students WHERE id = ?').get(numericStudentId);
+    let student = db.prepare('SELECT id, name FROM class1_students WHERE id = ?').get(numericStudentId);
     console.log('生徒確認結果:', student);
     
     if (!student) {
       console.log('生徒が見つかりません:', numericStudentId);
       
-      // デバッグ: 全生徒を表示
-      const allStudents = db.prepare('SELECT id, name FROM class1_students ORDER BY id').all();
-      console.log('利用可能な生徒一覧:', allStudents);
+      // 不足している生徒を自動補完
+      console.log('🔧 不足している生徒を自動補完します...');
+      const addedCount = ensureAllStudentsExist([studentId]);
       
-      return res.status(404).json({ success: false, message: '生徒が見つかりません' });
+      if (addedCount > 0) {
+        // 再度確認
+        student = db.prepare('SELECT id, name FROM class1_students WHERE id = ?').get(numericStudentId);
+        console.log('補完後の生徒確認結果:', student);
+      }
+      
+      if (!student) {
+        // デバッグ: 全生徒を表示
+        const allStudents = db.prepare('SELECT id, name FROM class1_students ORDER BY id').all();
+        console.log('利用可能な生徒一覧:', allStudents);
+        
+        return res.status(404).json({ success: false, message: '生徒が見つかりません' });
+      }
     }
     
     // メモを直接class1_studentsテーブルのmemoカラムに保存
@@ -180,17 +232,29 @@ router.get('/:studentId', authenticateToken, (req, res) => {
     }
     
     // 生徒の存在確認とメモ取得（class1_studentsテーブルから直接）
-    const student = db.prepare('SELECT id, name, memo FROM class1_students WHERE id = ?').get(numericStudentId);
+    let student = db.prepare('SELECT id, name, memo FROM class1_students WHERE id = ?').get(numericStudentId);
     console.log('生徒データ取得結果:', student);
     
     if (!student) {
       console.log('生徒が見つかりません:', numericStudentId);
       
-      // デバッグ: 全生徒を表示
-      const allStudents = db.prepare('SELECT id, name FROM class1_students ORDER BY id').all();
-      console.log('利用可能な生徒一覧:', allStudents);
+      // 不足している生徒を自動補完
+      console.log('🔧 不足している生徒を自動補完します...');
+      const addedCount = ensureAllStudentsExist([studentId]);
       
-      return res.status(404).json({ success: false, message: '生徒が見つかりません' });
+      if (addedCount > 0) {
+        // 再度確認
+        student = db.prepare('SELECT id, name, memo FROM class1_students WHERE id = ?').get(numericStudentId);
+        console.log('補完後の生徒データ取得結果:', student);
+      }
+      
+      if (!student) {
+        // デバッグ: 全生徒を表示
+        const allStudents = db.prepare('SELECT id, name FROM class1_students ORDER BY id').all();
+        console.log('利用可能な生徒一覧:', allStudents);
+        
+        return res.status(404).json({ success: false, message: '生徒が見つかりません' });
+      }
     }
     
     console.log(`✅ メモ取得成功: 生徒ID ${numericStudentId}, メモ: "${student.memo || ''}"`);
