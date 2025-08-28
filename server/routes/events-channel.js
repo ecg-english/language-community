@@ -7,7 +7,9 @@ const { authenticateToken } = require('../middleware/auth');
 router.get('/', (req, res) => {
   try {
     const events = db.prepare(`
-      SELECT e.*, u.username as created_by_name
+      SELECT e.id, e.title, e.description, e.target_audience, e.event_date, 
+             e.start_time, e.end_time, e.participation_method, e.created_by, 
+             e.created_at, e.updated_at, e.location, u.username as created_by_name
       FROM events e
       LEFT JOIN users u ON e.created_by = u.id
       ORDER BY e.event_date DESC
@@ -42,7 +44,9 @@ router.get('/:id', (req, res) => {
     console.log('イベント詳細取得リクエスト:', { eventId });
     
     const event = db.prepare(`
-      SELECT e.*, u.username as created_by_name
+      SELECT e.id, e.title, e.description, e.target_audience, e.event_date, 
+             e.start_time, e.end_time, e.participation_method, e.created_by, 
+             e.created_at, e.updated_at, e.location, u.username as created_by_name
       FROM events e
       LEFT JOIN users u ON e.created_by = u.id
       WHERE e.id = ?
