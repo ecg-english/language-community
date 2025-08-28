@@ -572,6 +572,41 @@ const initializeDatabase = () => {
       )
     `).run();
 
+    // 企画管理イベントテーブルの作成（Eventsチャンネルとは別）
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS planning_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        event_date DATE NOT NULL,
+        start_time TIME NOT NULL,
+        end_time TIME NOT NULL,
+        location TEXT,
+        member_fee INTEGER DEFAULT 0,
+        visitor_fee INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `).run();
+
+    // 企画管理タスクテーブルの作成
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS planning_tasks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        event_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        deadline_days_before INTEGER NOT NULL,
+        deadline_date DATE NOT NULL,
+        is_completed INTEGER DEFAULT 0,
+        url TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (event_id) REFERENCES planning_events(id) ON DELETE CASCADE
+      )
+    `).run();
+
     // 注意: 新規ユーザーのデフォルトロールを「ビジター」に変更
     // 既存ユーザーのロールは変更されません
     console.log('New users will be assigned "ビジター" role by default');

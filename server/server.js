@@ -137,18 +137,17 @@ app.get('/api/test/users', (req, res) => {
   }
 });
 
-// ルート
+// Routes
 app.use('/api/auth', require('./routes/auth'));
-app.use('/api/channels', require('./routes/channels'));
-app.use('/api/posts', require('./routes/posts'));
-app.use('/api/events', require('./routes/events'));
 app.use('/api/study-log', require('./routes/studyLog'));
-app.use('/api/class1', require('./routes/class1'));
-app.use('/api/manager', require('./routes/manager'));
-app.use('/api/survey', require('./routes/survey'));
-app.use('/api/additional-lessons', require('./routes/additional-lessons'));
-app.use('/api/calendar-events', require('./routes/calendar-events'));
-app.use('/api/student-memos', require('./routes/student-memos'));
+app.use('/api/event-planning', require('./routes/events')); // 企画管理API（旧/api/events）
+app.use('/api/discord', require('./routes/discord'));
+app.use('/api/birthday', require('./routes/birthday'));
+app.use('/api/reservation', require('./routes/reservation'));
+app.use('/api/channel', require('./routes/channel'));
+
+// オンライン状態管理
+const onlineUsers = new Set();
 
 // ファイルアップロード用ルート
 app.post('/api/upload/avatar', upload.single('avatar'), (req, res) => {

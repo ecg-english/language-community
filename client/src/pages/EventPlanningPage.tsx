@@ -96,46 +96,49 @@ const EventPlanningPage: React.FC = () => {
     fetchEvents();
   }, []);
 
+  // イベント一覧を取得
   const fetchEvents = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/events', {
+      const response = await axios.get('/api/event-planning', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setEvents(response.data.data || []);
+      
+      console.log('企画イベント取得レスポンス:', response.data);
+      setEvents(response.data);
     } catch (error) {
-      console.error('イベント取得エラー:', error);
+      console.error('企画イベント取得エラー:', error);
       setError('イベントの取得に失敗しました');
     } finally {
       setLoading(false);
     }
   };
 
+  // イベント作成
   const handleCreateEvent = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post('/api/events', newEvent, {
+      const response = await axios.post('/api/event-planning', newEvent, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      if (response.data.success) {
-        await fetchEvents();
-        setCreateEventDialog(false);
-        setNewEvent({
-          title: '',
-          description: '',
-          event_date: '',
-          start_time: '',
-          end_time: '',
-          visitor_fee: '',
-          member_fee: '',
-          location: ''
-        });
-        alert('イベントを作成しました！');
-      }
+      console.log('企画イベント作成レスポンス:', response.data);
+      alert('イベントを作成しました！');
+      setCreateEventDialog(false);
+      setNewEvent({
+        title: '',
+        description: '',
+        event_date: '',
+        start_time: '',
+        end_time: '',
+        location: '',
+        member_fee: '',
+        visitor_fee: ''
+      });
+      fetchEvents(); // 一覧を再取得
     } catch (error) {
-      console.error('イベント作成エラー:', error);
+      console.error('企画イベント作成エラー:', error);
       alert('イベントの作成に失敗しました');
     }
   };
@@ -145,7 +148,7 @@ const EventPlanningPage: React.FC = () => {
       console.log('タスク更新開始:', { taskId, isCompleted, newValue: !isCompleted });
       
       const token = localStorage.getItem('token');
-      const response = await axios.put(`/api/events/tasks/${taskId}`, 
+      const response = await axios.put(`/api/event-planning/tasks/${taskId}`, 
         { is_completed: !Boolean(isCompleted) },
         { headers: { Authorization: `Bearer ${token}` } }
       );

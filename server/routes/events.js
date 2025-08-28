@@ -1,42 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const Database = require('better-sqlite3');
-const { authenticateToken } = require('../middleware/auth');
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
+const auth = require('../middleware/auth');
 
-const db = new Database('language-community.db');
+// データベースパス
+const dbPath = path.join(__dirname, '../database.db');
 
-// イベント企画管理テーブルの作成（既存のeventsテーブルとは別）
-db.exec(`
-  CREATE TABLE IF NOT EXISTS event_planning (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    description TEXT NOT NULL,
-    event_date DATE NOT NULL,
-    start_time TIME NOT NULL,
-    end_time TIME NOT NULL,
-    visitor_fee INTEGER NOT NULL,
-    member_fee INTEGER NOT NULL,
-    location TEXT NOT NULL,
-    created_by INTEGER NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (created_by) REFERENCES users(id)
-  )
-`);
-
-// イベント企画タスクテーブルの作成
-db.exec(`
-  CREATE TABLE IF NOT EXISTS event_planning_tasks (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    event_id INTEGER NOT NULL,
-    name TEXT NOT NULL,
-    deadline_days_before INTEGER NOT NULL,
-    deadline_date DATE NOT NULL,
-    is_completed BOOLEAN DEFAULT FALSE,
-    url TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (event_id) REFERENCES event_planning(id) ON DELETE CASCADE
-  )
-`);
+// データベース接続
+const db = new sqlite3.Database(dbPath);
 
 // デフォルトタスクテンプレート
 const defaultTasks = [
@@ -55,333 +27,164 @@ const defaultTasks = [
   { name: 'イベント実施と反省メモ', deadline_days_before: 0, url: '' }
 ];
 
-// 締切日を計算する関数
-const calculateDeadlineDate = (eventDate, daysBefore) => {
-  const deadline = new Date(eventDate);
-  deadline.setDate(deadline.getDate() - daysBefore);
-  return deadline.toISOString().split('T')[0];
-};
-
-// イベント企画一覧取得
-router.get('/', authenticateToken, (req, res) => {
+// 企画イベント一覧取得
+router.get('/', auth, async (req, res) => {
   try {
-    const events = db.prepare(`
-      SELECT e.*, u.username as created_by_name
-      FROM event_planning e
-      LEFT JOIN users u ON e.created_by = u.id
+    const sql = `
+      SELECT e.*, 
+        GROUP_CONCAT(
+          json_object(
+            'id', t.id,
+            'event_id', t.event_id,
+            'name', t.name,
+            'deadline_days_before', t.deadline_days_before,
+            'deadline_date', t.deadline_date,
+            'is_completed', t.is_completed,
+            'url', t.url
+          )
+        ) as tasks_json
+      FROM planning_events e
+      LEFT JOIN planning_tasks t ON e.id = t.event_id
+      WHERE e.user_id = ?
+      GROUP BY e.id
       ORDER BY e.event_date DESC
-    `).all();
-
-    // 各イベントのタスク進捗も取得
-    const eventsWithProgress = events.map(event => {
-      const tasks = db.prepare(`
-        SELECT * FROM event_planning_tasks 
-        WHERE event_id = ? 
-        ORDER BY deadline_date ASC
-      `).all(event.id);
-
-      return {
-        ...event,
-        tasks: tasks,
-        completed_tasks: tasks.filter(task => task.is_completed).length,
-        total_tasks: tasks.length
-      };
-    });
-
-    res.json({ 
-      success: true, 
-      data: eventsWithProgress 
+    `;
+    
+    db.all(sql, [req.user.id], (err, rows) => {
+      if (err) {
+        console.error('データベースエラー:', err);
+        return res.status(500).json({ error: 'データベースエラー' });
+      }
+      
+      const events = rows.map(row => ({
+        ...row,
+        tasks: row.tasks_json ? 
+          row.tasks_json.split('},{').map((task, index, array) => {
+            let taskStr = task;
+            if (index === 0 && !taskStr.startsWith('{')) taskStr = '{' + taskStr;
+            if (index === array.length - 1 && !taskStr.endsWith('}')) taskStr = taskStr + '}';
+            if (index !== 0 && !taskStr.startsWith('{')) taskStr = '{' + taskStr;
+            if (index !== array.length - 1 && !taskStr.endsWith('}')) taskStr = taskStr + '}';
+            
+            try {
+              return JSON.parse(taskStr);
+            } catch (e) {
+              console.error('タスクJSONパースエラー:', e, taskStr);
+              return null;
+            }
+          }).filter(Boolean) : []
+      }));
+      
+      res.json(events);
     });
   } catch (error) {
-    console.error('イベント取得エラー:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'イベントの取得に失敗しました' 
-    });
+    console.error('企画イベント取得エラー:', error);
+    res.status(500).json({ error: 'サーバーエラー' });
   }
 });
 
-// イベント企画作成
-router.post('/', authenticateToken, (req, res) => {
+// 企画イベント作成
+router.post('/', auth, async (req, res) => {
   try {
-    const { 
-      title, 
-      description, 
-      event_date, 
-      start_time, 
-      end_time, 
-      visitor_fee, 
-      member_fee, 
-      location 
-    } = req.body;
-
-    const userId = req.user.userId; // req.user.id から req.user.userId に修正
-
-    console.log('イベント作成リクエスト:', {
-      title,
-      description,
-      event_date,
-      start_time,
-      end_time,
-      visitor_fee,
-      member_fee,
-      location,
-      userId
-    });
-
-    // バリデーション
-    if (!title || !description || !event_date || !start_time || !end_time || !location) {
-      return res.status(400).json({ 
-        success: false, 
-        message: '必須項目が不足しています' 
-      });
+    const { title, description, event_date, start_time, end_time, location, member_fee, visitor_fee } = req.body;
+    
+    if (!title || !event_date || !start_time || !end_time) {
+      return res.status(400).json({ error: '必須フィールドが不足しています' });
     }
 
-    if (!userId) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'ユーザー認証に失敗しました' 
+    const insertEventSql = `
+      INSERT INTO planning_events (user_id, title, description, event_date, start_time, end_time, location, member_fee, visitor_fee)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    db.run(insertEventSql, [req.user.id, title, description, event_date, start_time, end_time, location, member_fee, visitor_fee], function(err) {
+      if (err) {
+        console.error('企画イベント作成エラー:', err);
+        return res.status(500).json({ error: 'データベースエラー' });
+      }
+
+      const eventId = this.lastID;
+      
+      // デフォルトタスクを作成
+      const insertTaskPromises = defaultTasks.map(task => {
+        return new Promise((resolve, reject) => {
+          const eventDate = new Date(event_date);
+          const deadlineDate = new Date(eventDate);
+          deadlineDate.setDate(deadlineDate.getDate() - task.deadline_days_before);
+          
+          const insertTaskSql = `
+            INSERT INTO planning_tasks (event_id, name, deadline_days_before, deadline_date, is_completed, url)
+            VALUES (?, ?, ?, ?, 0, ?)
+          `;
+          
+          db.run(insertTaskSql, [eventId, task.name, task.deadline_days_before, deadlineDate.toISOString().split('T')[0], task.url], function(err) {
+            if (err) {
+              reject(err);
+            } else {
+              resolve();
+            }
+          });
+        });
       });
-    }
 
-    // イベント企画を作成
-    const insertEvent = db.prepare(`
-      INSERT INTO event_planning (
-        title, description, event_date, start_time, end_time, 
-        visitor_fee, member_fee, location, created_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    const result = insertEvent.run(
-      title, description, event_date, start_time, end_time,
-      parseInt(visitor_fee) || 0, parseInt(member_fee) || 0, location, userId
-    );
-
-    const eventId = result.lastInsertRowid;
-
-    // デフォルトタスクを作成
-    const insertTask = db.prepare(`
-      INSERT INTO event_planning_tasks (
-        event_id, name, deadline_days_before, deadline_date, url
-      ) VALUES (?, ?, ?, ?, ?)
-    `);
-
-    defaultTasks.forEach(task => {
-      const deadlineDate = calculateDeadlineDate(event_date, task.deadline_days_before);
-      insertTask.run(
-        eventId,
-        task.name,
-        task.deadline_days_before,
-        deadlineDate,
-        task.url || null
-      );
-    });
-
-    console.log('イベント作成成功:', { eventId });
-
-    res.json({ 
-      success: true, 
-      message: 'イベントを作成しました',
-      data: { id: eventId }
+      Promise.all(insertTaskPromises)
+        .then(() => {
+          res.status(201).json({ 
+            message: '企画イベントとタスクが作成されました',
+            eventId: eventId
+          });
+        })
+        .catch(err => {
+          console.error('タスク作成エラー:', err);
+          res.status(500).json({ error: 'タスク作成エラー' });
+        });
     });
   } catch (error) {
-    console.error('イベント作成エラー:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'イベントの作成に失敗しました' 
-    });
+    console.error('企画イベント作成エラー:', error);
+    res.status(500).json({ error: 'サーバーエラー' });
   }
 });
 
-// イベント企画のタスク一覧取得
-router.get('/:eventId/tasks', authenticateToken, (req, res) => {
+// タスク完了状態更新
+router.put('/tasks/:taskId', auth, async (req, res) => {
   try {
-    const eventId = req.params.eventId;
-
-    console.log('タスク取得リクエスト:', { eventId });
-
-    const tasks = db.prepare(`
-      SELECT * FROM event_planning_tasks 
-      WHERE event_id = ? 
-      ORDER BY deadline_date ASC
-    `).all(eventId);
-
-    console.log('取得されたタスク:', { 
-      eventId, 
-      tasksCount: tasks.length, 
-      tasks: tasks.slice(0, 3) // 最初の3つを表示
-    });
-
-    res.json({ 
-      success: true, 
-      data: tasks 
-    });
-  } catch (error) {
-    console.error('タスク取得エラー:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'タスクの取得に失敗しました' 
-    });
-  }
-});
-
-// タスクの完了状態を更新
-router.put('/tasks/:taskId', authenticateToken, (req, res) => {
-  try {
-    const taskId = parseInt(req.params.taskId);
+    const { taskId } = req.params;
     const { is_completed } = req.body;
-
-    console.log('タスク更新リクエスト:', { 
-      taskId, 
-      is_completed, 
-      is_completed_type: typeof is_completed,
-      userId: req.user.userId 
-    });
-
-    // バリデーション
-    if (!taskId || isNaN(taskId)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: '無効なタスクIDです' 
-      });
-    }
-
+    
+    console.log('タスク更新リクエスト受信:', { taskId, is_completed });
+    
     if (typeof is_completed !== 'boolean') {
-      return res.status(400).json({ 
-        success: false, 
-        message: '無効な完了状態です' 
-      });
+      return res.status(400).json({ error: 'is_completedはboolean型である必要があります' });
     }
 
-    // SQLite用に0/1に変換
-    const sqliteValue = is_completed ? 1 : 0;
-
-    const updateTask = db.prepare(`
-      UPDATE event_planning_tasks 
+    const updateSql = `
+      UPDATE planning_tasks 
       SET is_completed = ? 
-      WHERE id = ?
-    `);
+      WHERE id = ? AND event_id IN (
+        SELECT id FROM planning_events WHERE user_id = ?
+      )
+    `;
 
-    const result = updateTask.run(sqliteValue, taskId);
+    db.run(updateSql, [is_completed ? 1 : 0, taskId, req.user.id], function(err) {
+      if (err) {
+        console.error('タスク更新エラー:', err);
+        return res.status(500).json({ error: 'データベースエラー' });
+      }
 
-    console.log('タスク更新結果:', { 
-      taskId, 
-      changes: result.changes,
-      sqliteValue 
-    });
+      if (this.changes === 0) {
+        return res.status(404).json({ error: 'タスクが見つからないか、更新権限がありません' });
+      }
 
-    if (result.changes === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'タスクが見つかりません' 
+      console.log('タスク更新成功:', { taskId, is_completed, changes: this.changes });
+      res.json({ 
+        message: 'タスクが更新されました',
+        taskId: taskId,
+        is_completed: is_completed
       });
-    }
-
-    res.json({ 
-      success: true, 
-      message: 'タスクを更新しました',
-      data: { taskId, is_completed }
     });
   } catch (error) {
     console.error('タスク更新エラー:', error);
-    console.error('エラー詳細:', {
-      taskId: req.params.taskId,
-      body: req.body,
-      error: error.message
-    });
-    res.status(500).json({ 
-      success: false, 
-      message: 'タスクの更新に失敗しました' 
-    });
-  }
-});
-
-// イベント企画削除
-router.delete('/:eventId', authenticateToken, (req, res) => {
-  try {
-    const eventId = parseInt(req.params.eventId);
-    const userId = req.user.userId; // 修正: req.user.id から req.user.userId
-
-    console.log('イベント削除リクエスト:', { eventId, userId });
-
-    if (!eventId || isNaN(eventId)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: '無効なイベントIDです' 
-      });
-    }
-
-    // イベントの作成者または管理者のみ削除可能
-    const event = db.prepare(`
-      SELECT * FROM event_planning WHERE id = ?
-    `).get(eventId);
-
-    if (!event) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'イベントが見つかりません' 
-      });
-    }
-
-    if (event.created_by !== userId && req.user.role !== 'サーバー管理者') {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'イベントを削除する権限がありません' 
-      });
-    }
-
-    // タスクとイベントを削除（CASCADE設定済み）
-    const result = db.prepare('DELETE FROM event_planning WHERE id = ?').run(eventId);
-
-    console.log('イベント削除結果:', { eventId, changes: result.changes });
-
-    res.json({ 
-      success: true, 
-      message: 'イベントを削除しました' 
-    });
-  } catch (error) {
-    console.error('イベント削除エラー:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'イベントの削除に失敗しました' 
-    });
-  }
-});
-
-// デバッグ用のテーブル状態確認エンドポイント
-router.get('/debug/tables', authenticateToken, (req, res) => {
-  try {
-    if (req.user.role !== 'サーバー管理者') {
-      return res.status(403).json({ 
-        success: false, 
-        message: '管理者のみアクセス可能です' 
-      });
-    }
-
-    // テーブル存在確認
-    const eventPlanningCount = db.prepare('SELECT COUNT(*) as count FROM event_planning').get();
-    const tasksCount = db.prepare('SELECT COUNT(*) as count FROM event_planning_tasks').get();
-    
-    // サンプルデータ取得
-    const events = db.prepare('SELECT * FROM event_planning LIMIT 3').all();
-    const tasks = db.prepare('SELECT * FROM event_planning_tasks LIMIT 5').all();
-
-    res.json({
-      success: true,
-      data: {
-        event_planning_count: eventPlanningCount.count,
-        tasks_count: tasksCount.count,
-        sample_events: events,
-        sample_tasks: tasks
-      }
-    });
-  } catch (error) {
-    console.error('デバッグ情報取得エラー:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'デバッグ情報の取得に失敗しました',
-      error: error.message
-    });
+    res.status(500).json({ error: 'サーバーエラー' });
   }
 });
 
