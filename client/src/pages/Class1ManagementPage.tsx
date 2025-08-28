@@ -131,6 +131,10 @@ const Class1ManagementPage: React.FC = () => {
   const [isNewStudent, setIsNewStudent] = useState(true);
   const [class1Members, setClass1Members] = useState<any[]>([]);
 
+  // 生徒メモの一時保存用state（保存ボタン用）
+  const [temporaryMemos, setTemporaryMemos] = useState<{ [studentId: number]: string }>({});
+  const [savingMemos, setSavingMemos] = useState<{ [studentId: number]: boolean }>({});
+
   // 現在の月を取得する関数（簡易版）
   const getCurrentMonth = () => {
     const now = new Date();
@@ -159,21 +163,25 @@ const Class1ManagementPage: React.FC = () => {
     }
 
     const newStudentMemos: { [studentId: number]: string } = {};
+    const newTemporaryMemos: { [studentId: number]: string } = {};
     
     for (const student of students) {
       try {
         console.log(`生徒 ${student.name} (ID: ${student.id}) のメモ取得開始`);
         const memo = await getStudentMemo(student.id);
         newStudentMemos[student.id] = memo;
+        newTemporaryMemos[student.id] = memo; // 一時保存にも同じ値を設定
         console.log(`生徒 ${student.name} のメモ: "${memo}"`);
       } catch (error) {
         console.error(`生徒 ${student.name} のメモ取得エラー:`, error);
         newStudentMemos[student.id] = '';
+        newTemporaryMemos[student.id] = '';
       }
     }
     
     console.log('全生徒メモ:', newStudentMemos);
     setStudentMemos(newStudentMemos);
+    setTemporaryMemos(newTemporaryMemos);
     console.log('=== 生徒メモ初期化完了 ===');
   };
 
@@ -443,11 +451,23 @@ const Class1ManagementPage: React.FC = () => {
     }
   }, [calendarEventsData, selectedInstructorCalendar, students]);
 
-  // 生徒メモ変更ハンドラー（単純化）
-  const handleStudentMemoChange = async (studentId: number, memo: string) => {
+  // 生徒メモ変更ハンドラー（一時保存のみ）
+  const handleStudentMemoChange = (studentId: number, memo: string) => {
+    console.log(`メモ一時変更: 生徒ID ${studentId}, メモ: "${memo}"`);
+    setTemporaryMemos(prev => ({
+      ...prev,
+      [studentId]: memo
+    }));
+  };
+
+  // 生徒メモ保存ハンドラー（保存ボタン用）
+  const handleSaveStudentMemo = async (studentId: number) => {
     try {
-      console.log('=== メモ変更ハンドラー開始 ===');
-      console.log('メモ変更ハンドラー:', { studentId, memo });
+      console.log('=== メモ保存ボタンクリック ===');
+      const memo = temporaryMemos[studentId] || '';
+      console.log('メモ保存開始:', { studentId, memo });
+      
+      setSavingMemos(prev => ({ ...prev, [studentId]: true }));
       
       const numericStudentId = Number(studentId);
       if (isNaN(numericStudentId)) {
@@ -455,20 +475,25 @@ const Class1ManagementPage: React.FC = () => {
         return;
       }
       
-      console.log('数値変換後の生徒ID:', numericStudentId);
-      
       const success = await saveStudentMemo(numericStudentId, memo);
       if (success) {
         setStudentMemos(prev => ({
           ...prev,
           [numericStudentId]: memo
         }));
-        console.log('メモ保存成功、状態更新完了');
+        console.log('✅ メモ保存成功、状態更新完了');
+        
+        // 成功メッセージやフィードバックを表示
+        alert('メモを保存しました');
       } else {
-        console.error('メモ保存に失敗しました');
+        console.error('❌ メモ保存に失敗しました');
+        alert('メモの保存に失敗しました');
       }
     } catch (error) {
       console.error('メモ保存エラー:', error);
+      alert('メモの保存中にエラーが発生しました');
+    } finally {
+      setSavingMemos(prev => ({ ...prev, [studentId]: false }));
     }
   };
 
@@ -734,9 +759,18 @@ const Class1ManagementPage: React.FC = () => {
                       variant="outlined"
                       size="small"
                       placeholder="生徒のメモを入力してください..."
-                      value={studentMemos[student.id] || ''}
+                      value={temporaryMemos[student.id] || ''}
                       onChange={(e) => handleStudentMemoChange(student.id, e.target.value)}
                     />
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => handleSaveStudentMemo(student.id)}
+                      disabled={savingMemos[student.id] || !temporaryMemos[student.id]}
+                      sx={{ mt: 1 }}
+                    >
+                      {savingMemos[student.id] ? <CircularProgress size={20} /> : 'メモを保存'}
+                    </Button>
                   </Box>
                 </CardContent>
               </Card>
