@@ -8,7 +8,9 @@ router.get('/', (req, res) => {
   console.log('=== Events API: イベント一覧取得リクエスト受信 ===');
   try {
     const events = db.prepare(`
-      SELECT e.*, u.username as created_by_name
+      SELECT e.id, e.title, e.description, e.target_audience, e.event_date, 
+             e.start_time, e.end_time, e.participation_method, e.created_by, 
+             e.created_at, e.updated_at, e.location, u.username as created_by_name
       FROM events e
       LEFT JOIN users u ON e.created_by = u.id
       ORDER BY e.event_date DESC
@@ -30,7 +32,7 @@ router.get('/', (req, res) => {
       };
     });
 
-    console.log('レスポンス送信:', eventsWithAttendees.length, 'イベント');
+    console.log('軽量化レスポンス送信:', eventsWithAttendees.length, 'イベント（カバーイメージ除外）');
     res.json(eventsWithAttendees);
   } catch (error) {
     console.error('イベント取得エラー:', error);
@@ -45,13 +47,19 @@ router.get('/:id', (req, res) => {
   
   try {
     const event = db.prepare(`
-      SELECT e.*, u.username as created_by_name
+      SELECT e.id, e.title, e.description, e.target_audience, e.event_date, 
+             e.start_time, e.end_time, e.participation_method, e.created_by, 
+             e.created_at, e.updated_at, e.location, u.username as created_by_name
       FROM events e
       LEFT JOIN users u ON e.created_by = u.id
       WHERE e.id = ?
     `).get(eventId);
 
-    console.log('データベースから取得したイベント:', event);
+    console.log('データベースから取得したイベント（軽量化）:', { 
+      id: event?.id, 
+      title: event?.title,
+      event_date: event?.event_date 
+    });
 
     if (!event) {
       console.log('イベントが見つかりません:', { eventId });
@@ -72,7 +80,7 @@ router.get('/:id', (req, res) => {
       attendees: attendees
     };
 
-    console.log('レスポンス送信:', { eventId, title: event.title });
+    console.log('軽量化レスポンス送信:', { eventId, title: event.title, responseSize: 'lightweight' });
     res.json(response);
   } catch (error) {
     console.error('イベント詳細取得エラー:', error);
