@@ -228,8 +228,33 @@ router.get('/:eventId/tasks', authenticateToken, (req, res) => {
 // タスクの完了状態を更新
 router.put('/tasks/:taskId', authenticateToken, (req, res) => {
   try {
-    const taskId = req.params.taskId;
+    const taskId = parseInt(req.params.taskId);
     const { is_completed } = req.body;
+
+    console.log('タスク更新リクエスト:', { 
+      taskId, 
+      is_completed, 
+      is_completed_type: typeof is_completed,
+      userId: req.user.userId 
+    });
+
+    // バリデーション
+    if (!taskId || isNaN(taskId)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: '無効なタスクIDです' 
+      });
+    }
+
+    if (typeof is_completed !== 'boolean') {
+      return res.status(400).json({ 
+        success: false, 
+        message: '無効な完了状態です' 
+      });
+    }
+
+    // SQLite用に0/1に変換
+    const sqliteValue = is_completed ? 1 : 0;
 
     const updateTask = db.prepare(`
       UPDATE event_planning_tasks 
@@ -237,14 +262,33 @@ router.put('/tasks/:taskId', authenticateToken, (req, res) => {
       WHERE id = ?
     `);
 
-    updateTask.run(is_completed, taskId);
+    const result = updateTask.run(sqliteValue, taskId);
+
+    console.log('タスク更新結果:', { 
+      taskId, 
+      changes: result.changes,
+      sqliteValue 
+    });
+
+    if (result.changes === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'タスクが見つかりません' 
+      });
+    }
 
     res.json({ 
       success: true, 
-      message: 'タスクを更新しました' 
+      message: 'タスクを更新しました',
+      data: { taskId, is_completed }
     });
   } catch (error) {
     console.error('タスク更新エラー:', error);
+    console.error('エラー詳細:', {
+      taskId: req.params.taskId,
+      body: req.body,
+      error: error.message
+    });
     res.status(500).json({ 
       success: false, 
       message: 'タスクの更新に失敗しました' 
@@ -255,8 +299,17 @@ router.put('/tasks/:taskId', authenticateToken, (req, res) => {
 // イベント企画削除
 router.delete('/:eventId', authenticateToken, (req, res) => {
   try {
-    const eventId = req.params.eventId;
-    const userId = req.user.userId; // req.user.id から req.user.userId に修正
+    const eventId = parseInt(req.params.eventId);
+    const userId = req.user.userId; // 修正: req.user.id から req.user.userId
+
+    console.log('イベント削除リクエスト:', { eventId, userId });
+
+    if (!eventId || isNaN(eventId)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: '無効なイベントIDです' 
+      });
+    }
 
     // イベントの作成者または管理者のみ削除可能
     const event = db.prepare(`
@@ -278,7 +331,9 @@ router.delete('/:eventId', authenticateToken, (req, res) => {
     }
 
     // タスクとイベントを削除（CASCADE設定済み）
-    db.prepare('DELETE FROM event_planning WHERE id = ?').run(eventId);
+    const result = db.prepare('DELETE FROM event_planning WHERE id = ?').run(eventId);
+
+    console.log('イベント削除結果:', { eventId, changes: result.changes });
 
     res.json({ 
       success: true, 
@@ -289,6 +344,43 @@ router.delete('/:eventId', authenticateToken, (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: 'イベントの削除に失敗しました' 
+    });
+  }
+});
+
+// デバッグ用のテーブル状態確認エンドポイント
+router.get('/debug/tables', authenticateToken, (req, res) => {
+  try {
+    if (req.user.role !== 'サーバー管理者') {
+      return res.status(403).json({ 
+        success: false, 
+        message: '管理者のみアクセス可能です' 
+      });
+    }
+
+    // テーブル存在確認
+    const eventPlanningCount = db.prepare('SELECT COUNT(*) as count FROM event_planning').get();
+    const tasksCount = db.prepare('SELECT COUNT(*) as count FROM event_planning_tasks').get();
+    
+    // サンプルデータ取得
+    const events = db.prepare('SELECT * FROM event_planning LIMIT 3').all();
+    const tasks = db.prepare('SELECT * FROM event_planning_tasks LIMIT 5').all();
+
+    res.json({
+      success: true,
+      data: {
+        event_planning_count: eventPlanningCount.count,
+        tasks_count: tasksCount.count,
+        sample_events: events,
+        sample_tasks: tasks
+      }
+    });
+  } catch (error) {
+    console.error('デバッグ情報取得エラー:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'デバッグ情報の取得に失敗しました',
+      error: error.message
     });
   }
 });
