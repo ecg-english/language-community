@@ -178,7 +178,7 @@ const EventPlanningPage: React.FC = () => {
       console.log('タスクダイアログが開かれました');
     } catch (error) {
       console.error('タスク取得エラー:', error);
-      console.error('エラー詳細:', error.response?.data);
+      console.error('エラー詳細:', (error as any)?.response?.data);
       alert('タスクの取得に失敗しました');
     }
   };
