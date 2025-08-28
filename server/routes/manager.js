@@ -90,16 +90,18 @@ router.put('/monthly-data/:month/:studentId/payment', authenticateToken, checkMa
   }
 });
 
-// 講師の月別レッスン実施数を取得
+// 講師の月別レッスン実施数を取得（カレンダーイベントベース）
 router.get('/instructor-lessons/:month', authenticateToken, checkManagerPermission, (req, res) => {
   try {
     const { month } = req.params;
     console.log('講師レッスン数取得開始:', month);
     
-    // 月形式（2025-08）を週形式（2025-W）に変換
-    const [year, monthNum] = month.split('-');
-    const weekPattern = `${year}-W`;
-    console.log('週パターン:', weekPattern);
+    // 月の開始日と終了日を計算
+    const [year, monthNum] = month.split('-').map(Number);
+    const startDate = `${year}-${String(monthNum).padStart(2, '0')}-01`;
+    const endDate = `${year}-${String(monthNum).padStart(2, '0')}-${new Date(year, monthNum, 0).getDate()}`;
+    
+    console.log('月の期間:', { startDate, endDate });
     
     // デバッグ用：講師一覧を確認
     const instructors = db.prepare(`
@@ -114,35 +116,40 @@ router.get('/instructor-lessons/:month', authenticateToken, checkManagerPermissi
     `).all();
     console.log('生徒一覧:', students);
     
-    // デバッグ用：レッスン完了データを確認
-    const lessonData = db.prepare(`
-      SELECT student_id, week_key, lesson_completed 
-      FROM class1_weekly_checklist 
-      WHERE lesson_completed = 1
-    `).all();
-    console.log('レッスン完了データ:', lessonData);
+    // デバッグ用：カレンダーイベントを確認
+    const calendarEvents = db.prepare(`
+      SELECT 
+        ce.student_id,
+        ce.date,
+        ce.type,
+        cs.instructor_id,
+        u.username as instructor_name
+      FROM calendar_events ce
+      JOIN class1_students cs ON ce.student_id = cs.id
+      JOIN users u ON cs.instructor_id = u.id
+      WHERE ce.date BETWEEN ? AND ?
+      AND ce.type = 'completed'
+      ORDER BY ce.date
+    `).all(startDate, endDate);
+    console.log('カレンダーイベント（完了）:', calendarEvents);
     
-    // 各講師の月別レッスン実施数を取得（通常レッスン + 追加レッスン）
+    // 各講師の月別レッスン実施数を取得（カレンダーイベントベース）
     const instructorLessons = db.prepare(`
       SELECT 
         u.id as instructor_id,
         u.username as instructor_name,
         u.role as instructor_role,
         COUNT(DISTINCT cs.id) as total_students,
-        (
-          COUNT(CASE WHEN wcd.lesson_completed = 1 THEN 1 END) + 
-          COUNT(CASE WHEN al.lesson_completed = 1 THEN 1 END)
-        ) as completed_lessons
+        COUNT(CASE WHEN ce.type = 'completed' THEN 1 END) as completed_lessons
       FROM users u
       LEFT JOIN class1_students cs ON u.id = cs.instructor_id
-      LEFT JOIN class1_weekly_checklist wcd ON cs.id = wcd.student_id 
-        AND wcd.week_key LIKE ? || '%'
-      LEFT JOIN class1_additional_lessons al ON cs.id = al.student_id 
-        AND al.week_key LIKE ? || '%'
+      LEFT JOIN calendar_events ce ON cs.id = ce.student_id 
+        AND ce.date BETWEEN ? AND ?
+        AND ce.type = 'completed'
       WHERE u.role IN ('ECG講師', 'JCG講師', 'サーバー管理者')
       GROUP BY u.id, u.username, u.role
       ORDER BY u.username
-    `).all(weekPattern, weekPattern);
+    `).all(startDate, endDate);
     
     console.log('講師レッスン数結果:', instructorLessons);
     res.json({ success: true, data: instructorLessons });
