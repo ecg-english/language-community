@@ -188,7 +188,10 @@ const EventPlanningPage: React.FC = () => {
     const deadline = new Date(task.deadline_date);
     const diffDays = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (task.is_completed) {
+    // SQLiteの0/1をboolean判定に修正
+    const isCompleted = Boolean(task.is_completed);
+
+    if (isCompleted) {
       return { status: 'completed', color: 'success', icon: <CheckCircleIcon /> };
     } else if (diffDays < 0) {
       return { status: 'overdue', color: 'error', icon: <ErrorIcon /> };
@@ -201,7 +204,7 @@ const EventPlanningPage: React.FC = () => {
 
   const getEventProgress = (event: Event) => {
     if (!event.tasks || event.tasks.length === 0) return 0;
-    const completedTasks = event.tasks.filter(task => task.is_completed).length;
+    const completedTasks = event.tasks.filter(task => Boolean(task.is_completed)).length;
     return (completedTasks / event.tasks.length) * 100;
   };
 
@@ -436,6 +439,8 @@ const EventPlanningPage: React.FC = () => {
               {selectedEvent.tasks && selectedEvent.tasks.length > 0 ? (
                 selectedEvent.tasks.map((task) => {
                   const taskStatus = getTaskStatus(task);
+                  const isCompleted = Boolean(task.is_completed);
+                  
                   return (
                     <Box 
                       key={task.id}
@@ -447,18 +452,18 @@ const EventPlanningPage: React.FC = () => {
                         border: 1,
                         borderColor: `${taskStatus.color}.main`,
                         borderRadius: 1,
-                        backgroundColor: task.is_completed ? 'success.light' : 
+                        backgroundColor: isCompleted ? 'success.light' : 
                                       taskStatus.status === 'overdue' ? 'error.light' :
                                       taskStatus.status === 'urgent' ? 'warning.light' : 'transparent',
-                        opacity: task.is_completed ? 0.7 : 1
+                        opacity: isCompleted ? 0.7 : 1
                       }}
                     >
                       <Box sx={{ flexGrow: 1 }}>
                         <Typography 
                           variant="body1" 
                           sx={{ 
-                            textDecoration: task.is_completed ? 'line-through' : 'none',
-                            fontWeight: task.is_completed ? 'normal' : 500
+                            textDecoration: isCompleted ? 'line-through' : 'none',
+                            fontWeight: isCompleted ? 'normal' : 500
                           }}
                         >
                           {task.name}
@@ -482,12 +487,12 @@ const EventPlanningPage: React.FC = () => {
                           </Button>
                         )}
                         <Button
-                          variant={task.is_completed ? "outlined" : "contained"}
+                          variant={isCompleted ? "outlined" : "contained"}
                           color={taskStatus.color as any}
                           onClick={() => handleTaskToggle(task.id, task.is_completed)}
                           startIcon={taskStatus.icon}
                         >
-                          {task.is_completed ? '完了済み' : '完了'}
+                          {isCompleted ? '完了済み' : '完了'}
                         </Button>
                       </Box>
                     </Box>
