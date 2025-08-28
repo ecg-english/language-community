@@ -152,6 +152,7 @@ app.use('/api/events', (req, res, next) => {
   next();
 }, require('./routes/events')); // 元のEventsチャンネル用API
 
+app.use('/api/event-planning', require('./routes/event-planning')); // イベント企画API
 app.use('/api/study-log', require('./routes/studyLog'));
 app.use('/api/class1', require('./routes/class1'));
 app.use('/api/manager', require('./routes/manager'));
