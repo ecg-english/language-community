@@ -41,7 +41,7 @@ db.exec(`
 // デフォルトタスクテンプレート
 const defaultTasks = [
   { name: 'イベント企画書作成', deadline_days_before: 30, url: '' },
-  { name: 'フライヤー作成とLINEで共有', deadline_days_before: 30, url: 'https://utage-system.com/operator/thOIhLyBdzs4/login' },
+  { name: 'フライヤー作成→グループLINEで共有', deadline_days_before: 30, url: '' },
   { name: 'Instagram投稿', deadline_days_before: 25, url: 'https://www.instagram.com/english_ecg/' },
   { name: 'コミュニティ投稿', deadline_days_before: 30, url: 'https://ecg-english.github.io/language-community' },
   { name: '公式LINE予約投稿', deadline_days_before: 30, url: 'https://utage-system.com/operator/thOIhLyBdzs4/login' },

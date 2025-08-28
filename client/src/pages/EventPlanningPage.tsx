@@ -51,7 +51,7 @@ interface Task {
   name: string;
   deadline_days_before: number;
   deadline_date: string;
-  is_completed: boolean;
+  is_completed: number; // SQLiteの0/1に対応
   url?: string;
 }
 
@@ -78,7 +78,7 @@ const EventPlanningPage: React.FC = () => {
   // デフォルトタスクテンプレート
   const defaultTasks = [
     { name: 'イベント企画書作成', deadline_days_before: 30, url: '' },
-    { name: 'フライヤー作成とLINEで共有', deadline_days_before: 30, url: 'https://utage-system.com/operator/thOIhLyBdzs4/login' },
+    { name: 'フライヤー作成→グループLINEで共有', deadline_days_before: 30, url: '' },
     { name: 'Instagram投稿', deadline_days_before: 25, url: 'https://www.instagram.com/english_ecg/' },
     { name: 'コミュニティ投稿', deadline_days_before: 30, url: 'https://ecg-english.github.io/language-community' },
     { name: '公式LINE予約投稿', deadline_days_before: 30, url: 'https://utage-system.com/operator/thOIhLyBdzs4/login' },
@@ -140,13 +140,13 @@ const EventPlanningPage: React.FC = () => {
     }
   };
 
-  const handleTaskToggle = async (taskId: number, isCompleted: boolean) => {
+  const handleTaskToggle = async (taskId: number, isCompleted: number) => {
     try {
       console.log('タスク更新開始:', { taskId, isCompleted, newValue: !isCompleted });
       
       const token = localStorage.getItem('token');
       const response = await axios.put(`/api/events/tasks/${taskId}`, 
-        { is_completed: !isCompleted },
+        { is_completed: !Boolean(isCompleted) },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
@@ -155,11 +155,11 @@ const EventPlanningPage: React.FC = () => {
       // 選択されたイベントのタスクを更新
       if (selectedEvent) {
         const updatedTasks = selectedEvent.tasks?.map(task => 
-          task.id === taskId ? { ...task, is_completed: !isCompleted ? 1 : 0 } : task
+          task.id === taskId ? { ...task, is_completed: Boolean(isCompleted) ? 0 : 1 } : task
         ) || [];
         setSelectedEvent({ ...selectedEvent, tasks: updatedTasks });
         
-        console.log('UIタスク更新完了:', { taskId, newCompletedValue: !isCompleted });
+        console.log('UIタスク更新完了:', { taskId, newCompletedValue: !Boolean(isCompleted) });
       }
     } catch (error) {
       console.error('タスク更新エラー:', error);
@@ -474,41 +474,65 @@ const EventPlanningPage: React.FC = () => {
                       key={task.id}
                       sx={{ 
                         display: 'flex', 
-                        alignItems: 'center', 
-                        p: 2, 
-                        mb: 1,
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        alignItems: { xs: 'stretch', sm: 'center' },
+                        p: { xs: 2, sm: 3 }, 
+                        mb: 2,
                         border: 1,
                         borderColor: getBorderColor(),
-                        borderRadius: 1,
+                        borderRadius: 2,
                         backgroundColor: isCompleted ? 'success.light' : 
                                       taskStatus.status === 'overdue' ? 'error.light' :
                                       taskStatus.status === 'urgent' ? 'warning.light' : 'transparent',
-                        opacity: isCompleted ? 0.7 : 1
+                        opacity: isCompleted ? 0.7 : 1,
+                        transition: 'all 0.2s ease'
                       }}
                     >
-                      <Box sx={{ flexGrow: 1 }}>
+                      <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                         <Typography 
                           variant="body1" 
                           sx={{ 
                             textDecoration: isCompleted ? 'line-through' : 'none',
-                            fontWeight: isCompleted ? 'normal' : 500
+                            fontWeight: isCompleted ? 'normal' : 500,
+                            fontSize: { xs: '0.9rem', sm: '1rem' },
+                            lineHeight: 1.4,
+                            wordBreak: 'break-word'
                           }}
                         >
                           {task.name}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography 
+                          variant="body2" 
+                          color="text.secondary"
+                          sx={{ 
+                            mt: 1,
+                            fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                          }}
+                        >
                           締切: {new Date(task.deadline_date).toLocaleDateString('ja-JP')}
                         </Typography>
                       </Box>
                       
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        {task.url && (
+                      <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: { xs: 'row', sm: 'row' },
+                        alignItems: 'center', 
+                        gap: { xs: 1, sm: 2 },
+                        mt: { xs: 2, sm: 0 },
+                        ml: { xs: 0, sm: 2 },
+                        justifyContent: { xs: 'flex-end', sm: 'flex-start' }
+                      }}>
+                        {task.url && task.name !== 'フライヤー作成→グループLINEで共有' && (
                           <Button
                             size="small"
                             variant="outlined"
                             onClick={(e) => {
                               e.stopPropagation();
                               window.open(task.url, '_blank');
+                            }}
+                            sx={{ 
+                              minWidth: { xs: '60px', sm: '80px' },
+                              fontSize: { xs: '0.7rem', sm: '0.8rem' }
                             }}
                           >
                             リンク
@@ -519,6 +543,11 @@ const EventPlanningPage: React.FC = () => {
                           color={getButtonColor() as any}
                           onClick={() => handleTaskToggle(task.id, task.is_completed)}
                           startIcon={taskStatus.icon}
+                          sx={{ 
+                            minWidth: { xs: '80px', sm: '100px' },
+                            fontSize: { xs: '0.7rem', sm: '0.8rem' },
+                            whiteSpace: 'nowrap'
+                          }}
                         >
                           {isCompleted ? '完了済み' : '完了'}
                         </Button>
