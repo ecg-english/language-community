@@ -44,6 +44,7 @@ import {
 } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import AdditionalLessonModal from '../components/AdditionalLessonModal';
 import CalendarEditModal from '../components/CalendarEditModal';
 
@@ -67,6 +68,7 @@ interface Instructor {
 
 const Class1ManagementPage: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   // 権限チェック関数
   const hasPermission = () => {
@@ -1137,7 +1139,7 @@ const Class1ManagementPage: React.FC = () => {
           </Typography>
           <Button
             variant="contained"
-            onClick={() => window.open('/#/manager', '_blank')}
+            onClick={() => navigate('/manager')}
             startIcon={<SupervisorAccountIcon />}
           >
             マネージャーページを開く
