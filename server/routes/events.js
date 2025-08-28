@@ -66,6 +66,20 @@ router.get('/:id', (req, res) => {
       return res.status(404).json({ error: 'イベントが見つかりません' });
     }
 
+    // postsテーブルからカバーイメージを取得
+    const postImage = db.prepare(`
+      SELECT image_url, content
+      FROM posts 
+      WHERE event_id = ? AND image_url IS NOT NULL
+      ORDER BY created_at DESC
+      LIMIT 1
+    `).get(eventId);
+
+    console.log('postsから取得した画像:', { 
+      hasImage: !!postImage?.image_url,
+      imageUrl: postImage?.image_url?.substring(0, 50) + '...' 
+    });
+
     const attendees = db.prepare(`
       SELECT ea.*, u.username, u.avatar_url
       FROM event_attendees ea
@@ -77,10 +91,16 @@ router.get('/:id', (req, res) => {
 
     const response = {
       ...event,
+      cover_image: postImage?.image_url || null, // postsのimage_urlを使用
       attendees: attendees
     };
 
-    console.log('軽量化レスポンス送信:', { eventId, title: event.title, responseSize: 'lightweight' });
+    console.log('軽量化レスポンス送信:', { 
+      eventId, 
+      title: event.title, 
+      responseSize: 'lightweight',
+      hasCoverImage: !!response.cover_image
+    });
     res.json(response);
   } catch (error) {
     console.error('イベント詳細取得エラー:', error);
