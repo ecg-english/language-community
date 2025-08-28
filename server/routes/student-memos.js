@@ -104,8 +104,6 @@ router.post('/:studentId', authenticateToken, (req, res) => {
     console.log('リクエストパラメータ:', req.params);
     console.log('リクエストボディ:', req.body);
     
-    ensureStudentSync(); // 生徒データを同期
-    
     const { studentId } = req.params;
     const { memo } = req.body;
     
@@ -117,12 +115,24 @@ router.post('/:studentId', authenticateToken, (req, res) => {
       return res.status(400).json({ success: false, message: '無効な生徒IDです' });
     }
     
-    // 生徒の存在確認
+    // class1_studentsテーブルの存在確認
+    const studentsTableExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='class1_students'").get();
+    if (!studentsTableExists) {
+      console.error('class1_studentsテーブルが存在しません');
+      return res.status(500).json({ success: false, message: 'テーブルが存在しません' });
+    }
+    
+    // 生徒の存在確認（class1_studentsテーブルから直接確認）
     const student = db.prepare('SELECT id, name FROM class1_students WHERE id = ?').get(numericStudentId);
     console.log('生徒確認結果:', student);
     
     if (!student) {
       console.log('生徒が見つかりません:', numericStudentId);
+      
+      // デバッグ: 全生徒を表示
+      const allStudents = db.prepare('SELECT id, name FROM class1_students ORDER BY id').all();
+      console.log('利用可能な生徒一覧:', allStudents);
+      
       return res.status(404).json({ success: false, message: '生徒が見つかりません' });
     }
     
@@ -136,8 +146,10 @@ router.post('/:studentId', authenticateToken, (req, res) => {
     console.log('保存結果:', result);
     
     if (result.changes > 0) {
+      console.log(`✅ メモ保存成功: 生徒ID ${numericStudentId}, メモ: "${memo}"`);
       res.json({ success: true, message: 'メモを保存しました' });
     } else {
+      console.error(`❌ メモ保存失敗: 生徒ID ${numericStudentId}`);
       res.status(500).json({ success: false, message: 'メモの保存に失敗しました' });
     }
   } catch (error) {
@@ -152,8 +164,6 @@ router.get('/:studentId', authenticateToken, (req, res) => {
     console.log('=== メモ取得リクエスト開始 ===');
     console.log('リクエストパラメータ:', req.params);
     
-    ensureStudentSync(); // 生徒データを同期
-    
     const { studentId } = req.params;
     
     const numericStudentId = parseInt(studentId);
@@ -162,15 +172,28 @@ router.get('/:studentId', authenticateToken, (req, res) => {
       return res.status(400).json({ success: false, message: '無効な生徒IDです' });
     }
     
-    // 生徒の存在確認とメモ取得
+    // class1_studentsテーブルの存在確認
+    const studentsTableExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='class1_students'").get();
+    if (!studentsTableExists) {
+      console.error('class1_studentsテーブルが存在しません');
+      return res.status(500).json({ success: false, message: 'テーブルが存在しません' });
+    }
+    
+    // 生徒の存在確認とメモ取得（class1_studentsテーブルから直接）
     const student = db.prepare('SELECT id, name, memo FROM class1_students WHERE id = ?').get(numericStudentId);
     console.log('生徒データ取得結果:', student);
     
     if (!student) {
       console.log('生徒が見つかりません:', numericStudentId);
+      
+      // デバッグ: 全生徒を表示
+      const allStudents = db.prepare('SELECT id, name FROM class1_students ORDER BY id').all();
+      console.log('利用可能な生徒一覧:', allStudents);
+      
       return res.status(404).json({ success: false, message: '生徒が見つかりません' });
     }
     
+    console.log(`✅ メモ取得成功: 生徒ID ${numericStudentId}, メモ: "${student.memo || ''}"`);
     res.json({ 
       success: true, 
       data: { 
