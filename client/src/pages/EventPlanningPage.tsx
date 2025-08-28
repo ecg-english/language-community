@@ -198,7 +198,7 @@ const EventPlanningPage: React.FC = () => {
     } else if (diffDays <= 3) {
       return { status: 'urgent', color: 'warning', icon: <WarningIcon /> };
     } else {
-      return { status: 'pending', color: 'default', icon: <ScheduleIcon /> };
+      return { status: 'pending', color: 'primary', icon: <ScheduleIcon /> };
     }
   };
 
@@ -441,6 +441,27 @@ const EventPlanningPage: React.FC = () => {
                   const taskStatus = getTaskStatus(task);
                   const isCompleted = Boolean(task.is_completed);
                   
+                  // 安全なカラー値の取得
+                  const getBorderColor = () => {
+                    switch (taskStatus.color) {
+                      case 'success': return 'success.main';
+                      case 'error': return 'error.main';
+                      case 'warning': return 'warning.main';
+                      case 'primary': return 'primary.main';
+                      default: return 'grey.300';
+                    }
+                  };
+
+                  const getButtonColor = () => {
+                    switch (taskStatus.color) {
+                      case 'success': return 'success';
+                      case 'error': return 'error';
+                      case 'warning': return 'warning';
+                      case 'primary': return 'primary';
+                      default: return 'primary';
+                    }
+                  };
+                  
                   return (
                     <Box 
                       key={task.id}
@@ -450,7 +471,7 @@ const EventPlanningPage: React.FC = () => {
                         p: 2, 
                         mb: 1,
                         border: 1,
-                        borderColor: `${taskStatus.color}.main`,
+                        borderColor: getBorderColor(),
                         borderRadius: 1,
                         backgroundColor: isCompleted ? 'success.light' : 
                                       taskStatus.status === 'overdue' ? 'error.light' :
@@ -488,7 +509,7 @@ const EventPlanningPage: React.FC = () => {
                         )}
                         <Button
                           variant={isCompleted ? "outlined" : "contained"}
-                          color={taskStatus.color as any}
+                          color={getButtonColor() as any}
                           onClick={() => handleTaskToggle(task.id, task.is_completed)}
                           startIcon={taskStatus.icon}
                         >
