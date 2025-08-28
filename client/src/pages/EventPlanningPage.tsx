@@ -145,11 +145,14 @@ const EventPlanningPage: React.FC = () => {
 
   const handleTaskToggle = async (taskId: number, isCompleted: number) => {
     try {
-      console.log('タスク更新開始:', { taskId, isCompleted, newValue: !isCompleted });
+      // 現在の完了状態を反転（0→1, 1→0）
+      const newCompletedValue = isCompleted === 1 ? 0 : 1;
+      
+      console.log('タスク更新開始:', { taskId, isCompleted, newValue: newCompletedValue });
       
       const token = localStorage.getItem('token');
       const response = await axios.put(`/api/event-planning/tasks/${taskId}`, 
-        { is_completed: !Boolean(isCompleted) },
+        { is_completed: newCompletedValue }, // 数値（0または1）を送信
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
@@ -158,11 +161,11 @@ const EventPlanningPage: React.FC = () => {
       // 選択されたイベントのタスクを更新
       if (selectedEvent) {
         const updatedTasks = selectedEvent.tasks?.map(task => 
-          task.id === taskId ? { ...task, is_completed: Boolean(isCompleted) ? 0 : 1 } : task
+          task.id === taskId ? { ...task, is_completed: newCompletedValue } : task
         ) || [];
         setSelectedEvent({ ...selectedEvent, tasks: updatedTasks });
         
-        console.log('UIタスク更新完了:', { taskId, newCompletedValue: !Boolean(isCompleted) });
+        console.log('UIタスク更新完了:', { taskId, newCompletedValue });
       }
     } catch (error) {
       console.error('タスク更新エラー:', error);
