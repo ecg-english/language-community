@@ -188,17 +188,28 @@ const Class1ManagementPage: React.FC = () => {
   // 生徒メモ取得（単純化）
   const getStudentMemo = async (studentId: number): Promise<string> => {
     try {
-      console.log('メモ取得開始:', { studentId });
+      console.log('=== メモ取得開始 ===');
+      console.log('対象生徒ID:', studentId);
       
       const token = localStorage.getItem('token');
+      console.log('Token存在:', !!token);
+      
       const response = await axios.get(`/api/student-memos/${studentId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      console.log('メモ取得成功:', response.data);
-      return response.data.data?.memo || '';
+      console.log('メモ取得APIレスポンス:', response.data);
+      const memo = response.data.data?.memo || '';
+      console.log(`生徒ID ${studentId} のメモ取得結果: "${memo}"`);
+      console.log('=== メモ取得完了 ===');
+      
+      return memo;
     } catch (error: any) {
-      console.error('生徒メモ取得エラー:', error);
+      console.error('=== メモ取得エラー ===');
+      console.error('生徒ID:', studentId);
+      console.error('エラー詳細:', error);
+      console.error('エラーレスポンス:', error.response?.data);
+      console.error('エラーステータス:', error.response?.status);
       return '';
     }
   };
@@ -339,13 +350,6 @@ const Class1ManagementPage: React.FC = () => {
       const studentsData = studentsResponse.data.students || [];
       console.log('生徒データ詳細:', studentsData);
       setStudents(studentsData);
-      
-      // 生徒データ設定後に月次データを初期化
-      setTimeout(async () => {
-        console.log('生徒データ設定後の月次データ初期化');
-        console.log('現在の生徒数:', studentsData.length);
-        await initializeStudentMemos();
-      }, 200);
 
       // 講師データを取得
       console.log('講師データ取得中...');
@@ -405,6 +409,15 @@ const Class1ManagementPage: React.FC = () => {
     }
   };
 
+  // studentsが変更されたときにメモを初期化
+  useEffect(() => {
+    if (students.length > 0) {
+      console.log('生徒データ変更検出、メモ初期化実行');
+      console.log('対象生徒:', students.map(s => ({ id: s.id, name: s.name })));
+      initializeStudentMemos();
+    }
+  }, [students]);
+
   // 初期化
   useEffect(() => {
     const initializeData = async () => {
@@ -414,6 +427,8 @@ const Class1ManagementPage: React.FC = () => {
         return;
       }
       
+      console.log('=== ページ初期化開始 ===');
+      
       // 現在の月を設定
       const currentMonthString = getCurrentMonth();
       console.log('現在の月:', currentMonthString);
@@ -422,7 +437,7 @@ const Class1ManagementPage: React.FC = () => {
       // 基本データを取得
       await fetchData();
       
-      // データ取得完了後の処理はfetchData内で行うため、ここでは何もしない
+      console.log('=== ページ初期化完了 ===');
     };
     
     initializeData();
@@ -477,11 +492,14 @@ const Class1ManagementPage: React.FC = () => {
       
       const success = await saveStudentMemo(numericStudentId, memo);
       if (success) {
+        // 永続保存データを更新
         setStudentMemos(prev => ({
           ...prev,
           [numericStudentId]: memo
         }));
         console.log('✅ メモ保存成功、状態更新完了');
+        console.log('保存されたメモ:', memo);
+        console.log('更新後のstudentMemos:', studentMemos);
         
         // 成功メッセージやフィードバックを表示
         alert('メモを保存しました');
