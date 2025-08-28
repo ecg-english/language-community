@@ -198,11 +198,19 @@ router.get('/:eventId/tasks', authenticateToken, (req, res) => {
   try {
     const eventId = req.params.eventId;
 
+    console.log('タスク取得リクエスト:', { eventId });
+
     const tasks = db.prepare(`
       SELECT * FROM event_planning_tasks 
       WHERE event_id = ? 
       ORDER BY deadline_date ASC
     `).all(eventId);
+
+    console.log('取得されたタスク:', { 
+      eventId, 
+      tasksCount: tasks.length, 
+      tasks: tasks.slice(0, 3) // 最初の3つを表示
+    });
 
     res.json({ 
       success: true, 

@@ -163,15 +163,22 @@ const EventPlanningPage: React.FC = () => {
 
   const openTaskDialog = async (event: Event) => {
     try {
+      console.log('タスクダイアログを開く:', { eventId: event.id, eventTitle: event.title });
+      
       const token = localStorage.getItem('token');
       const response = await axios.get(`/api/events/${event.id}/tasks`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
+      console.log('タスク取得レスポンス:', response.data);
+      
       setSelectedEvent({ ...event, tasks: response.data.data || [] });
       setTaskDialog(true);
+      
+      console.log('タスクダイアログが開かれました');
     } catch (error) {
       console.error('タスク取得エラー:', error);
+      console.error('エラー詳細:', error.response?.data);
       alert('タスクの取得に失敗しました');
     }
   };
@@ -419,72 +426,86 @@ const EventPlanningPage: React.FC = () => {
           {selectedEvent?.title} - タスクチェックリスト
         </DialogTitle>
         <DialogContent>
-          {selectedEvent && (
+          {selectedEvent ? (
             <Box sx={{ pt: 1 }}>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                 開催日: {new Date(selectedEvent.event_date).toLocaleDateString('ja-JP')} 
                 {selectedEvent.start_time} - {selectedEvent.end_time}
               </Typography>
 
-              {selectedEvent.tasks?.map((task) => {
-                const taskStatus = getTaskStatus(task);
-                return (
-                  <Box 
-                    key={task.id}
-                    sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      p: 2, 
-                      mb: 1,
-                      border: 1,
-                      borderColor: `${taskStatus.color}.main`,
-                      borderRadius: 1,
-                      backgroundColor: task.is_completed ? 'success.light' : 
-                                    taskStatus.status === 'overdue' ? 'error.light' :
-                                    taskStatus.status === 'urgent' ? 'warning.light' : 'transparent',
-                      opacity: task.is_completed ? 0.7 : 1
-                    }}
-                  >
-                    <Box sx={{ flexGrow: 1 }}>
-                      <Typography 
-                        variant="body1" 
-                        sx={{ 
-                          textDecoration: task.is_completed ? 'line-through' : 'none',
-                          fontWeight: task.is_completed ? 'normal' : 500
-                        }}
-                      >
-                        {task.name}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        締切: {new Date(task.deadline_date).toLocaleDateString('ja-JP')}
-                      </Typography>
-                    </Box>
-                    
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      {task.url && (
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            window.open(task.url, '_blank');
+              {selectedEvent.tasks && selectedEvent.tasks.length > 0 ? (
+                selectedEvent.tasks.map((task) => {
+                  const taskStatus = getTaskStatus(task);
+                  return (
+                    <Box 
+                      key={task.id}
+                      sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        p: 2, 
+                        mb: 1,
+                        border: 1,
+                        borderColor: `${taskStatus.color}.main`,
+                        borderRadius: 1,
+                        backgroundColor: task.is_completed ? 'success.light' : 
+                                      taskStatus.status === 'overdue' ? 'error.light' :
+                                      taskStatus.status === 'urgent' ? 'warning.light' : 'transparent',
+                        opacity: task.is_completed ? 0.7 : 1
+                      }}
+                    >
+                      <Box sx={{ flexGrow: 1 }}>
+                        <Typography 
+                          variant="body1" 
+                          sx={{ 
+                            textDecoration: task.is_completed ? 'line-through' : 'none',
+                            fontWeight: task.is_completed ? 'normal' : 500
                           }}
                         >
-                          リンク
+                          {task.name}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          締切: {new Date(task.deadline_date).toLocaleDateString('ja-JP')}
+                        </Typography>
+                      </Box>
+                      
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {task.url && (
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(task.url, '_blank');
+                            }}
+                          >
+                            リンク
+                          </Button>
+                        )}
+                        <Button
+                          variant={task.is_completed ? "outlined" : "contained"}
+                          color={taskStatus.color as any}
+                          onClick={() => handleTaskToggle(task.id, task.is_completed)}
+                          startIcon={taskStatus.icon}
+                        >
+                          {task.is_completed ? '完了済み' : '完了'}
                         </Button>
-                      )}
-                      <Button
-                        variant={task.is_completed ? "outlined" : "contained"}
-                        color={taskStatus.color as any}
-                        onClick={() => handleTaskToggle(task.id, task.is_completed)}
-                        startIcon={taskStatus.icon}
-                      >
-                        {task.is_completed ? '完了済み' : '完了'}
-                      </Button>
+                      </Box>
                     </Box>
-                  </Box>
-                );
-              })}
+                  );
+                })
+              ) : (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <Typography variant="body1" color="text.secondary">
+                    タスクが見つかりません
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          ) : (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant="body1" color="text.secondary">
+                イベント情報を読み込み中...
+              </Typography>
             </Box>
           )}
         </DialogContent>
