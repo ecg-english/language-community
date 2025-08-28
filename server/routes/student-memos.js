@@ -10,7 +10,7 @@ const db = new Database(dbPath);
 // テーブル作成と生徒データ同期
 const ensureStudentSync = () => {
   try {
-    console.log('生徒データ同期開始');
+    console.log('=== 生徒データ同期開始 ===');
     
     // class1_studentsテーブル確認・作成
     const studentsTableExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='class1_students'").get();
@@ -27,41 +27,72 @@ const ensureStudentSync = () => {
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `).run();
-      console.log('class1_studentsテーブルを作成しました');
+      console.log('✅ class1_studentsテーブルを作成しました');
     }
 
-    // 現在ログインしているユーザーのClass1 Membersを取得
+    // 現在のClass1 Membersを取得
     const class1Members = db.prepare(`
       SELECT id, username, email 
       FROM users 
       WHERE role = 'Class1 Members'
     `).all();
     
-    console.log('Class1 Members数:', class1Members.length);
-    console.log('Class1 Members:', class1Members);
+    console.log(`📋 Class1 Members数: ${class1Members.length}`);
+    class1Members.forEach(member => {
+      console.log(`  - ${member.username} (ID: ${member.id}, Email: ${member.email})`);
+    });
+
+    // 現在のclass1_studentsを取得
+    const existingStudents = db.prepare(`
+      SELECT id, name, email FROM class1_students
+    `).all();
+    
+    console.log(`📋 既存class1_students数: ${existingStudents.length}`);
+    existingStudents.forEach(student => {
+      console.log(`  - ${student.name} (ID: ${student.id}, Email: ${student.email})`);
+    });
 
     // 各Class1 MemberをClass1_studentsテーブルに同期
+    let syncCount = 0;
     for (const member of class1Members) {
+      // 名前またはメールで既存チェック
       const existingStudent = db.prepare(`
         SELECT id FROM class1_students WHERE name = ? OR email = ?
       `).get(member.username, member.email);
 
       if (!existingStudent) {
-        // 新しい生徒を追加（instructor_idは後で設定）
-        const result = db.prepare(`
-          INSERT INTO class1_students (name, email, instructor_id, created_at, updated_at)
-          VALUES (?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        `).run(member.username, member.email);
-        
-        console.log(`新しい生徒を追加: ${member.username} (ID: ${result.lastInsertRowid})`);
+        // 新しい生徒を追加
+        try {
+          const result = db.prepare(`
+            INSERT INTO class1_students (name, email, instructor_id, created_at, updated_at)
+            VALUES (?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+          `).run(member.username, member.email);
+          
+          syncCount++;
+          console.log(`✅ 新しい生徒を追加: ${member.username} (新ID: ${result.lastInsertRowid})`);
+        } catch (error) {
+          console.error(`❌ 生徒追加エラー (${member.username}):`, error);
+        }
       } else {
-        console.log(`既存の生徒: ${member.username}`);
+        console.log(`⏭️  既存の生徒をスキップ: ${member.username} (ID: ${existingStudent.id})`);
       }
     }
     
-    console.log('生徒データ同期完了');
+    // 同期後の確認
+    const finalStudents = db.prepare(`
+      SELECT id, name, email FROM class1_students ORDER BY id
+    `).all();
+    
+    console.log(`🎉 同期完了: ${syncCount}人の新しい生徒を追加`);
+    console.log(`📊 最終的なclass1_students数: ${finalStudents.length}`);
+    finalStudents.forEach(student => {
+      console.log(`  - ${student.name} (ID: ${student.id}, Email: ${student.email})`);
+    });
+    
+    console.log('=== 生徒データ同期完了 ===');
+    return { success: true, synced: syncCount, total: finalStudents.length };
   } catch (error) {
-    console.error('生徒データ同期エラー:', error);
+    console.error('❌ 生徒データ同期エラー:', error);
     throw error;
   }
 };
@@ -150,6 +181,42 @@ router.get('/:studentId', authenticateToken, (req, res) => {
   } catch (error) {
     console.error('メモ取得エラー:', error);
     res.status(500).json({ success: false, message: 'メモの取得に失敗しました', error: error.message });
+  }
+});
+
+// 生徒同期状況確認エンドポイント
+router.get('/sync-status', authenticateToken, (req, res) => {
+  try {
+    console.log('=== 同期状況確認開始 ===');
+    
+    const syncResult = ensureStudentSync();
+    
+    // 詳細情報を取得
+    const class1Members = db.prepare(`
+      SELECT id, username, email FROM users WHERE role = 'Class1 Members'
+    `).all();
+    
+    const class1Students = db.prepare(`
+      SELECT id, name, email FROM class1_students
+    `).all();
+    
+    res.json({
+      success: true,
+      syncResult,
+      details: {
+        class1Members: class1Members.length,
+        class1Students: class1Students.length,
+        class1MembersList: class1Members,
+        class1StudentsList: class1Students
+      }
+    });
+  } catch (error) {
+    console.error('同期状況確認エラー:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: '同期状況の確認に失敗しました', 
+      error: error.message 
+    });
   }
 });
 
