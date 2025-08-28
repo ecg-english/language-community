@@ -481,7 +481,7 @@ const EventPlanningPage: React.FC = () => {
                         border: 1,
                         borderColor: getBorderColor(),
                         borderRadius: 2,
-                        backgroundColor: isCompleted ? 'success.light' : 
+                        backgroundColor: isCompleted ? 'success.dark' : 
                                       taskStatus.status === 'overdue' ? 'error.light' :
                                       taskStatus.status === 'urgent' ? 'warning.light' : 'transparent',
                         opacity: isCompleted ? 0.7 : 1,
@@ -496,17 +496,18 @@ const EventPlanningPage: React.FC = () => {
                             fontWeight: isCompleted ? 'normal' : 500,
                             fontSize: { xs: '0.9rem', sm: '1rem' },
                             lineHeight: 1.4,
-                            wordBreak: 'break-word'
+                            wordBreak: 'break-word',
+                            color: isCompleted ? 'white' : 'text.primary'
                           }}
                         >
                           {task.name}
                         </Typography>
                         <Typography 
                           variant="body2" 
-                          color="text.secondary"
                           sx={{ 
                             mt: 1,
-                            fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                            fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                            color: isCompleted ? 'white' : 'text.secondary'
                           }}
                         >
                           締切: {new Date(task.deadline_date).toLocaleDateString('ja-JP')}
@@ -540,13 +541,21 @@ const EventPlanningPage: React.FC = () => {
                         )}
                         <Button
                           variant={isCompleted ? "outlined" : "contained"}
-                          color={getButtonColor() as any}
+                          color={isCompleted ? "success" : getButtonColor() as any}
                           onClick={() => handleTaskToggle(task.id, task.is_completed)}
                           startIcon={taskStatus.icon}
                           sx={{ 
                             minWidth: { xs: '80px', sm: '100px' },
                             fontSize: { xs: '0.7rem', sm: '0.8rem' },
-                            whiteSpace: 'nowrap'
+                            whiteSpace: 'nowrap',
+                            borderColor: isCompleted ? 'white' : undefined,
+                            color: isCompleted ? 'white' : undefined,
+                            backgroundColor: isCompleted ? 'transparent' : undefined,
+                            '&:hover': {
+                              borderColor: isCompleted ? 'success.light' : undefined,
+                              color: isCompleted ? 'success.light' : undefined,
+                              backgroundColor: isCompleted ? 'rgba(255,255,255,0.1)' : undefined
+                            }
                           }}
                         >
                           {isCompleted ? '完了済み' : '完了'}
