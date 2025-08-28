@@ -141,7 +141,17 @@ app.get('/api/test/users', (req, res) => {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/channels', require('./routes/channels'));
 app.use('/api/posts', require('./routes/posts'));
-app.use('/api/events', require('./routes/events')); // 元のEventsチャンネル用API
+
+// Events API用のログ追加
+app.use('/api/events', (req, res, next) => {
+  console.log('=== Events Route Middleware ===');
+  console.log('Request URL:', req.originalUrl);
+  console.log('Request Method:', req.method);
+  console.log('Request Params:', req.params);
+  console.log('Request Query:', req.query);
+  next();
+}, require('./routes/events')); // 元のEventsチャンネル用API
+
 app.use('/api/study-log', require('./routes/studyLog'));
 app.use('/api/class1', require('./routes/class1'));
 app.use('/api/manager', require('./routes/manager'));

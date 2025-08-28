@@ -5,6 +5,7 @@ const { authenticateToken } = require('../middleware/auth');
 
 // イベント一覧取得
 router.get('/', (req, res) => {
+  console.log('=== Events API: イベント一覧取得リクエスト受信 ===');
   try {
     const events = db.prepare(`
       SELECT e.*, u.username as created_by_name
@@ -12,6 +13,8 @@ router.get('/', (req, res) => {
       LEFT JOIN users u ON e.created_by = u.id
       ORDER BY e.event_date DESC
     `).all();
+
+    console.log('取得されたイベント数:', events.length);
 
     const eventsWithAttendees = events.map(event => {
       const attendees = db.prepare(`
@@ -27,6 +30,7 @@ router.get('/', (req, res) => {
       };
     });
 
+    console.log('レスポンス送信:', eventsWithAttendees.length, 'イベント');
     res.json(eventsWithAttendees);
   } catch (error) {
     console.error('イベント取得エラー:', error);
@@ -36,9 +40,10 @@ router.get('/', (req, res) => {
 
 // 特定のイベント詳細取得
 router.get('/:id', (req, res) => {
+  const eventId = req.params.id;
+  console.log('=== Events API: イベント詳細取得リクエスト受信 ===', { eventId });
+  
   try {
-    const eventId = req.params.id;
-    
     const event = db.prepare(`
       SELECT e.*, u.username as created_by_name
       FROM events e
@@ -46,7 +51,10 @@ router.get('/:id', (req, res) => {
       WHERE e.id = ?
     `).get(eventId);
 
+    console.log('データベースから取得したイベント:', event);
+
     if (!event) {
+      console.log('イベントが見つかりません:', { eventId });
       return res.status(404).json({ error: 'イベントが見つかりません' });
     }
 
@@ -57,10 +65,15 @@ router.get('/:id', (req, res) => {
       WHERE ea.event_id = ?
     `).all(eventId);
 
-    res.json({
+    console.log('参加者データ:', { eventId, attendeeCount: attendees.length });
+
+    const response = {
       ...event,
       attendees: attendees
-    });
+    };
+
+    console.log('レスポンス送信:', { eventId, title: event.title });
+    res.json(response);
   } catch (error) {
     console.error('イベント詳細取得エラー:', error);
     res.status(500).json({ error: 'サーバーエラー' });
@@ -69,9 +82,10 @@ router.get('/:id', (req, res) => {
 
 // イベント参加者一覧取得
 router.get('/:id/attendees', (req, res) => {
+  const eventId = req.params.id;
+  console.log('=== Events API: 参加者一覧取得リクエスト受信 ===', { eventId });
+  
   try {
-    const eventId = req.params.id;
-    
     const attendees = db.prepare(`
       SELECT ea.*, u.username, u.avatar_url
       FROM event_attendees ea
@@ -79,6 +93,8 @@ router.get('/:id/attendees', (req, res) => {
       WHERE ea.event_id = ?
     `).all(eventId);
 
+    console.log('参加者データ取得:', { eventId, attendeeCount: attendees.length });
+    console.log('レスポンス送信:', attendees);
     res.json(attendees);
   } catch (error) {
     console.error('参加者取得エラー:', error);
