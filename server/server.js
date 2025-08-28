@@ -141,7 +141,7 @@ app.get('/api/test/users', (req, res) => {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/channels', require('./routes/channels'));
 app.use('/api/posts', require('./routes/posts'));
-app.use('/api/events', require('./routes/events-channel')); // Eventsチャンネル用API（既存機能）
+app.use('/api/events', require('./routes/events')); // 元のEventsチャンネル用API
 app.use('/api/study-log', require('./routes/studyLog'));
 app.use('/api/class1', require('./routes/class1'));
 app.use('/api/manager', require('./routes/manager'));
@@ -149,7 +149,6 @@ app.use('/api/survey', require('./routes/survey'));
 app.use('/api/additional-lessons', require('./routes/additional-lessons'));
 app.use('/api/calendar-events', require('./routes/calendar-events'));
 app.use('/api/student-memos', require('./routes/student-memos'));
-app.use('/api/event-planning', require('./routes/events')); // 企画管理API
 
 // オンライン状態管理
 const onlineUsers = new Set();
