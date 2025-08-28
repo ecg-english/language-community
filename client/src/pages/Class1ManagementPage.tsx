@@ -637,6 +637,30 @@ const Class1ManagementPage: React.FC = () => {
     return instructor ? instructor.name : '不明';
   };
 
+  // カレンダー設定
+  const [weekStartsOnMonday, setWeekStartsOnMonday] = useState<boolean>(true);
+
+  // 曜日配列を動的に生成
+  const getWeekDays = () => {
+    if (weekStartsOnMonday) {
+      return ['月', '火', '水', '木', '金', '土', '日'];
+    } else {
+      return ['日', '月', '火', '水', '木', '金', '土'];
+    }
+  };
+
+  // 曜日のインデックスを取得（0=日曜日, 1=月曜日, ...）
+  const getDayIndex = (date: Date) => {
+    const day = date.getDay(); // 0=日曜日, 1=月曜日, ...
+    if (weekStartsOnMonday) {
+      // 月曜始まりの場合: 0=月曜日, 1=火曜日, ..., 6=日曜日
+      return day === 0 ? 6 : day - 1;
+    } else {
+      // 日曜始まりの場合: 0=日曜日, 1=月曜日, ..., 6=土曜日
+      return day;
+    }
+  };
+
   if (loading) {
     return (
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -669,52 +693,6 @@ const Class1ManagementPage: React.FC = () => {
           生徒を追加
         </Button>
       </Box>
-
-      {/* 月次ナビゲーション */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Box display="flex" alignItems="center" gap={2}>
-            <IconButton onClick={handlePreviousMonth}>
-              <NavigateBeforeIcon />
-            </IconButton>
-            <Typography variant="h6">
-              {currentMonth} 月
-            </Typography>
-            <IconButton onClick={handleNextMonth}>
-              <NavigateNextIcon />
-            </IconButton>
-            <Typography variant="body2" color="text.secondary">
-              {getMonthRange(currentMonth).start} ~ {getMonthRange(currentMonth).end}
-            </Typography>
-          </Box>
-          
-          <Box display="flex" alignItems="center" gap={2}>
-            <FormControl size="small" sx={{ minWidth: 150 }}>
-              <InputLabel>講師フィルター</InputLabel>
-              <Select
-                value={selectedInstructor}
-                onChange={(e) => setSelectedInstructor(e.target.value)}
-                label="講師フィルター"
-              >
-                <MenuItem value="all">全講師</MenuItem>
-                {instructors.length === 0 ? (
-                  <MenuItem disabled value="">
-                    講師データを読み込み中...
-                  </MenuItem>
-                ) : (
-                  instructors.map((instructor) => (
-                    <MenuItem key={instructor.id} value={instructor.id.toString()}>
-                      {instructor.name}
-                    </MenuItem>
-                  ))
-                )}
-              </Select>
-            </FormControl>
-            
-
-          </Box>
-        </Box>
-      </Paper>
 
       {/* タブ */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
@@ -850,6 +828,29 @@ const Class1ManagementPage: React.FC = () => {
               </IconButton>
             </Box>
 
+            {/* カレンダー設定 */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                カレンダー設定:
+              </Typography>
+              <Button
+                variant={weekStartsOnMonday ? "contained" : "outlined"}
+                size="small"
+                onClick={() => setWeekStartsOnMonday(true)}
+                sx={{ minWidth: 80 }}
+              >
+                月曜始まり
+              </Button>
+              <Button
+                variant={!weekStartsOnMonday ? "contained" : "outlined"}
+                size="small"
+                onClick={() => setWeekStartsOnMonday(false)}
+                sx={{ minWidth: 80 }}
+              >
+                日曜始まり
+              </Button>
+            </Box>
+
             {/* カレンダーグリッド */}
             <Box sx={{ 
               display: 'grid', 
@@ -859,7 +860,7 @@ const Class1ManagementPage: React.FC = () => {
               borderRadius: 1
             }}>
               {/* 曜日ヘッダー */}
-              {['日', '月', '火', '水', '木', '金', '土'].map((day) => (
+              {getWeekDays().map((day) => (
                 <Box key={day} sx={{ 
                   p: 1, 
                   textAlign: 'center', 
@@ -880,7 +881,7 @@ const Class1ManagementPage: React.FC = () => {
                 const firstDay = new Date(yearNum, monthNum - 1, 1);
                 const lastDay = new Date(yearNum, monthNum, 0);
                 const daysInMonth = lastDay.getDate();
-                const firstDayOfWeek = firstDay.getDay();
+                const firstDayOfWeek = getDayIndex(firstDay);
                 
                 const days = [];
                 
