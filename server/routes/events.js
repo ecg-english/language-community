@@ -1,491 +1,266 @@
 const express = require('express');
-const multer = require('multer');
-const path = require('path');
 const router = express.Router();
-const db = require('../database');
-const { authenticateToken, requireAdmin, requireInstructor } = require('../middleware/auth');
+const Database = require('better-sqlite3');
+const { authenticateToken } = require('../middleware/auth');
 
-// Multer設定
-const uploadsDir = path.join(__dirname, '../uploads');
+const db = new Database('language-community.db');
 
-// uploadsディレクトリが存在しない場合は作成
-const fs = require('fs');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log('uploadsディレクトリを作成しました:', uploadsDir);
-}
+// イベントテーブルの作成
+db.exec(`
+  CREATE TABLE IF NOT EXISTS events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    event_date DATE NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    visitor_fee INTEGER NOT NULL,
+    member_fee INTEGER NOT NULL,
+    location TEXT NOT NULL,
+    created_by INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+  )
+`);
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadsDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'cover-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+// イベントタスクテーブルの作成
+db.exec(`
+  CREATE TABLE IF NOT EXISTS event_tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    deadline_days_before INTEGER NOT NULL,
+    deadline_date DATE NOT NULL,
+    is_completed BOOLEAN DEFAULT FALSE,
+    url TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
+  )
+`);
 
-const upload = multer({ 
-  storage: storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB制限
-  },
-  fileFilter: function (req, file, cb) {
-    // 画像ファイルのみ許可
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed!'), false);
-    }
-  }
-});
+// デフォルトタスクテンプレート
+const defaultTasks = [
+  { name: 'イベント企画書作成', deadline_days_before: 30, url: '' },
+  { name: 'フライヤー作成とLINEで共有', deadline_days_before: 30, url: 'https://utage-system.com/operator/thOIhLyBdzs4/login' },
+  { name: 'Instagram投稿', deadline_days_before: 25, url: 'https://www.instagram.com/english_ecg/' },
+  { name: 'コミュニティ投稿', deadline_days_before: 30, url: 'https://ecg-english.github.io/language-community' },
+  { name: '公式LINE予約投稿', deadline_days_before: 30, url: 'https://utage-system.com/operator/thOIhLyBdzs4/login' },
+  { name: '印刷して店舗張り出し', deadline_days_before: 30, url: '' },
+  { name: 'Meetup投稿', deadline_days_before: 7, url: '' },
+  { name: 'Instagramで単体投稿', deadline_days_before: 7, url: 'https://www.instagram.com/english_ecg/' },
+  { name: 'ストーリー投稿', deadline_days_before: 7, url: 'https://www.instagram.com/english_ecg/' },
+  { name: 'イベント準備物確認と買い出し', deadline_days_before: 3, url: '' },
+  { name: 'ストーリー再投稿', deadline_days_before: 1, url: 'https://www.instagram.com/english_ecg/' },
+  { name: 'コミュニティのお知らせ投稿やアクティビティ', deadline_days_before: 1, url: 'https://ecg-english.github.io/language-community' },
+  { name: 'イベント実施と反省メモ', deadline_days_before: 0, url: '' }
+];
 
-// イベント一覧を取得
+// 締切日を計算する関数
+const calculateDeadlineDate = (eventDate, daysBefore) => {
+  const deadline = new Date(eventDate);
+  deadline.setDate(deadline.getDate() - daysBefore);
+  return deadline.toISOString().split('T')[0];
+};
+
+// イベント一覧取得
 router.get('/', authenticateToken, (req, res) => {
   try {
     const events = db.prepare(`
-      SELECT 
-        e.*,
-        u.username as created_by_name,
-        u.role as created_by_role
+      SELECT e.*, u.username as created_by_name
       FROM events e
-      JOIN users u ON e.created_by = u.id
-      ORDER BY e.event_date ASC, e.start_time ASC
+      LEFT JOIN users u ON e.created_by = u.id
+      ORDER BY e.event_date DESC
     `).all();
 
-    res.json({ events });
-  } catch (error) {
-    console.error('イベント取得エラー:', error);
-    res.status(500).json({ error: 'イベントの取得に失敗しました' });
-  }
-});
+    // 各イベントのタスク進捗も取得
+    const eventsWithProgress = events.map(event => {
+      const tasks = db.prepare(`
+        SELECT * FROM event_tasks 
+        WHERE event_id = ? 
+        ORDER BY deadline_date ASC
+      `).all(event.id);
 
-// 特定の月のイベントを取得
-router.get('/month/:year/:month', authenticateToken, (req, res) => {
-  try {
-    const { year, month } = req.params;
-    const startDate = `${year}-${month.padStart(2, '0')}-01`;
-    const endDate = `${year}-${month.padStart(2, '0')}-31`;
-
-    const events = db.prepare(`
-      SELECT 
-        e.*,
-        u.username as created_by_name,
-        u.role as created_by_role
-      FROM events e
-      JOIN users u ON e.created_by = u.id
-      WHERE e.event_date >= ? AND e.event_date <= ?
-      ORDER BY e.event_date ASC, e.start_time ASC
-    `).all(startDate, endDate);
-
-    res.json({ events });
-  } catch (error) {
-    console.error('月別イベント取得エラー:', error);
-    res.status(500).json({ error: 'イベントの取得に失敗しました' });
-  }
-});
-
-// イベントを作成（管理者・講師のみ）
-router.post('/', authenticateToken, (req, res) => {
-  try {
-    console.log('イベント作成リクエスト:', req.body);
-    console.log('ユーザー情報:', { userId: req.user.userId, role: req.user.role });
-    
-    const { title, description, target_audience, event_date, start_time, end_time, participation_method, cover_image, location } = req.body;
-    const userId = req.user.userId;
-    const userRole = req.user.role;
-
-    // 管理者・講師のみ作成可能
-    const allowedRoles = ['サーバー管理者', 'ECG講師', 'JCG講師'];
-    if (!allowedRoles.includes(userRole)) {
-      console.log('権限エラー:', { userRole, allowedRoles });
-      return res.status(403).json({ error: 'イベントの作成権限がありません' });
-    }
-
-    if (!title || !event_date) {
-      console.log('必須フィールドエラー:', { title, event_date });
-      return res.status(400).json({ error: 'タイトルと開催日は必須です' });
-    }
-
-    console.log('イベント作成SQL実行前:', {
-      title: title.trim(),
-      description: description || '',
-      target_audience: target_audience || '',
-      event_date,
-      start_time: start_time || '',
-      end_time: end_time || '',
-      participation_method: participation_method || '',
-      cover_image: cover_image || '',
-      location: location || '',
-      userId
+      return {
+        ...event,
+        tasks: tasks,
+        completed_tasks: tasks.filter(task => task.is_completed).length,
+        total_tasks: tasks.length
+      };
     });
 
+    res.json({ 
+      success: true, 
+      data: eventsWithProgress 
+    });
+  } catch (error) {
+    console.error('イベント取得エラー:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'イベントの取得に失敗しました' 
+    });
+  }
+});
+
+// イベント作成
+router.post('/', authenticateToken, (req, res) => {
+  try {
+    const { 
+      title, 
+      description, 
+      event_date, 
+      start_time, 
+      end_time, 
+      visitor_fee, 
+      member_fee, 
+      location 
+    } = req.body;
+
+    const userId = req.user.id;
+
+    // バリデーション
+    if (!title || !description || !event_date || !start_time || !end_time || !location) {
+      return res.status(400).json({ 
+        success: false, 
+        message: '必須項目が不足しています' 
+      });
+    }
+
+    // イベントを作成
     const insertEvent = db.prepare(`
-      INSERT INTO events (title, description, target_audience, event_date, start_time, end_time, participation_method, cover_image, location, created_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO events (
+        title, description, event_date, start_time, end_time, 
+        visitor_fee, member_fee, location, created_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const result = insertEvent.run(
-      title.trim(),
-      description || '',
-      target_audience || '',
-      event_date,
-      start_time || '',
-      end_time || '',
-      participation_method || '',
-      cover_image || '',
-      location || '',
-      userId
+      title, description, event_date, start_time, end_time,
+      parseInt(visitor_fee), parseInt(member_fee), location, userId
     );
 
-    console.log('イベント作成結果:', result);
-    console.log('作成されたイベントID:', result.lastInsertRowid);
+    const eventId = result.lastInsertRowid;
 
-    // 作成されたイベントを取得
-    const newEvent = db.prepare(`
-      SELECT 
-        e.*,
-        u.username as created_by_name,
-        u.role as created_by_role
-      FROM events e
-      JOIN users u ON e.created_by = u.id
-      WHERE e.id = ?
-    `).get(result.lastInsertRowid);
+    // デフォルトタスクを作成
+    const insertTask = db.prepare(`
+      INSERT INTO event_tasks (
+        event_id, name, deadline_days_before, deadline_date, url
+      ) VALUES (?, ?, ?, ?, ?)
+    `);
 
-    console.log('取得されたイベント詳細:', newEvent);
-
-    // チャンネル投稿も作成（Eventsチャンネル用）
-    if (req.body.channel_id) {
-      console.log('チャンネル投稿作成:', {
-        content: title,
-        userId,
-        channelId: req.body.channel_id,
-        imageUrl: cover_image || null,
-        eventId: result.lastInsertRowid
-      });
-      
-      const insertPost = db.prepare(`
-        INSERT INTO posts (content, user_id, channel_id, image_url, event_id)
-        VALUES (?, ?, ?, ?, ?)
-      `);
-      
-      const postResult = insertPost.run(
-        title, // イベントタイトルを投稿内容として使用
-        userId,
-        req.body.channel_id,
-        cover_image || null,
-        result.lastInsertRowid // イベントIDを保存
+    defaultTasks.forEach(task => {
+      const deadlineDate = calculateDeadlineDate(event_date, task.deadline_days_before);
+      insertTask.run(
+        eventId,
+        task.name,
+        task.deadline_days_before,
+        deadlineDate,
+        task.url || null
       );
-      
-      console.log('チャンネル投稿作成結果:', postResult);
-    }
+    });
 
-    res.status(201).json({
-      message: 'イベントが作成されました',
-      event: newEvent
+    res.json({ 
+      success: true, 
+      message: 'イベントを作成しました',
+      data: { id: eventId }
     });
   } catch (error) {
     console.error('イベント作成エラー:', error);
-    console.error('エラースタック:', error.stack);
     res.status(500).json({ 
-      error: 'イベントの作成に失敗しました',
-      details: error.message 
+      success: false, 
+      message: 'イベントの作成に失敗しました' 
     });
   }
 });
 
-// イベントを更新（管理者・講師のみ）
-router.put('/:eventId', authenticateToken, (req, res) => {
+// イベントのタスク一覧取得
+router.get('/:eventId/tasks', authenticateToken, (req, res) => {
   try {
-    const { eventId } = req.params;
-    const { title, description, target_audience, event_date, start_time, end_time, participation_method, cover_image, location } = req.body;
-    const userId = req.user.userId;
-    const userRole = req.user.role;
+    const eventId = req.params.eventId;
 
-    console.log('イベント更新リクエスト:', { eventId, userRole, body: req.body });
+    const tasks = db.prepare(`
+      SELECT * FROM event_tasks 
+      WHERE event_id = ? 
+      ORDER BY deadline_date ASC
+    `).all(eventId);
 
-    // 管理者・講師のみ更新可能
-    const allowedRoles = ['サーバー管理者', 'ECG講師', 'JCG講師'];
-    if (!allowedRoles.includes(userRole)) {
-      console.log('更新権限エラー:', { userRole, allowedRoles });
-      return res.status(403).json({ error: 'イベントの更新権限がありません' });
-    }
+    res.json({ 
+      success: true, 
+      data: tasks 
+    });
+  } catch (error) {
+    console.error('タスク取得エラー:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'タスクの取得に失敗しました' 
+    });
+  }
+});
 
-    if (!title || !event_date) {
-      console.log('必須フィールドエラー:', { title, event_date });
-      return res.status(400).json({ error: 'タイトルと開催日は必須です' });
-    }
+// タスクの完了状態を更新
+router.put('/tasks/:taskId', authenticateToken, (req, res) => {
+  try {
+    const taskId = req.params.taskId;
+    const { is_completed } = req.body;
 
-    // イベントの存在確認
-    const existingEvent = db.prepare('SELECT id FROM events WHERE id = ?').get(eventId);
-    if (!existingEvent) {
-      console.log('イベントが見つかりません:', eventId);
-      return res.status(404).json({ error: 'イベントが見つかりません' });
-    }
-
-    const updateEvent = db.prepare(`
-      UPDATE events 
-      SET title = ?, description = ?, target_audience = ?, event_date = ?, start_time = ?, end_time = ?, participation_method = ?, cover_image = ?, location = ?, updated_at = CURRENT_TIMESTAMP
+    const updateTask = db.prepare(`
+      UPDATE event_tasks 
+      SET is_completed = ? 
       WHERE id = ?
     `);
 
-    const result = updateEvent.run(
-      title.trim(),
-      description || '',
-      target_audience || '',
-      event_date,
-      start_time || '',
-      end_time || '',
-      participation_method || '',
-      cover_image || '',
-      location || '',
-      eventId
-    );
+    updateTask.run(is_completed, taskId);
 
-    console.log('イベント更新結果:', result);
-
-    // 関連する投稿も更新
-    const updatePost = db.prepare(`
-      UPDATE posts 
-      SET content = ?, image_url = ?
-      WHERE event_id = ?
-    `);
-    
-    const postResult = updatePost.run(
-      title.trim(), // イベントタイトルを投稿内容として更新
-      cover_image || null, // カバー画像を投稿画像として更新
-      eventId
-    );
-    
-    console.log('関連投稿更新結果:', postResult);
-
-    // 更新されたイベントを取得
-    const updatedEvent = db.prepare(`
-      SELECT 
-        e.*,
-        u.username as created_by_name,
-        u.role as created_by_role
-      FROM events e
-      JOIN users u ON e.created_by = u.id
-      WHERE e.id = ?
-    `).get(eventId);
-
-    console.log('更新されたイベント:', updatedEvent);
-
-    res.json({
-      message: 'イベントが更新されました',
-      event: updatedEvent
+    res.json({ 
+      success: true, 
+      message: 'タスクを更新しました' 
     });
   } catch (error) {
-    console.error('イベント更新エラー:', error);
-    console.error('エラースタック:', error.stack);
-    res.status(500).json({ error: 'イベントの更新に失敗しました' });
+    console.error('タスク更新エラー:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'タスクの更新に失敗しました' 
+    });
   }
 });
 
-// イベントを削除（管理者・講師のみ）
+// イベント削除
 router.delete('/:eventId', authenticateToken, (req, res) => {
   try {
-    const { eventId } = req.params;
-    const userRole = req.user.role;
+    const eventId = req.params.eventId;
+    const userId = req.user.id;
 
-    console.log('イベント削除リクエスト:', { eventId, userRole });
-
-    // 管理者・講師のみ削除可能
-    const allowedRoles = ['サーバー管理者', 'ECG講師', 'JCG講師'];
-    if (!allowedRoles.includes(userRole)) {
-      console.log('削除権限エラー:', { userRole, allowedRoles });
-      return res.status(403).json({ error: 'イベントの削除権限がありません' });
-    }
-
-    // イベントの存在確認
-    const existingEvent = db.prepare('SELECT id FROM events WHERE id = ?').get(eventId);
-    if (!existingEvent) {
-      console.log('イベントが見つかりません:', eventId);
-      return res.status(404).json({ error: 'イベントが見つかりません' });
-    }
-
-    // トランザクション開始
-    const transaction = db.transaction(() => {
-      // 関連する投稿を削除
-      const deletePosts = db.prepare('DELETE FROM posts WHERE event_id = ?');
-      const postsResult = deletePosts.run(eventId);
-      console.log('関連投稿削除結果:', postsResult);
-
-      // 参加者を削除
-      const deleteAttendees = db.prepare('DELETE FROM event_attendees WHERE event_id = ?');
-      const attendeesResult = deleteAttendees.run(eventId);
-      console.log('参加者削除結果:', attendeesResult);
-
-      // イベントを削除
-      const deleteEvent = db.prepare('DELETE FROM events WHERE id = ?');
-      const eventResult = deleteEvent.run(eventId);
-      console.log('イベント削除結果:', eventResult);
-
-      return { postsResult, attendeesResult, eventResult };
-    });
-
-    const result = transaction();
-    console.log('削除処理完了:', result);
-
-    res.json({ message: 'イベントが削除されました' });
-  } catch (error) {
-    console.error('イベント削除エラー:', error);
-    console.error('エラースタック:', error.stack);
-    res.status(500).json({ error: 'イベントの削除に失敗しました' });
-  }
-});
-
-// 特定のイベント詳細を取得
-router.get('/:eventId', authenticateToken, (req, res) => {
-  try {
-    const { eventId } = req.params;
-    console.log('イベント詳細取得リクエスト:', { eventId, userId: req.user.userId });
-
+    // イベントの作成者または管理者のみ削除可能
     const event = db.prepare(`
-      SELECT 
-        e.*,
-        u.username as created_by_name,
-        u.role as created_by_role
-      FROM events e
-      JOIN users u ON e.created_by = u.id
-      WHERE e.id = ?
+      SELECT * FROM events WHERE id = ?
     `).get(eventId);
 
-    console.log('イベント詳細取得結果:', event);
-
     if (!event) {
-      console.log('イベントが見つかりません:', eventId);
-      return res.status(404).json({ error: 'イベントが見つかりません' });
+      return res.status(404).json({ 
+        success: false, 
+        message: 'イベントが見つかりません' 
+      });
     }
 
-    res.json({ event });
-  } catch (error) {
-    console.error('イベント詳細取得エラー:', error);
-    console.error('エラースタック:', error.stack);
-    res.status(500).json({ error: 'イベントの取得に失敗しました' });
-  }
-});
-
-// イベントの参加者一覧を取得
-router.get('/:eventId/attendees', authenticateToken, (req, res) => {
-  try {
-    const { eventId } = req.params;
-    console.log('参加者取得リクエスト:', { eventId, userId: req.user.userId });
-
-    const attendees = db.prepare(`
-      SELECT 
-        a.*,
-        u.username,
-        u.role,
-        u.avatar_url
-      FROM event_attendees a
-      JOIN users u ON a.user_id = u.id
-      WHERE a.event_id = ?
-      ORDER BY a.created_at ASC
-    `).all(eventId);
-
-    console.log('参加者取得結果:', attendees);
-
-    res.json({ attendees });
-  } catch (error) {
-    console.error('参加者取得エラー:', error);
-    console.error('エラースタック:', error.stack);
-    res.status(500).json({ error: '参加者の取得に失敗しました' });
-  }
-});
-
-// イベントに参加する
-router.post('/:eventId/attend', authenticateToken, (req, res) => {
-  try {
-    const { eventId } = req.params;
-    const userId = req.user.userId;
-
-    // 既に参加しているかチェック
-    const existingAttendance = db.prepare(`
-      SELECT id FROM event_attendees 
-      WHERE event_id = ? AND user_id = ?
-    `).get(eventId, userId);
-
-    if (existingAttendance) {
-      return res.status(400).json({ error: '既に参加しています' });
+    if (event.created_by !== userId && req.user.role !== 'サーバー管理者') {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'イベントを削除する権限がありません' 
+      });
     }
 
-    // 参加を追加
-    const insertAttendance = db.prepare(`
-      INSERT INTO event_attendees (event_id, user_id) 
-      VALUES (?, ?)
-    `);
-    
-    insertAttendance.run(eventId, userId);
+    // タスクとイベントを削除（CASCADE設定済み）
+    db.prepare('DELETE FROM events WHERE id = ?').run(eventId);
 
-    res.json({ message: 'イベントに参加しました' });
-  } catch (error) {
-    console.error('参加処理エラー:', error);
-    res.status(500).json({ error: '参加処理に失敗しました' });
-  }
-});
-
-// イベントの参加をキャンセル
-router.delete('/:eventId/attend', authenticateToken, (req, res) => {
-  try {
-    const { eventId } = req.params;
-    const userId = req.user.userId;
-
-    // 参加を削除
-    const deleteAttendance = db.prepare(`
-      DELETE FROM event_attendees 
-      WHERE event_id = ? AND user_id = ?
-    `);
-    
-    const result = deleteAttendance.run(eventId, userId);
-
-    if (result.changes === 0) {
-      return res.status(404).json({ error: '参加記録が見つかりません' });
-    }
-
-    res.json({ message: '参加をキャンセルしました' });
-  } catch (error) {
-    console.error('参加キャンセルエラー:', error);
-    res.status(500).json({ error: '参加キャンセルに失敗しました' });
-  }
-});
-
-// カバー画像アップロード
-router.post('/upload/cover', authenticateToken, upload.single('cover_image'), (req, res) => {
-  try {
-    console.log('カバー画像アップロードリクエスト:', {
-      file: req.file,
-      body: req.body,
-      userId: req.user.userId
-    });
-
-    if (!req.file) {
-      console.log('ファイルがアップロードされていません');
-      return res.status(400).json({ error: 'ファイルがアップロードされていません' });
-    }
-    
-    // ファイルをBase64エンコード
-    const fs = require('fs');
-    const imageBuffer = fs.readFileSync(req.file.path);
-    const base64Image = `data:${req.file.mimetype};base64,${imageBuffer.toString('base64')}`;
-    
-    // 一時ファイルを削除
-    fs.unlinkSync(req.file.path);
-    
-    console.log('Base64エンコード成功:', { 
-      filename: req.file.filename, 
-      size: base64Image.length 
-    });
-    
     res.json({ 
-      message: 'カバー画像がアップロードされました',
-      imageUrl: base64Image
+      success: true, 
+      message: 'イベントを削除しました' 
     });
   } catch (error) {
-    console.error('カバー画像アップロードエラー:', error);
-    console.error('エラースタック:', error.stack);
-    res.status(500).json({ error: 'カバー画像のアップロードに失敗しました' });
+    console.error('イベント削除エラー:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'イベントの削除に失敗しました' 
+    });
   }
 });
 

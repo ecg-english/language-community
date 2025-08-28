@@ -28,6 +28,7 @@ import {
   Bookmark as BookmarkIcon,
   School as SchoolIcon,
   Assignment as AssignmentIcon,
+  EventNote as EventNoteIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -362,6 +363,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {(user?.role === 'ECG講師' || user?.role === 'JCG講師' || user?.role === 'サーバー管理者') && (
           <MenuItem
+            onClick={() => navigate('/event-planning')}
+            sx={{
+              py: 1.5,
+              '&:hover': {
+                backgroundColor: 'rgba(30, 64, 175, 0.04)',
+              },
+            }}
+          >
+            <EventNoteIcon sx={{ mr: 2, color: 'secondary.main' }} />
+            <Typography variant="body2" fontWeight={500}>
+              イベント企画管理
+            </Typography>
+          </MenuItem>
+        )}
+
+        {(user?.role === 'ECG講師' || user?.role === 'JCG講師' || user?.role === 'サーバー管理者') && (
+          <MenuItem
             onClick={() => navigate('/class1-management')}
             sx={{
               py: 1.5,
@@ -377,24 +395,20 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </MenuItem>
         )}
 
-
-
-        {user?.role !== 'ビジター' && (
-          <MenuItem
-            onClick={() => navigate('/monthly-history')}
-            sx={{
-              py: 1.5,
-              '&:hover': {
-                backgroundColor: 'rgba(30, 64, 175, 0.04)',
-              },
-            }}
-          >
-            <HistoryIcon sx={{ mr: 2, color: 'primary.main' }} />
-            <Typography variant="body2" fontWeight={500}>
-              {t('monthlyHistory')}
-            </Typography>
-          </MenuItem>
-        )}
+        <MenuItem
+          onClick={() => navigate('/monthly-history')}
+          sx={{
+            py: 1.5,
+            '&:hover': {
+              backgroundColor: 'rgba(30, 64, 175, 0.04)',
+            },
+          }}
+        >
+          <HistoryIcon sx={{ mr: 2, color: 'primary.main' }} />
+          <Typography variant="body2" fontWeight={500}>
+            {t('monthlyHistory')}
+          </Typography>
+        </MenuItem>
 
         {user?.role === 'サーバー管理者' && (
           <MenuItem
