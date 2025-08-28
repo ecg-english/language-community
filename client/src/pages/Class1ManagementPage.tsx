@@ -236,15 +236,15 @@ const Class1ManagementPage: React.FC = () => {
   };
 
   // アンケートURL生成関数
-  const generateSurveyUrl = (studentId: number) => {
+  const generateSurveyUrl = () => {
     const baseUrl = window.location.origin + window.location.pathname;
     const month = currentMonth;
-    return `${baseUrl}#/survey/${month}/${studentId}`;
+    return `${baseUrl}#/survey/${month}/`;
   };
 
   // アンケートURLをクリップボードにコピー
-  const copySurveyUrl = (studentId: number) => {
-    const surveyUrl = generateSurveyUrl(studentId);
+  const copySurveyUrl = () => {
+    const surveyUrl = generateSurveyUrl();
     navigator.clipboard.writeText(surveyUrl).then(() => {
       alert(`アンケートURLをクリップボードにコピーしました:\n${surveyUrl}`);
     });
@@ -707,74 +707,88 @@ const Class1ManagementPage: React.FC = () => {
 
       {/* 生徒管理タブ */}
       {activeTab === 0 && (
-        <Grid container spacing={3}>
-          {filteredStudents.map((student) => (
-            <Grid item xs={12} md={6} key={student.id}>
-              <Card>
-                <CardContent>
-                  <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                    <Box>
-                      <Typography variant="h6" gutterBottom>
-                        {student.name}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        講師: {getInstructorName(student.instructor_id)} 会員番号: {student.member_number}
-                      </Typography>
+        <Box>
+          {/* 生徒管理ヘッダー */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Typography variant="h5" sx={{ fontWeight: 600 }}>
+              生徒一覧
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Tooltip title="アンケートURL生成">
+                <Button
+                  variant="outlined"
+                  startIcon={<CopyIcon />}
+                  onClick={() => copySurveyUrl()}
+                  size="small"
+                >
+                  アンケートURL
+                </Button>
+              </Tooltip>
+            </Box>
+          </Box>
+
+          <Grid container spacing={3}>
+            {filteredStudents.map((student) => (
+              <Grid item xs={12} md={6} key={student.id}>
+                <Card>
+                  <CardContent>
+                    <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                      <Box>
+                        <Typography variant="h6" gutterBottom>
+                          {student.name}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          講師: {getInstructorName(student.instructor_id)} 会員番号: {student.member_number}
+                        </Typography>
+                      </Box>
+                      <Box display="flex" gap={1}>
+                        <Tooltip title="生徒を削除">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleDeleteStudent(student.id)}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
                     </Box>
-                                         <Box display="flex" gap={1}>
-                       <Tooltip title="アンケートURL生成">
-                         <IconButton
-                           size="small"
-                           onClick={() => copySurveyUrl(student.id)}
-                         >
-                           <CopyIcon />
-                         </IconButton>
-                       </Tooltip>
-                       <Tooltip title="生徒を削除">
-                         <IconButton
-                           size="small"
-                           color="error"
-                           onClick={() => handleDeleteStudent(student.id)}
-                         >
-                           <DeleteIcon />
-                         </IconButton>
-                       </Tooltip>
-                     </Box>
-                  </Box>
                   
-                  <Divider sx={{ my: 2 }} />
-                  
-                  {/* 生徒メモ */}
-                  <Box>
-                    <Typography variant="subtitle2" gutterBottom>
-                      <AssignmentIcon sx={{ fontSize: 16, mr: 0.5 }} />
-                      生徒メモ
-                    </Typography>
-                    <TextField
-                      fullWidth
-                      multiline
-                      rows={3}
-                      variant="outlined"
-                      size="small"
-                      placeholder="生徒のメモを入力してください..."
-                      value={temporaryMemos[student.id] || ''}
-                      onChange={(e) => handleStudentMemoChange(student.id, e.target.value)}
-                    />
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => handleSaveStudentMemo(student.id)}
-                      disabled={savingMemos[student.id] || !temporaryMemos[student.id]}
-                      sx={{ mt: 1 }}
-                    >
-                      {savingMemos[student.id] ? <CircularProgress size={20} /> : 'メモを保存'}
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+                    
+                    <Divider sx={{ my: 2 }} />
+                    
+                    {/* 生徒メモ */}
+                    <Box>
+                      <Typography variant="subtitle2" gutterBottom>
+                        <AssignmentIcon sx={{ fontSize: 16, mr: 0.5 }} />
+                        生徒メモ
+                      </Typography>
+                      <TextField
+                        fullWidth
+                        multiline
+                        rows={3}
+                        variant="outlined"
+                        size="small"
+                        placeholder="生徒のメモを入力してください..."
+                        value={temporaryMemos[student.id] || ''}
+                        onChange={(e) => handleStudentMemoChange(student.id, e.target.value)}
+                      />
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => handleSaveStudentMemo(student.id)}
+                        disabled={savingMemos[student.id] || !temporaryMemos[student.id]}
+                        sx={{ mt: 1 }}
+                      >
+                        {savingMemos[student.id] ? <CircularProgress size={20} /> : 'メモを保存'}
+                      </Button>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
       )}
 
       {/* カレンダータブ */}
