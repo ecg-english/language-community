@@ -141,6 +141,7 @@ app.get('/api/test/users', (req, res) => {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/channels', require('./routes/channels'));
 app.use('/api/posts', require('./routes/posts'));
+app.use('/api/events', require('./routes/events-channel')); // Eventsチャンネル用API（既存機能）
 app.use('/api/study-log', require('./routes/studyLog'));
 app.use('/api/class1', require('./routes/class1'));
 app.use('/api/manager', require('./routes/manager'));
