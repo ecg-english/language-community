@@ -116,21 +116,39 @@ const EventDetailPage: React.FC = () => {
       setLoading(true);
       setError(null);
 
+      console.log('=== EventDetailPage: イベント詳細取得開始 ===', { eventId });
+
       const [eventResponse, attendeesResponse] = await Promise.all([
         axios.get(`/api/events/${eventId}`),
         axios.get(`/api/events/${eventId}/attendees`)
       ]);
 
-      setEvent(eventResponse.data.event);
-      setAttendees(attendeesResponse.data.attendees || []);
+      console.log('=== EventDetailPage: レスポンス取得 ===');
+      console.log('eventResponse.data:', eventResponse.data);
+      console.log('attendeesResponse.data:', attendeesResponse.data);
+
+      // サーバーは直接イベントオブジェクトを返す（eventプロパティなし）
+      const eventData = eventResponse.data;
+      const attendeesData = eventData.attendees || attendeesResponse.data || [];
+
+      console.log('=== EventDetailPage: データ設定 ===');
+      console.log('eventData:', eventData);
+      console.log('attendeesData:', attendeesData);
+
+      setEvent(eventData);
+      setAttendees(attendeesData);
       
       // 現在のユーザーが参加しているかチェック
-      const userAttending = attendeesResponse.data.attendees?.some(
+      const userAttending = attendeesData.some(
         (attendee: Attendee) => attendee.user_id === user?.id
       );
       setIsAttending(userAttending);
+
+      console.log('=== EventDetailPage: 設定完了 ===');
+      console.log('isAttending:', userAttending);
     } catch (error: any) {
-      console.error('イベント詳細取得エラー:', error);
+      console.error('=== EventDetailPage: エラー発生 ===', error);
+      console.error('エラー詳細:', error.response?.data);
       setError('イベントの取得に失敗しました');
     } finally {
       setLoading(false);
