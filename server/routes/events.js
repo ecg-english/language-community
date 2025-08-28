@@ -115,13 +115,32 @@ router.post('/', authenticateToken, (req, res) => {
       location 
     } = req.body;
 
-    const userId = req.user.id;
+    const userId = req.user.userId; // req.user.id から req.user.userId に修正
+
+    console.log('イベント作成リクエスト:', {
+      title,
+      description,
+      event_date,
+      start_time,
+      end_time,
+      visitor_fee,
+      member_fee,
+      location,
+      userId
+    });
 
     // バリデーション
     if (!title || !description || !event_date || !start_time || !end_time || !location) {
       return res.status(400).json({ 
         success: false, 
         message: '必須項目が不足しています' 
+      });
+    }
+
+    if (!userId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'ユーザー認証に失敗しました' 
       });
     }
 
@@ -135,7 +154,7 @@ router.post('/', authenticateToken, (req, res) => {
 
     const result = insertEvent.run(
       title, description, event_date, start_time, end_time,
-      parseInt(visitor_fee), parseInt(member_fee), location, userId
+      parseInt(visitor_fee) || 0, parseInt(member_fee) || 0, location, userId
     );
 
     const eventId = result.lastInsertRowid;
@@ -157,6 +176,8 @@ router.post('/', authenticateToken, (req, res) => {
         task.url || null
       );
     });
+
+    console.log('イベント作成成功:', { eventId });
 
     res.json({ 
       success: true, 
@@ -227,7 +248,7 @@ router.put('/tasks/:taskId', authenticateToken, (req, res) => {
 router.delete('/:eventId', authenticateToken, (req, res) => {
   try {
     const eventId = req.params.eventId;
-    const userId = req.user.id;
+    const userId = req.user.userId; // req.user.id から req.user.userId に修正
 
     // イベントの作成者または管理者のみ削除可能
     const event = db.prepare(`
