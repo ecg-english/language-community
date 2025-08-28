@@ -175,14 +175,8 @@ const EventPlanningPage: React.FC = () => {
     try {
       console.log('タスクダイアログを開く:', { eventId: event.id, eventTitle: event.title });
       
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/events/${event.id}/tasks`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      console.log('タスク取得レスポンス:', response.data);
-      
-      setSelectedEvent({ ...event, tasks: response.data.data || [] });
+      // 企画管理APIから直接タスクを取得（既にイベントに含まれている）
+      setSelectedEvent(event);
       setTaskDialog(true);
       
       console.log('タスクダイアログが開かれました');
