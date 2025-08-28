@@ -20,19 +20,20 @@ const defaultTasks = [
   { name: 'イベント実施と反省メモ', deadline_days_before: 0, url: '' }
 ];
 
-// 企画イベント一覧取得
+// 企画イベント一覧取得（全ユーザー共有）
 router.get('/', authenticateToken, (req, res) => {
   try {
     const userId = req.user.userId || req.user.id;
     
     console.log('=== Event Planning API: 企画イベント取得リクエスト ===', { userId });
     
-    // イベント取得
+    // 全ユーザーのイベントを取得（共有化）
     const events = db.prepare(`
-      SELECT * FROM planning_events 
-      WHERE user_id = ? 
-      ORDER BY event_date DESC
-    `).all(userId);
+      SELECT pe.*, u.username as created_by_name
+      FROM planning_events pe
+      LEFT JOIN users u ON pe.user_id = u.id
+      ORDER BY pe.event_date DESC
+    `).all();
 
     console.log('取得した企画イベント数:', events.length);
 
@@ -52,7 +53,8 @@ router.get('/', authenticateToken, (req, res) => {
 
     console.log('企画イベント取得成功:', { 
       userId, 
-      eventCount: eventsWithTasks.length 
+      eventCount: eventsWithTasks.length,
+      shared: true
     });
     
     res.json(eventsWithTasks);
@@ -121,7 +123,7 @@ router.post('/', authenticateToken, (req, res) => {
   }
 });
 
-// タスク完了状態更新
+// タスク完了状態更新（全ユーザー共有）
 router.put('/tasks/:taskId', authenticateToken, (req, res) => {
   try {
     const { taskId } = req.params;
@@ -134,22 +136,20 @@ router.put('/tasks/:taskId', authenticateToken, (req, res) => {
       return res.status(400).json({ error: 'is_completedは0または1である必要があります' });
     }
 
-    // タスクの所有者確認とタスク更新
+    // タスク更新（全ユーザー共有のため権限チェックなし）
     const updateTask = db.prepare(`
       UPDATE planning_tasks 
       SET is_completed = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ? AND event_id IN (
-        SELECT id FROM planning_events WHERE user_id = ?
-      )
+      WHERE id = ?
     `);
 
-    const result = updateTask.run(is_completed, taskId, userId);
+    const result = updateTask.run(is_completed, taskId);
 
     if (result.changes === 0) {
-      return res.status(404).json({ error: 'タスクが見つからないか、更新権限がありません' });
+      return res.status(404).json({ error: 'タスクが見つかりません' });
     }
 
-    console.log('タスク更新成功:', { taskId, is_completed, changes: result.changes });
+    console.log('タスク更新成功:', { taskId, is_completed, changes: result.changes, shared: true });
     res.json({ 
       message: 'タスクが更新されました',
       taskId: taskId,
