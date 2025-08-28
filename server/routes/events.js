@@ -5,9 +5,9 @@ const { authenticateToken } = require('../middleware/auth');
 
 const db = new Database('language-community.db');
 
-// イベントテーブルの作成
+// イベント企画管理テーブルの作成（既存のeventsテーブルとは別）
 db.exec(`
-  CREATE TABLE IF NOT EXISTS events (
+  CREATE TABLE IF NOT EXISTS event_planning (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     description TEXT NOT NULL,
@@ -23,9 +23,9 @@ db.exec(`
   )
 `);
 
-// イベントタスクテーブルの作成
+// イベント企画タスクテーブルの作成
 db.exec(`
-  CREATE TABLE IF NOT EXISTS event_tasks (
+  CREATE TABLE IF NOT EXISTS event_planning_tasks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     event_id INTEGER NOT NULL,
     name TEXT NOT NULL,
@@ -34,7 +34,7 @@ db.exec(`
     is_completed BOOLEAN DEFAULT FALSE,
     url TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
+    FOREIGN KEY (event_id) REFERENCES event_planning(id) ON DELETE CASCADE
   )
 `);
 
@@ -62,12 +62,12 @@ const calculateDeadlineDate = (eventDate, daysBefore) => {
   return deadline.toISOString().split('T')[0];
 };
 
-// イベント一覧取得
+// イベント企画一覧取得
 router.get('/', authenticateToken, (req, res) => {
   try {
     const events = db.prepare(`
       SELECT e.*, u.username as created_by_name
-      FROM events e
+      FROM event_planning e
       LEFT JOIN users u ON e.created_by = u.id
       ORDER BY e.event_date DESC
     `).all();
@@ -75,7 +75,7 @@ router.get('/', authenticateToken, (req, res) => {
     // 各イベントのタスク進捗も取得
     const eventsWithProgress = events.map(event => {
       const tasks = db.prepare(`
-        SELECT * FROM event_tasks 
+        SELECT * FROM event_planning_tasks 
         WHERE event_id = ? 
         ORDER BY deadline_date ASC
       `).all(event.id);
@@ -101,7 +101,7 @@ router.get('/', authenticateToken, (req, res) => {
   }
 });
 
-// イベント作成
+// イベント企画作成
 router.post('/', authenticateToken, (req, res) => {
   try {
     const { 
@@ -125,9 +125,9 @@ router.post('/', authenticateToken, (req, res) => {
       });
     }
 
-    // イベントを作成
+    // イベント企画を作成
     const insertEvent = db.prepare(`
-      INSERT INTO events (
+      INSERT INTO event_planning (
         title, description, event_date, start_time, end_time, 
         visitor_fee, member_fee, location, created_by
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -142,7 +142,7 @@ router.post('/', authenticateToken, (req, res) => {
 
     // デフォルトタスクを作成
     const insertTask = db.prepare(`
-      INSERT INTO event_tasks (
+      INSERT INTO event_planning_tasks (
         event_id, name, deadline_days_before, deadline_date, url
       ) VALUES (?, ?, ?, ?, ?)
     `);
@@ -172,13 +172,13 @@ router.post('/', authenticateToken, (req, res) => {
   }
 });
 
-// イベントのタスク一覧取得
+// イベント企画のタスク一覧取得
 router.get('/:eventId/tasks', authenticateToken, (req, res) => {
   try {
     const eventId = req.params.eventId;
 
     const tasks = db.prepare(`
-      SELECT * FROM event_tasks 
+      SELECT * FROM event_planning_tasks 
       WHERE event_id = ? 
       ORDER BY deadline_date ASC
     `).all(eventId);
@@ -203,7 +203,7 @@ router.put('/tasks/:taskId', authenticateToken, (req, res) => {
     const { is_completed } = req.body;
 
     const updateTask = db.prepare(`
-      UPDATE event_tasks 
+      UPDATE event_planning_tasks 
       SET is_completed = ? 
       WHERE id = ?
     `);
@@ -223,7 +223,7 @@ router.put('/tasks/:taskId', authenticateToken, (req, res) => {
   }
 });
 
-// イベント削除
+// イベント企画削除
 router.delete('/:eventId', authenticateToken, (req, res) => {
   try {
     const eventId = req.params.eventId;
@@ -231,7 +231,7 @@ router.delete('/:eventId', authenticateToken, (req, res) => {
 
     // イベントの作成者または管理者のみ削除可能
     const event = db.prepare(`
-      SELECT * FROM events WHERE id = ?
+      SELECT * FROM event_planning WHERE id = ?
     `).get(eventId);
 
     if (!event) {
@@ -249,7 +249,7 @@ router.delete('/:eventId', authenticateToken, (req, res) => {
     }
 
     // タスクとイベントを削除（CASCADE設定済み）
-    db.prepare('DELETE FROM events WHERE id = ?').run(eventId);
+    db.prepare('DELETE FROM event_planning WHERE id = ?').run(eventId);
 
     res.json({ 
       success: true, 
