@@ -3,39 +3,49 @@ const router = express.Router();
 const db = require('../database');
 const { authenticateToken } = require('../middleware/auth');
 
-// イベント一覧取得
+// イベント一覧取得（軽量化）
 router.get('/', (req, res) => {
   console.log('=== Events API: イベント一覧取得リクエスト受信 ===');
+
   try {
     const events = db.prepare(`
-      SELECT e.id, e.title, e.description, e.target_audience, e.event_date, 
-             e.start_time, e.end_time, e.participation_method, e.created_by, 
+      SELECT e.id, e.title, e.description, e.target_audience, e.event_date,
+             e.start_time, e.end_time, e.participation_method, e.created_by,
              e.created_at, e.updated_at, e.location, u.username as created_by_name
       FROM events e
       LEFT JOIN users u ON e.created_by = u.id
       ORDER BY e.event_date DESC
     `).all();
 
-    console.log('取得されたイベント数:', events.length);
-
-    const eventsWithAttendees = events.map(event => {
-      const attendees = db.prepare(`
-        SELECT ea.*, u.username, u.avatar_url
-        FROM event_attendees ea
-        LEFT JOIN users u ON ea.user_id = u.id
-        WHERE ea.event_id = ?
-      `).all(event.id);
-
-      return {
-        ...event,
-        attendees: attendees
-      };
-    });
-
-    console.log('軽量化レスポンス送信:', eventsWithAttendees.length, 'イベント（カバーイメージ除外）');
-    res.json(eventsWithAttendees);
+    console.log('イベント一覧取得成功:', { eventCount: events.length });
+    res.json(events);
   } catch (error) {
-    console.error('イベント取得エラー:', error);
+    console.error('イベント一覧取得エラー:', error);
+    res.status(500).json({ error: 'サーバーエラー' });
+  }
+});
+
+// 月別イベント取得
+router.get('/month/:year/:month', (req, res) => {
+  const { year, month } = req.params;
+  console.log('=== Events API: 月別イベント取得リクエスト受信 ===', { year, month });
+
+  try {
+    // 指定月のイベントを取得
+    const events = db.prepare(`
+      SELECT e.id, e.title, e.description, e.target_audience, e.event_date,
+             e.start_time, e.end_time, e.participation_method, e.created_by,
+             e.created_at, e.updated_at, e.location, u.username as created_by_name
+      FROM events e
+      LEFT JOIN users u ON e.created_by = u.id
+      WHERE strftime('%Y-%m', e.event_date) = ?
+      ORDER BY e.event_date ASC, e.start_time ASC
+    `).all(`${year}-${month.padStart(2, '0')}`);
+
+    console.log('月別イベント取得成功:', { year, month, eventCount: events.length });
+    res.json({ events });
+  } catch (error) {
+    console.error('月別イベント取得エラー:', error);
     res.status(500).json({ error: 'サーバーエラー' });
   }
 });
