@@ -19,7 +19,9 @@ import {
   MenuItem,
   Alert,
   Chip,
-  LinearProgress
+  LinearProgress,
+  Divider,
+  Paper
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -27,7 +29,9 @@ import {
   CheckCircle as CheckCircleIcon,
   Schedule as ScheduleIcon,
   Warning as WarningIcon,
-  Error as ErrorIcon
+  Error as ErrorIcon,
+  Edit as EditIcon,
+  Save as SaveIcon
 } from '@mui/icons-material';
 import axios from 'axios';
 
@@ -55,6 +59,21 @@ interface Task {
   url?: string;
 }
 
+interface Reflection {
+  id: number;
+  event_id: number;
+  user_id: number;
+  revenue: number;
+  expenses: number;
+  profit: number;
+  visitor_count: number;
+  member_count: number;
+  reflection_memo: string;
+  created_by_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
 const EventPlanningPage: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,6 +81,8 @@ const EventPlanningPage: React.FC = () => {
   const [createEventDialog, setCreateEventDialog] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [taskDialog, setTaskDialog] = useState(false);
+  const [reflectionDialog, setReflectionDialog] = useState(false);
+  const [reflections, setReflections] = useState<Reflection[]>([]);
 
   // 新規イベント作成フォーム
   const [newEvent, setNewEvent] = useState({
@@ -70,9 +91,18 @@ const EventPlanningPage: React.FC = () => {
     event_date: '',
     start_time: '',
     end_time: '',
-    visitor_fee: '',
+    location: '',
     member_fee: '',
-    location: ''
+    visitor_fee: ''
+  });
+
+  // 振り返りメモフォーム
+  const [reflectionForm, setReflectionForm] = useState({
+    revenue: '',
+    expenses: '',
+    visitor_count: '',
+    member_count: '',
+    reflection_memo: ''
   });
 
   // デフォルトタスクテンプレート
@@ -213,6 +243,74 @@ const EventPlanningPage: React.FC = () => {
     if (!event.tasks || event.tasks.length === 0) return 0;
     const completedTasks = event.tasks.filter(task => Boolean(task.is_completed)).length;
     return (completedTasks / event.tasks.length) * 100;
+  };
+
+  // 振り返りメモダイアログを開く
+  const openReflectionDialog = async (event: Event) => {
+    try {
+      console.log('振り返りメモダイアログを開く:', { eventId: event.id, eventTitle: event.title });
+      
+      setSelectedEvent(event);
+      
+      // 振り返りメモを取得
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`/api/event-planning/reflections/${event.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      console.log('振り返りメモ取得レスポンス:', response.data);
+      setReflections(response.data);
+      
+      setReflectionDialog(true);
+      console.log('振り返りメモダイアログが開かれました');
+    } catch (error) {
+      console.error('振り返りメモ取得エラー:', error);
+      alert('振り返りメモの取得に失敗しました');
+    }
+  };
+
+  // 振り返りメモを保存
+  const handleSaveReflection = async () => {
+    try {
+      if (!selectedEvent) return;
+      
+      console.log('振り返りメモ保存開始:', { eventId: selectedEvent.id, form: reflectionForm });
+      
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`/api/event-planning/reflections/${selectedEvent.id}`, reflectionForm, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      console.log('振り返りメモ保存レスポンス:', response.data);
+      
+      // 振り返りメモを再取得
+      const reflectionsResponse = await axios.get(`/api/event-planning/reflections/${selectedEvent.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setReflections(reflectionsResponse.data);
+      
+      // フォームをリセット
+      setReflectionForm({
+        revenue: '',
+        expenses: '',
+        visitor_count: '',
+        member_count: '',
+        reflection_memo: ''
+      });
+      
+      alert('振り返りメモを保存しました！');
+    } catch (error) {
+      console.error('振り返りメモ保存エラー:', error);
+      alert('振り返りメモの保存に失敗しました');
+    }
+  };
+
+  // 利益を自動算出
+  const calculateProfit = () => {
+    const revenue = parseInt(reflectionForm.revenue) || 0;
+    const expenses = parseInt(reflectionForm.expenses) || 0;
+    return revenue - expenses;
   };
 
   if (loading) {
@@ -539,6 +637,24 @@ const EventPlanningPage: React.FC = () => {
                             リンク
                           </Button>
                         )}
+                        {task.name === 'イベント実施と反省メモ' && (
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="secondary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openReflectionDialog(selectedEvent!);
+                            }}
+                            startIcon={<EditIcon />}
+                            sx={{ 
+                              minWidth: { xs: '80px', sm: '100px' },
+                              fontSize: { xs: '0.7rem', sm: '0.8rem' }
+                            }}
+                          >
+                            振り返り
+                          </Button>
+                        )}
                         <Button
                           variant={isCompleted ? "outlined" : "contained"}
                           color={isCompleted ? "success" : getButtonColor() as any}
@@ -582,6 +698,164 @@ const EventPlanningPage: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setTaskDialog(false)}>閉じる</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* 振り返りメモダイアログ */}
+      <Dialog open={reflectionDialog} onClose={() => setReflectionDialog(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          {selectedEvent?.title} - 振り返りメモ
+        </DialogTitle>
+        <DialogContent>
+          {selectedEvent ? (
+            <Box sx={{ pt: 1 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                開催日: {new Date(selectedEvent.event_date).toLocaleDateString('ja-JP')} 
+                {selectedEvent.start_time} - {selectedEvent.end_time}
+              </Typography>
+
+              {/* 振り返りメモフォーム */}
+              <Paper sx={{ p: 3, mb: 3 }}>
+                <Typography variant="h6" sx={{ mb: 2 }}>振り返りメモ入力</Typography>
+                
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="売上 (円)"
+                      type="number"
+                      value={reflectionForm.revenue}
+                      onChange={(e) => setReflectionForm({ ...reflectionForm, revenue: e.target.value })}
+                      sx={{ mb: 2 }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="経費 (円)"
+                      type="number"
+                      value={reflectionForm.expenses}
+                      onChange={(e) => setReflectionForm({ ...reflectionForm, expenses: e.target.value })}
+                      sx={{ mb: 2 }}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="利益 (円)"
+                      type="number"
+                      value={calculateProfit()}
+                      InputProps={{ readOnly: true }}
+                      sx={{ mb: 2 }}
+                      color={calculateProfit() >= 0 ? 'success' : 'error'}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="ビジター数"
+                      type="number"
+                      value={reflectionForm.visitor_count}
+                      onChange={(e) => setReflectionForm({ ...reflectionForm, visitor_count: e.target.value })}
+                      sx={{ mb: 2 }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="メンバー数"
+                      type="number"
+                      value={reflectionForm.member_count}
+                      onChange={(e) => setReflectionForm({ ...reflectionForm, member_count: e.target.value })}
+                      sx={{ mb: 2 }}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="振り返りメモ"
+                      multiline
+                      rows={4}
+                      value={reflectionForm.reflection_memo}
+                      onChange={(e) => setReflectionForm({ ...reflectionForm, reflection_memo: e.target.value })}
+                      placeholder="イベントの振り返りや改善点を記入してください..."
+                    />
+                  </Grid>
+                </Grid>
+
+                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                  <Button
+                    variant="contained"
+                    startIcon={<SaveIcon />}
+                    onClick={handleSaveReflection}
+                  >
+                    保存
+                  </Button>
+                </Box>
+              </Paper>
+
+              {/* 既存の振り返りメモ表示 */}
+              {reflections.length > 0 && (
+                <Box>
+                  <Typography variant="h6" sx={{ mb: 2 }}>既存の振り返りメモ</Typography>
+                  {reflections.map((reflection) => (
+                    <Paper key={reflection.id} sx={{ p: 2, mb: 2 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                        <Typography variant="subtitle2" color="primary">
+                          {reflection.created_by_name}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {new Date(reflection.updated_at).toLocaleString('ja-JP')}
+                        </Typography>
+                      </Box>
+                      
+                      <Grid container spacing={1} sx={{ mb: 2 }}>
+                        <Grid item xs={4}>
+                          <Typography variant="body2">売上: ¥{reflection.revenue.toLocaleString()}</Typography>
+                        </Grid>
+                        <Grid item xs={4}>
+                          <Typography variant="body2">経費: ¥{reflection.expenses.toLocaleString()}</Typography>
+                        </Grid>
+                        <Grid item xs={4}>
+                          <Typography 
+                            variant="body2" 
+                            color={reflection.profit >= 0 ? 'success.main' : 'error.main'}
+                            fontWeight="bold"
+                          >
+                            利益: ¥{reflection.profit.toLocaleString()}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Typography variant="body2">ビジター: {reflection.visitor_count}名</Typography>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Typography variant="body2">メンバー: {reflection.member_count}名</Typography>
+                        </Grid>
+                      </Grid>
+                      
+                      {reflection.reflection_memo && (
+                        <Box>
+                          <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>振り返りメモ:</Typography>
+                          <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                            {reflection.reflection_memo}
+                          </Typography>
+                        </Box>
+                      )}
+                    </Paper>
+                  ))}
+                </Box>
+              )}
+            </Box>
+          ) : (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant="body1" color="text.secondary">
+                イベント情報を読み込み中...
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setReflectionDialog(false)}>閉じる</Button>
         </DialogActions>
       </Dialog>
     </Container>

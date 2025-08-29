@@ -161,4 +161,108 @@ router.put('/tasks/:taskId', authenticateToken, (req, res) => {
   }
 });
 
+// 振り返りメモ取得（全ユーザー共有）
+router.get('/reflections/:eventId', authenticateToken, (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const userId = req.user.userId || req.user.id;
+
+    console.log('=== Event Planning API: 振り返りメモ取得リクエスト ===', { eventId, userId });
+
+    // 振り返りメモを取得（全ユーザー共有）
+    const reflections = db.prepare(`
+      SELECT per.*, u.username as created_by_name
+      FROM planning_event_reflections per
+      LEFT JOIN users u ON per.user_id = u.id
+      WHERE per.event_id = ?
+      ORDER BY per.created_at DESC
+    `).all(eventId);
+
+    console.log('振り返りメモ取得成功:', { eventId, reflectionCount: reflections.length });
+    res.json(reflections);
+  } catch (error) {
+    console.error('振り返りメモ取得エラー:', error);
+    res.status(500).json({ error: 'サーバーエラー' });
+  }
+});
+
+// 振り返りメモ作成・更新（全ユーザー共有）
+router.post('/reflections/:eventId', authenticateToken, (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const { revenue, expenses, visitor_count, member_count, reflection_memo } = req.body;
+    const userId = req.user.userId || req.user.id;
+
+    console.log('=== Event Planning API: 振り返りメモ作成・更新リクエスト ===', { 
+      eventId, userId, revenue, expenses, visitor_count, member_count 
+    });
+
+    // 利益を自動算出
+    const profit = (parseInt(revenue) || 0) - (parseInt(expenses) || 0);
+
+    // 既存の振り返りメモをチェック
+    const existingReflection = db.prepare(`
+      SELECT id FROM planning_event_reflections 
+      WHERE event_id = ? AND user_id = ?
+    `).get(eventId, userId);
+
+    if (existingReflection) {
+      // 更新
+      const updateReflection = db.prepare(`
+        UPDATE planning_event_reflections 
+        SET revenue = ?, expenses = ?, profit = ?, visitor_count = ?, member_count = ?, 
+            reflection_memo = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE event_id = ? AND user_id = ?
+      `);
+
+      const result = updateReflection.run(
+        parseInt(revenue) || 0,
+        parseInt(expenses) || 0,
+        profit,
+        parseInt(visitor_count) || 0,
+        parseInt(member_count) || 0,
+        reflection_memo || '',
+        eventId,
+        userId
+      );
+
+      console.log('振り返りメモ更新成功:', { eventId, userId, changes: result.changes });
+      res.json({ 
+        message: '振り返りメモが更新されました',
+        eventId: eventId,
+        profit: profit
+      });
+    } else {
+      // 新規作成
+      const insertReflection = db.prepare(`
+        INSERT INTO planning_event_reflections 
+        (event_id, user_id, revenue, expenses, profit, visitor_count, member_count, reflection_memo)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+
+      const result = insertReflection.run(
+        eventId,
+        userId,
+        parseInt(revenue) || 0,
+        parseInt(expenses) || 0,
+        profit,
+        parseInt(visitor_count) || 0,
+        parseInt(member_count) || 0,
+        reflection_memo || ''
+      );
+
+      console.log('振り返りメモ作成成功:', { eventId, userId, reflectionId: result.lastInsertRowid });
+      res.status(201).json({ 
+        message: '振り返りメモが作成されました',
+        eventId: eventId,
+        reflectionId: result.lastInsertRowid,
+        profit: profit
+      });
+    }
+  } catch (error) {
+    console.error('振り返りメモ作成・更新エラー:', error);
+    res.status(500).json({ error: 'サーバーエラー' });
+  }
+});
+
 module.exports = router; 

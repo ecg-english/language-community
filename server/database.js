@@ -607,6 +607,26 @@ const initializeDatabase = () => {
       )
     `).run();
 
+    // イベント振り返りメモテーブルの作成
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS planning_event_reflections (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        event_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        revenue INTEGER DEFAULT 0,
+        expenses INTEGER DEFAULT 0,
+        profit INTEGER DEFAULT 0,
+        visitor_count INTEGER DEFAULT 0,
+        member_count INTEGER DEFAULT 0,
+        reflection_memo TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (event_id) REFERENCES planning_events(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        UNIQUE(event_id, user_id)
+      )
+    `).run();
+
     // 注意: 新規ユーザーのデフォルトロールを「ビジター」に変更
     // 既存ユーザーのロールは変更されません
     console.log('New users will be assigned "ビジター" role by default');
