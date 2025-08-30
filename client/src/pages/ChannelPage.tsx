@@ -204,7 +204,8 @@ const ChannelPage: React.FC = () => {
               location: event.location || '',
               cover_image: event.cover_image || '',
               created_by: event.created_by || 0,
-              created_by_name: event.created_by_name || '',
+              created_by_name: event.created_by_name || 'Unknown',
+              created_by_role: event.created_by_role || 'Unknown',
               created_at: event.created_at || '',
               updated_at: event.updated_at || '',
               is_event: true
