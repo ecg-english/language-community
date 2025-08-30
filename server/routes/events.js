@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database');
 const { authenticateToken } = require('../middleware/auth');
+const path = require('path');
+const fs = require('fs');
 
 // イベント一覧取得（軽量化）
 router.get('/', (req, res) => {
@@ -247,17 +249,60 @@ router.post('/upload/cover', authenticateToken, (req, res) => {
       return res.status(400).json({ error: '画像データが不足しています' });
     }
 
-    // 画像データをそのまま返す（フロントエンドで処理）
+    // Base64データをデコードしてバリデーション
+    const base64Data = imageData.replace(/^data:image\/[a-z]+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+    
+    // ファイルサイズチェック（5MB制限）
+    if (buffer.length > 5 * 1024 * 1024) {
+      return res.status(400).json({ error: '画像サイズは5MB以下にしてください' });
+    }
+
+    // 画像形式チェック
+    const header = buffer.toString('hex', 0, 4);
+    const validFormats = ['89504e47', 'ffd8ffdb', 'ffd8ffe0', 'ffd8ffe1', 'ffd8ffe2', 'ffd8ffe3', 'ffd8ffe8'];
+    
+    if (!validFormats.some(format => header.startsWith(format))) {
+      return res.status(400).json({ error: '対応していない画像形式です。PNG、JPEG形式のみ対応しています' });
+    }
+
+    // 画像を保存（Renderの永続化ディスクを使用）
+    const savedFileName = `event_cover_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
+    let uploadsDir;
+    
+    if (process.env.NODE_ENV === 'production') {
+      // Renderの永続化ディスクを使用
+      uploadsDir = '/opt/render/data/uploads';
+    } else {
+      // 開発環境
+      uploadsDir = path.join(__dirname, '../uploads');
+    }
+    
+    const filePath = path.join(uploadsDir, savedFileName);
+    
+    // uploadsディレクトリが存在しない場合は作成
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    
+    fs.writeFileSync(filePath, buffer);
+    
+    // 画像URLを返す（バックエンドのURLを含む）
+    const backendUrl = process.env.BACKEND_URL || 'https://language-community-backend.onrender.com';
+    const imageUrl = `${backendUrl}/uploads/${savedFileName}`;
+
     console.log('カバー画像アップロード成功:', { 
       hasImageData: !!imageData,
       fileName: fileName || 'unknown',
-      dataLength: imageData.length 
+      dataLength: imageData.length,
+      savedFileName: savedFileName,
+      imageUrl: imageUrl
     });
 
     res.json({ 
       success: true,
       message: 'カバー画像がアップロードされました',
-      imageUrl: imageData // base64データをそのまま返す
+      imageUrl: imageUrl
     });
   } catch (error) {
     console.error('カバー画像アップロードエラー:', error);
