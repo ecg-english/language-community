@@ -13,7 +13,7 @@ router.get('/', (req, res) => {
     const events = db.prepare(`
       SELECT e.id, e.title, e.description, e.target_audience, e.event_date,
              e.start_time, e.end_time, e.participation_method, e.created_by,
-             e.created_at, e.updated_at, e.location, u.username as created_by_name
+             e.created_at, e.updated_at, e.location, e.cover_image, u.username as created_by_name
       FROM events e
       LEFT JOIN users u ON e.created_by = u.id
       ORDER BY e.event_date DESC
@@ -37,7 +37,7 @@ router.get('/month/:year/:month', (req, res) => {
     const events = db.prepare(`
       SELECT e.id, e.title, e.description, e.target_audience, e.event_date,
              e.start_time, e.end_time, e.participation_method, e.created_by,
-             e.created_at, e.updated_at, e.location, u.username as created_by_name
+             e.created_at, e.updated_at, e.location, e.cover_image, u.username as created_by_name
       FROM events e
       LEFT JOIN users u ON e.created_by = u.id
       WHERE strftime('%Y-%m', e.event_date) = ?
@@ -61,7 +61,7 @@ router.get('/:id', (req, res) => {
     const event = db.prepare(`
       SELECT e.id, e.title, e.description, e.target_audience, e.event_date, 
              e.start_time, e.end_time, e.participation_method, e.created_by, 
-             e.created_at, e.updated_at, e.location, u.username as created_by_name
+             e.created_at, e.updated_at, e.location, e.cover_image, u.username as created_by_name
       FROM events e
       LEFT JOIN users u ON e.created_by = u.id
       WHERE e.id = ?
@@ -70,27 +70,14 @@ router.get('/:id', (req, res) => {
     console.log('データベースから取得したイベント（軽量化）:', { 
       id: event?.id, 
       title: event?.title,
-      event_date: event?.event_date 
+      event_date: event?.event_date,
+      cover_image: event?.cover_image ? '存在' : 'なし'
     });
 
     if (!event) {
       console.log('イベントが見つかりません:', { eventId });
       return res.status(404).json({ error: 'イベントが見つかりません' });
     }
-
-    // postsテーブルからカバーイメージを取得
-    const postImage = db.prepare(`
-      SELECT image_url, content
-      FROM posts 
-      WHERE event_id = ? AND image_url IS NOT NULL
-      ORDER BY created_at DESC
-      LIMIT 1
-    `).get(eventId);
-
-    console.log('postsから取得した画像:', { 
-      hasImage: !!postImage?.image_url,
-      imageUrl: postImage?.image_url?.substring(0, 50) + '...' 
-    });
 
     const attendees = db.prepare(`
       SELECT ea.*, u.username, u.avatar_url
@@ -103,16 +90,16 @@ router.get('/:id', (req, res) => {
 
     const response = {
       ...event,
-      cover_image: postImage?.image_url || null, // postsのimage_urlを使用
       attendees: attendees
     };
 
-    console.log('軽量化レスポンス送信:', { 
-      eventId, 
-      title: event.title, 
-      responseSize: 'lightweight',
-      hasCoverImage: !!response.cover_image
+    console.log('レスポンス送信:', { 
+      eventId: response.id, 
+      title: response.title,
+      hasCoverImage: !!response.cover_image,
+      attendeeCount: response.attendees.length
     });
+
     res.json(response);
   } catch (error) {
     console.error('イベント詳細取得エラー:', error);
