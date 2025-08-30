@@ -195,18 +195,42 @@ router.delete('/:id/attend', authenticateToken, (req, res) => {
 
 // イベント作成 (管理者用)
 router.post('/', authenticateToken, (req, res) => {
+  console.log('=== Events API: イベント作成リクエスト受信 ===');
+  console.log('リクエストボディ:', req.body);
+  console.log('ユーザー情報:', req.user);
+  
   try {
     const { title, description, event_date, start_time, end_time, location, cover_image, target_audience, participation_method } = req.body;
     const userId = req.user.userId || req.user.id;
 
+    console.log('パースされたデータ:', {
+      title,
+      description,
+      event_date,
+      start_time,
+      end_time,
+      location,
+      cover_image: cover_image ? '存在' : 'なし',
+      target_audience,
+      participation_method,
+      userId
+    });
+
     if (!title || !event_date) {
+      console.log('必須フィールド不足:', { title: !!title, event_date: !!event_date });
       return res.status(400).json({ error: '必須フィールドが不足しています' });
     }
 
+    console.log('イベント作成開始...');
     const result = db.prepare(`
       INSERT INTO events (title, description, event_date, start_time, end_time, location, cover_image, target_audience, participation_method, created_by)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(title, description, event_date, start_time, end_time, location, cover_image, target_audience, participation_method, userId);
+
+    console.log('イベント作成成功:', {
+      eventId: result.lastInsertRowid,
+      changes: result.changes
+    });
 
     res.status(201).json({ 
       message: 'イベントが作成されました',
