@@ -216,4 +216,33 @@ router.post('/', authenticateToken, (req, res) => {
   }
 });
 
+// カバー画像アップロード
+router.post('/upload/cover', authenticateToken, (req, res) => {
+  console.log('=== Events API: カバー画像アップロードリクエスト受信 ===');
+  
+  try {
+    const { imageData, fileName } = req.body;
+    
+    if (!imageData) {
+      return res.status(400).json({ error: '画像データが不足しています' });
+    }
+
+    // 画像データをそのまま返す（フロントエンドで処理）
+    console.log('カバー画像アップロード成功:', { 
+      hasImageData: !!imageData,
+      fileName: fileName || 'unknown',
+      dataLength: imageData.length 
+    });
+
+    res.json({ 
+      success: true,
+      message: 'カバー画像がアップロードされました',
+      imageUrl: imageData // base64データをそのまま返す
+    });
+  } catch (error) {
+    console.error('カバー画像アップロードエラー:', error);
+    res.status(500).json({ error: 'サーバーエラー' });
+  }
+});
+
 module.exports = router; 
