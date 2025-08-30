@@ -724,10 +724,11 @@ const ChannelPage: React.FC = () => {
   };
 
   const handleEventFormSuccess = () => {
-    // 投稿を再読み込み
+    // イベント作成後にページ全体を再読み込み
     if (channelId) {
       const numChannelId = parseInt(channelId);
-      loadPosts(numChannelId);
+      // ページ全体を再読み込みしてイベント一覧を更新
+      window.location.reload();
     }
   };
 
