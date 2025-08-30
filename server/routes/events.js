@@ -27,13 +27,12 @@ router.get('/', (req, res) => {
   }
 });
 
-// 月別イベント取得
+// 月別イベント取得API
 router.get('/month/:year/:month', (req, res) => {
   const { year, month } = req.params;
-  console.log('=== Events API: 月別イベント取得リクエスト受信 ===', { year, month });
-
+  
   try {
-    // 指定月のイベントを取得
+    // 指定された年月のイベントを取得
     const events = db.prepare(`
       SELECT e.id, e.title, e.description, e.target_audience, e.event_date,
              e.start_time, e.end_time, e.participation_method, e.created_by,
@@ -43,12 +42,11 @@ router.get('/month/:year/:month', (req, res) => {
       WHERE strftime('%Y-%m', e.event_date) = ?
       ORDER BY e.event_date ASC, e.start_time ASC
     `).all(`${year}-${month.padStart(2, '0')}`);
-
-    console.log('月別イベント取得成功:', { year, month, eventCount: events.length });
+    
     res.json({ events });
   } catch (error) {
     console.error('月別イベント取得エラー:', error);
-    res.status(500).json({ error: 'サーバーエラー' });
+    res.status(500).json({ error: '月別イベントの取得に失敗しました' });
   }
 });
 
