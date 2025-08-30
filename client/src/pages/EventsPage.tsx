@@ -51,6 +51,8 @@ interface Event {
   created_by_role: string;
   created_at: string;
   updated_at: string;
+  location?: string;
+  cover_image?: string;
 }
 
 const EventsPage: React.FC = () => {
