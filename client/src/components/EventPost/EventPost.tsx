@@ -44,25 +44,32 @@ const EventPost: React.FC<EventPostProps> = ({
   const navigate = useNavigate();
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
-    const day = days[date.getDay()];
-    const month = months[date.getMonth()];
-    const dayOfMonth = date.getDate();
-    
-    return `${day}, ${month} ${dayOfMonth}`;
+    if (!dateString || typeof dateString !== 'string') return '';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      
+      const day = days[date.getDay()];
+      const month = months[date.getMonth()];
+      const dayOfMonth = date.getDate();
+      
+      return `${day}, ${month} ${dayOfMonth}`;
+    } catch (error) {
+      return '';
+    }
   };
 
   const formatTime = (time: string) => {
-    if (!time) return '';
+    if (!time || typeof time !== 'string') return '';
     return time.substring(0, 5);
   };
 
   const formatTimeRange = (startTime: string, endTime: string) => {
-    if (!startTime) return '';
-    if (!endTime) return formatTime(startTime);
+    if (!startTime || typeof startTime !== 'string') return '';
+    if (!endTime || typeof endTime !== 'string') return formatTime(startTime);
     return `${formatTime(startTime)} - ${formatTime(endTime)}`;
   };
 
@@ -177,10 +184,10 @@ const EventPost: React.FC<EventPostProps> = ({
           {/* 作成者情報 */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2 }}>
             <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>
-              {event.created_by_name.charAt(0)}
+              {event.created_by_name ? event.created_by_name.charAt(0) : '?'}
             </Avatar>
             <Typography variant="caption" color="text.secondary">
-              {event.created_by_name} ({event.created_by_role})
+              {event.created_by_name || 'Unknown'} ({event.created_by_role || 'Unknown'})
             </Typography>
           </Box>
         </Box>
