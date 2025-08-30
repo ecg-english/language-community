@@ -221,8 +221,6 @@ router.post('/', authenticateToken, (req, res) => {
 // カバー画像アップロード
 router.post('/upload/cover', authenticateToken, (req, res) => {
   console.log('=== Events API: カバー画像アップロードリクエスト受信 ===');
-  console.log('リクエストボディ:', req.body);
-  console.log('リクエストヘッダー:', req.headers['content-type']);
   
   try {
     // FormDataとJSONの両方に対応
@@ -248,6 +246,18 @@ router.post('/upload/cover', authenticateToken, (req, res) => {
       console.log('画像データが見つかりません');
       return res.status(400).json({ error: '画像データが不足しています' });
     }
+
+    // ログ出力を軽量化（base64データの最初の100文字のみ表示）
+    const truncatedImageData = imageData.length > 100 
+      ? imageData.substring(0, 100) + '... (truncated)'
+      : imageData;
+    
+    console.log('リクエストボディ（軽量化）:', {
+      imageData: truncatedImageData,
+      fileName: fileName,
+      originalLength: imageData.length
+    });
+    console.log('リクエストヘッダー:', req.headers['content-type']);
 
     // Base64データをデコードしてバリデーション
     const base64Data = imageData.replace(/^data:image\/[a-z]+;base64,/, '');
@@ -294,7 +304,8 @@ router.post('/upload/cover', authenticateToken, (req, res) => {
     console.log('カバー画像アップロード成功:', { 
       hasImageData: !!imageData,
       fileName: fileName || 'unknown',
-      dataLength: imageData.length,
+      originalDataLength: imageData.length,
+      bufferSize: buffer.length,
       savedFileName: savedFileName,
       imageUrl: imageUrl
     });
