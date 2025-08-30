@@ -219,11 +219,31 @@ router.post('/', authenticateToken, (req, res) => {
 // カバー画像アップロード
 router.post('/upload/cover', authenticateToken, (req, res) => {
   console.log('=== Events API: カバー画像アップロードリクエスト受信 ===');
+  console.log('リクエストボディ:', req.body);
+  console.log('リクエストヘッダー:', req.headers['content-type']);
   
   try {
-    const { imageData, fileName } = req.body;
+    // FormDataとJSONの両方に対応
+    let imageData = null;
+    let fileName = null;
+    
+    if (req.headers['content-type']?.includes('multipart/form-data')) {
+      // FormDataの場合
+      console.log('FormData形式で受信');
+      if (req.body.cover_image) {
+        // ファイルがbase64で送信されている場合
+        imageData = req.body.cover_image;
+        fileName = req.body.fileName || 'cover.jpg';
+      }
+    } else {
+      // JSONの場合
+      console.log('JSON形式で受信');
+      imageData = req.body.imageData;
+      fileName = req.body.fileName;
+    }
     
     if (!imageData) {
+      console.log('画像データが見つかりません');
       return res.status(400).json({ error: '画像データが不足しています' });
     }
 

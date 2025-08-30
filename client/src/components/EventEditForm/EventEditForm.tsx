@@ -110,13 +110,21 @@ const EventEditForm: React.FC<EventEditFormProps> = ({
 
       // 新しい画像が選択された場合、アップロード
       if (coverImage) {
-        const formData = new FormData();
-        formData.append('cover_image', coverImage);
+        // ファイルをbase64に変換
+        const reader = new FileReader();
+        const base64Promise = new Promise<string>((resolve) => {
+          reader.onload = () => {
+            const result = reader.result as string;
+            resolve(result);
+          };
+        });
+        reader.readAsDataURL(coverImage);
+        
+        const imageData = await base64Promise;
 
-        const uploadResponse = await axios.post('/api/events/upload/cover', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+        const uploadResponse = await axios.post('/api/events/upload/cover', {
+          imageData: imageData,
+          fileName: coverImage.name
         });
 
         finalCoverImageUrl = uploadResponse.data.imageUrl;

@@ -95,10 +95,22 @@ const EventPostForm: React.FC<EventPostFormProps> = ({
       
       // カバー画像をアップロード
       if (coverImage) {
-        const formDataImage = new FormData();
-        formDataImage.append('cover_image', coverImage);
+        // ファイルをbase64に変換
+        const reader = new FileReader();
+        const base64Promise = new Promise<string>((resolve) => {
+          reader.onload = () => {
+            const result = reader.result as string;
+            resolve(result);
+          };
+        });
+        reader.readAsDataURL(coverImage);
         
-        const uploadResponse = await axios.post('/api/events/upload/cover', formDataImage);
+        const imageData = await base64Promise;
+        
+        const uploadResponse = await axios.post('/api/events/upload/cover', {
+          imageData: imageData,
+          fileName: coverImage.name
+        });
         coverImageUrl = uploadResponse.data.imageUrl;
       }
 
