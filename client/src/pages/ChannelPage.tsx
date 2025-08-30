@@ -193,20 +193,20 @@ const ChannelPage: React.FC = () => {
             const events = eventsResponse.data.events || [];
             console.log('イベント取得成功:', { count: events.length, events });
             
-            // イベントを投稿形式に変換
+            // イベントを投稿形式に変換（安全な変換）
             postsData = events.map((event: any) => ({
-              id: event.id,
-              content: event.title,
-              event_id: event.id,
-              event_date: event.event_date,
-              start_time: event.start_time,
-              end_time: event.end_time,
-              location: event.location,
-              cover_image: event.cover_image,
-              created_by: event.created_by,
-              created_by_name: event.created_by_name,
-              created_at: event.created_at,
-              updated_at: event.updated_at,
+              id: event.id || 0,
+              content: event.title || '',
+              event_id: event.id || 0,
+              event_date: event.event_date || '',
+              start_time: event.start_time || '',
+              end_time: event.end_time || '',
+              location: event.location || '',
+              cover_image: event.cover_image || '',
+              created_by: event.created_by || 0,
+              created_by_name: event.created_by_name || '',
+              created_at: event.created_at || '',
+              updated_at: event.updated_at || '',
               is_event: true
             }));
           } catch (error) {
