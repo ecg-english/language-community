@@ -43,16 +43,6 @@ const EventPost: React.FC<EventPostProps> = ({
 }) => {
   const navigate = useNavigate();
 
-  // 受け取ったデータの詳細をログ出力
-  console.log('EventPost 受け取ったデータ:', {
-    id: event.id,
-    title: event.title,
-    cover_image: event.cover_image,
-    created_by_name: event.created_by_name,
-    created_by_role: event.created_by_role,
-    allProps: Object.keys(event)
-  });
-
   const formatDate = (dateString: string) => {
     if (!dateString || typeof dateString !== 'string') return '';
     try {

@@ -58,7 +58,7 @@ router.get('/all', (req, res) => {
     console.log('=== Events API: 全イベント取得リクエスト受信 ===');
     
     // 全てのイベントを取得
-    const events = db.prepare(`
+    const rawEvents = db.prepare(`
       SELECT e.id, e.title, e.description, e.target_audience, e.event_date,
              e.start_time, e.end_time, e.participation_method, e.created_by,
              e.created_at, e.updated_at, e.location, e.cover_image, 
@@ -67,6 +67,27 @@ router.get('/all', (req, res) => {
       LEFT JOIN users u ON e.created_by = u.id
       ORDER BY e.event_date ASC, e.start_time ASC
     `).all();
+    
+    // レスポンス形式を統一
+    const events = rawEvents.map(event => ({
+      id: event.id,
+      title: event.title,
+      description: event.description,
+      target_audience: event.target_audience,
+      event_date: event.event_date,
+      start_time: event.start_time,
+      end_time: event.end_time,
+      participation_method: event.participation_method,
+      created_by: event.created_by,
+      created_at: event.created_at,
+      updated_at: event.updated_at,
+      location: event.location,
+      // cover_image が存在する場合、完全なURLパスを構築
+      cover_image: event.cover_image ? `/uploads/${event.cover_image}` : null,
+      // created_by_name と created_by_role が null/undefined の場合、'Unknown' に設定
+      created_by_name: event.created_by_name || 'Unknown',
+      created_by_role: event.created_by_role || 'Unknown'
+    }));
     
     console.log('全イベント取得成功:', { eventCount: events.length });
     
