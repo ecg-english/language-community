@@ -43,6 +43,15 @@ const EventPost: React.FC<EventPostProps> = ({
 }) => {
   const navigate = useNavigate();
 
+  // デバッグログを追加
+  console.log('EventPost レンダリング:', {
+    id: event.id,
+    title: event.title,
+    cover_image: event.cover_image,
+    created_by_name: event.created_by_name,
+    created_by_role: event.created_by_role
+  });
+
   const formatDate = (dateString: string) => {
     if (!dateString || typeof dateString !== 'string') return '';
     try {
@@ -97,13 +106,29 @@ const EventPost: React.FC<EventPostProps> = ({
         <Box
           sx={{
             height: 200,
-            backgroundImage: event.cover_image 
-              ? (event.cover_image.startsWith('data:') 
-                  ? `url(${event.cover_image})` 
-                  : event.cover_image.startsWith('http')
-                  ? `url(${event.cover_image})`
-                  : `url(https://language-community-backend.onrender.com${event.cover_image})`)
-              : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            backgroundImage: (() => {
+              const coverImage = event.cover_image;
+              console.log('カバー画像処理:', {
+                coverImage,
+                startsWithData: coverImage?.startsWith('data:'),
+                startsWithHttp: coverImage?.startsWith('http'),
+                finalUrl: coverImage 
+                  ? (coverImage.startsWith('data:') 
+                      ? coverImage 
+                      : coverImage.startsWith('http')
+                      ? coverImage
+                      : `https://language-community-backend.onrender.com${coverImage}`)
+                  : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+              });
+              
+              return coverImage 
+                ? (coverImage.startsWith('data:') 
+                    ? `url(${coverImage})` 
+                    : coverImage.startsWith('http')
+                    ? `url(${coverImage})`
+                    : `url(https://language-community-backend.onrender.com${coverImage})`)
+                : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            })(),
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             position: 'relative',
