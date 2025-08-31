@@ -189,6 +189,18 @@ const ChannelPage: React.FC = () => {
             const events = eventsResponse.data.events || [];
             console.log('イベント取得成功:', { count: events.length, events });
             
+            // 最初のイベントの詳細をログ出力
+            if (events.length > 0) {
+              console.log('最初のイベントの詳細:', {
+                id: events[0].id,
+                title: events[0].title,
+                created_by: events[0].created_by,
+                created_by_name: events[0].created_by_name,
+                created_by_role: events[0].created_by_role,
+                cover_image: events[0].cover_image ? '存在' : 'なし'
+              });
+            }
+            
             // イベントを投稿形式に変換（安全な変換）
             postsData = events.map((event: any) => ({
               id: event.id || 0,
