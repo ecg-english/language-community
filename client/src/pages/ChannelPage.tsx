@@ -183,13 +183,9 @@ const ChannelPage: React.FC = () => {
         let postsData = [];
         if (isEventsChannel) {
           console.log('Eventsチャンネル: イベント専用APIを呼び出し');
-          // イベント専用APIを呼び出し
-          const currentDate = new Date();
-          const year = currentDate.getFullYear();
-          const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-          
+          // 全イベントを取得（月に関係なく）
           try {
-            const eventsResponse = await axios.get(`/api/events/month/${year}/${month}`);
+            const eventsResponse = await axios.get(`/api/events/all`);
             const events = eventsResponse.data.events || [];
             console.log('イベント取得成功:', { count: events.length, events });
             

@@ -50,6 +50,29 @@ router.get('/month/:year/:month', (req, res) => {
   }
 });
 
+// 全イベント取得API（Eventsチャンネル用）
+router.get('/all', (req, res) => {
+  try {
+    console.log('=== Events API: 全イベント取得リクエスト受信 ===');
+    
+    // 全てのイベントを取得
+    const events = db.prepare(`
+      SELECT e.id, e.title, e.description, e.target_audience, e.event_date,
+             e.start_time, e.end_time, e.participation_method, e.created_by,
+             e.created_at, e.updated_at, e.location, e.cover_image, u.username as created_by_name
+      FROM events e
+      LEFT JOIN users u ON e.created_by = u.id
+      ORDER BY e.event_date ASC, e.start_time ASC
+    `).all();
+    
+    console.log('全イベント取得成功:', { eventCount: events.length });
+    res.json({ events });
+  } catch (error) {
+    console.error('全イベント取得エラー:', error);
+    res.status(500).json({ error: '全イベントの取得に失敗しました' });
+  }
+});
+
 // 特定のイベント詳細取得
 router.get('/:id', (req, res) => {
   const eventId = req.params.id;
