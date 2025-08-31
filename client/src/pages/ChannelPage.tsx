@@ -218,6 +218,17 @@ const ChannelPage: React.FC = () => {
               updated_at: event.updated_at || '',
               is_event: true
             }));
+            
+            // 変換後のデータの詳細をログ出力
+            if (postsData.length > 0) {
+              console.log('変換後の最初のイベント:', {
+                id: postsData[0].id,
+                title: postsData[0].content,
+                cover_image: postsData[0].cover_image,
+                created_by_name: postsData[0].created_by_name,
+                created_by_role: postsData[0].created_by_role
+              });
+            }
           } catch (error) {
             console.error('イベント取得エラー:', error);
             // エラーの場合は通常の投稿APIをフォールバック
