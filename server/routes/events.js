@@ -127,6 +127,85 @@ router.get('/:id/attendees', (req, res) => {
   }
 });
 
+// イベント削除API
+router.delete('/:id', authenticateToken, (req, res) => {
+  const eventId = req.params.id;
+  const userId = req.user.userId;
+  
+  console.log('=== Events API: イベント削除リクエスト受信 ===', { eventId, userId });
+  
+  try {
+    // イベントの存在確認と権限チェック
+    const event = db.prepare(`
+      SELECT e.*, u.username as created_by_name
+      FROM events e
+      LEFT JOIN users u ON e.created_by = u.id
+      WHERE e.id = ?
+    `).get(eventId);
+
+    if (!event) {
+      console.log('イベントが見つかりません:', { eventId });
+      return res.status(404).json({ error: 'イベントが見つかりません' });
+    }
+
+    // 作成者または管理者のみ削除可能
+    if (event.created_by !== userId && req.user.role !== 'サーバー管理者') {
+      console.log('削除権限がありません:', { eventId, userId, eventCreatedBy: event.created_by, userRole: req.user.role });
+      return res.status(403).json({ error: '削除権限がありません' });
+    }
+
+    // カバー画像ファイルを削除
+    if (event.cover_image) {
+      try {
+        const imageUrl = event.cover_image;
+        const fileName = imageUrl.split('/').pop();
+        
+        let uploadsDir;
+        if (process.env.NODE_ENV === 'production') {
+          uploadsDir = '/opt/render/data/uploads';
+        } else {
+          uploadsDir = path.join(__dirname, '../uploads');
+        }
+        
+        const filePath = path.join(uploadsDir, fileName);
+        
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          console.log('カバー画像ファイル削除成功:', { fileName });
+        }
+      } catch (imageError) {
+        console.error('カバー画像ファイル削除エラー:', imageError);
+        // 画像削除エラーは無視して続行
+      }
+    }
+
+    // 参加者データを削除
+    db.prepare('DELETE FROM event_attendees WHERE event_id = ?').run(eventId);
+    console.log('参加者データ削除完了:', { eventId });
+
+    // イベントを削除
+    const result = db.prepare('DELETE FROM events WHERE id = ?').run(eventId);
+    
+    if (result.changes > 0) {
+      console.log('イベント削除成功:', { eventId, deletedBy: req.user.username });
+      res.json({ 
+        success: true, 
+        message: 'イベントが削除されました',
+        deletedEvent: {
+          id: eventId,
+          title: event.title
+        }
+      });
+    } else {
+      console.log('イベント削除失敗:', { eventId });
+      res.status(500).json({ error: 'イベントの削除に失敗しました' });
+    }
+  } catch (error) {
+    console.error('イベント削除エラー:', error);
+    res.status(500).json({ error: 'サーバーエラー' });
+  }
+});
+
 // イベント参加登録
 router.post('/:id/attend', authenticateToken, (req, res) => {
   try {
