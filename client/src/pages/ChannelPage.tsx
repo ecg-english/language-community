@@ -189,22 +189,13 @@ const ChannelPage: React.FC = () => {
             const events = eventsResponse.data.events || [];
             console.log('イベント取得成功:', { count: events.length, events });
             
-            // 最初のイベントの詳細をログ出力
-            if (events.length > 0) {
-              console.log('最初のイベントの詳細:', {
-                id: events[0].id,
-                title: events[0].title,
-                created_by: events[0].created_by,
-                created_by_name: events[0].created_by_name,
-                created_by_role: events[0].created_by_role,
-                cover_image: events[0].cover_image ? '存在' : 'なし'
-              });
-            }
+
             
-            // イベントを投稿形式に変換（安全な変換）
+            // イベントを投稿形式に変換（EventPostコンポーネント用）
             postsData = events.map((event: any) => ({
               id: event.id || 0,
-              content: event.title || '',
+              title: event.title || '', // EventPostコンポーネントが期待するフィールド名
+              content: event.title || '', // 後方互換性のため残す
               event_id: event.id || 0,
               event_date: event.event_date || '',
               start_time: event.start_time || '',
@@ -219,16 +210,7 @@ const ChannelPage: React.FC = () => {
               is_event: true
             }));
             
-            // 変換後のデータの詳細をログ出力
-            if (postsData.length > 0) {
-              console.log('変換後の最初のイベント:', {
-                id: postsData[0].id,
-                title: postsData[0].content,
-                cover_image: postsData[0].cover_image,
-                created_by_name: postsData[0].created_by_name,
-                created_by_role: postsData[0].created_by_role
-              });
-            }
+
           } catch (error) {
             console.error('イベント取得エラー:', error);
             // エラーの場合は通常の投稿APIをフォールバック
