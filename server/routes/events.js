@@ -13,7 +13,8 @@ router.get('/', (req, res) => {
     const events = db.prepare(`
       SELECT e.id, e.title, e.description, e.target_audience, e.event_date,
              e.start_time, e.end_time, e.participation_method, e.created_by,
-             e.created_at, e.updated_at, e.location, e.cover_image, u.username as created_by_name
+             e.created_at, e.updated_at, e.location, e.cover_image, 
+             u.username as created_by_name, u.role as created_by_role
       FROM events e
       LEFT JOIN users u ON e.created_by = u.id
       ORDER BY e.event_date DESC
@@ -36,7 +37,8 @@ router.get('/month/:year/:month', (req, res) => {
     const events = db.prepare(`
       SELECT e.id, e.title, e.description, e.target_audience, e.event_date,
              e.start_time, e.end_time, e.participation_method, e.created_by,
-             e.created_at, e.updated_at, e.location, e.cover_image, u.username as created_by_name
+             e.created_at, e.updated_at, e.location, e.cover_image, 
+             u.username as created_by_name, u.role as created_by_role
       FROM events e
       LEFT JOIN users u ON e.created_by = u.id
       WHERE strftime('%Y-%m', e.event_date) = ?
@@ -59,7 +61,8 @@ router.get('/all', (req, res) => {
     const events = db.prepare(`
       SELECT e.id, e.title, e.description, e.target_audience, e.event_date,
              e.start_time, e.end_time, e.participation_method, e.created_by,
-             e.created_at, e.updated_at, e.location, e.cover_image, u.username as created_by_name
+             e.created_at, e.updated_at, e.location, e.cover_image, 
+             u.username as created_by_name, u.role as created_by_role
       FROM events e
       LEFT JOIN users u ON e.created_by = u.id
       ORDER BY e.event_date ASC, e.start_time ASC
@@ -82,7 +85,8 @@ router.get('/:id', (req, res) => {
     const event = db.prepare(`
       SELECT e.id, e.title, e.description, e.target_audience, e.event_date, 
              e.start_time, e.end_time, e.participation_method, e.created_by, 
-             e.created_at, e.updated_at, e.location, e.cover_image, u.username as created_by_name
+             e.created_at, e.updated_at, e.location, e.cover_image, 
+             u.username as created_by_name, u.role as created_by_role
       FROM events e
       LEFT JOIN users u ON e.created_by = u.id
       WHERE e.id = ?
