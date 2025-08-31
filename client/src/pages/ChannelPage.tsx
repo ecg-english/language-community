@@ -192,23 +192,33 @@ const ChannelPage: React.FC = () => {
 
             
             // イベントを投稿形式に変換（EventPostコンポーネント用）
-            postsData = events.map((event: any) => ({
-              id: event.id || 0,
-              title: event.title || '', // EventPostコンポーネントが期待するフィールド名
-              content: event.title || '', // 後方互換性のため残す
-              event_id: event.id || 0,
-              event_date: event.event_date || '',
-              start_time: event.start_time || '',
-              end_time: event.end_time || '',
-              location: event.location || '',
-              cover_image: event.cover_image || '',
-              created_by: event.created_by || 0,
-              created_by_name: event.created_by_name || 'Unknown',
-              created_by_role: event.created_by_role || 'Unknown',
-              created_at: event.created_at || '',
-              updated_at: event.updated_at || '',
-              is_event: true
-            }));
+            postsData = events.map((event: any) => {
+              console.log('個別イベント変換:', {
+                id: event.id,
+                title: event.title,
+                cover_image: event.cover_image,
+                created_by_name: event.created_by_name,
+                created_by_role: event.created_by_role
+              });
+              
+              return {
+                id: event.id || 0,
+                title: event.title || '', // EventPostコンポーネントが期待するフィールド名
+                content: event.title || '', // 後方互換性のため残す
+                event_id: event.id || 0,
+                event_date: event.event_date || '',
+                start_time: event.start_time || '',
+                end_time: event.end_time || '',
+                location: event.location || '',
+                cover_image: event.cover_image || '',
+                created_by: event.created_by || 0,
+                created_by_name: event.created_by_name || 'Unknown',
+                created_by_role: event.created_by_role || 'Unknown',
+                created_at: event.created_at || '',
+                updated_at: event.updated_at || '',
+                is_event: true
+              };
+            });
             
             // 変換後のデータの詳細をログ出力
             if (postsData.length > 0) {
