@@ -210,6 +210,19 @@ const ChannelPage: React.FC = () => {
               is_event: true
             }));
             
+            // 変換後のデータの詳細をログ出力
+            if (postsData.length > 0) {
+              console.log('ChannelPage 変換後の最初のイベント:', {
+                id: postsData[0].id,
+                title: postsData[0].title,
+                content: postsData[0].content,
+                cover_image: postsData[0].cover_image,
+                created_by_name: postsData[0].created_by_name,
+                created_by_role: postsData[0].created_by_role,
+                allProps: Object.keys(postsData[0])
+              });
+            }
+            
 
           } catch (error) {
             console.error('イベント取得エラー:', error);
