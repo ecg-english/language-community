@@ -100,13 +100,22 @@ const EventPost: React.FC<EventPostProps> = ({
             backgroundImage: (() => {
               const coverImage = event.cover_image;
               
-              return coverImage 
-                ? (coverImage.startsWith('data:') 
-                    ? `url(${coverImage})` 
-                    : coverImage.startsWith('http')
-                    ? `url(${coverImage})`
-                    : `url(https://language-community-backend.onrender.com${coverImage})`)
-                : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+              if (!coverImage) {
+                return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+              }
+              
+              // 完全なURL（http/httpsで始まる）の場合はそのまま使用
+              if (coverImage.startsWith('http://') || coverImage.startsWith('https://')) {
+                return `url(${coverImage})`;
+              }
+              
+              // data:で始まるbase64画像の場合はそのまま使用
+              if (coverImage.startsWith('data:')) {
+                return `url(${coverImage})`;
+              }
+              
+              // 相対パスの場合はベースURLを付与
+              return `url(https://language-community-backend.onrender.com${coverImage})`;
             })(),
             backgroundSize: 'cover',
             backgroundPosition: 'center',
