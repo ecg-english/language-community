@@ -189,10 +189,9 @@ const ChannelPage: React.FC = () => {
             const events = eventsResponse.data.events || [];
             console.log('イベント取得成功:', { count: events.length, events });
             
-            // イベントを投稿形式に変換（EventPostに必要なフィールドを保持）
+            // イベントを投稿形式に変換（安全な変換）
             postsData = events.map((event: any) => ({
               id: event.id || 0,
-              title: event.title || '',
               content: event.title || '',
               event_id: event.id || 0,
               event_date: event.event_date || '',
@@ -1265,15 +1264,15 @@ const ChannelPage: React.FC = () => {
                   key={post.id}
                   event={{
                     id: post.event_id,
-                    title: post.content,
-                    description: post.content,
+                    title: post.title || post.content,
+                    description: (post.content || "")
                     event_date: post.event_date || post.created_at, // イベント日付を優先
                     start_time: post.start_time || '',
                     end_time: post.end_time || '',
                     location: post.location || '',
-                    cover_image: post.image_url,
-                    created_by_name: post.username,
-                    created_by_role: '',
+                    cover_image: post.cover_image || post.image_url,
+                    created_by_name: post.created_by_name || post.username,
+                    created_by_role: post.created_by_role || '',
                     created_at: post.created_at,
                   }}
                   canEdit={user?.id === post.user_id || user?.role === 'サーバー管理者'}
@@ -1873,15 +1872,15 @@ const ChannelPage: React.FC = () => {
                     <EventPost
                       event={{
                         id: post.event_id,
-                        title: post.content,
-                        description: post.content,
+                        title: post.title || post.content,
+                        description: (post.content || "")
                         event_date: post.event_date || post.created_at,
                         start_time: post.start_time || '',
                         end_time: post.end_time || '',
                         location: post.location || '',
-                        cover_image: post.image_url,
-                        created_by_name: post.username,
-                        created_by_role: '',
+                        cover_image: post.cover_image || post.image_url,
+                        created_by_name: post.created_by_name || post.username,
+                        created_by_role: post.created_by_role || '',
                         created_at: post.created_at,
                       }}
                       canEdit={user?.id === post.user_id || user?.role === 'サーバー管理者'}
