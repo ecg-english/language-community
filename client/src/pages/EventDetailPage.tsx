@@ -282,21 +282,35 @@ const EventDetailPage: React.FC = () => {
                 backgroundImage: (() => {
                   const coverImage = event.cover_image;
                   
+                  // デバッグログ
+                  console.log('EventDetailPage cover_image処理:', {
+                    eventId: event.id,
+                    title: event.title,
+                    cover_image: coverImage,
+                    cover_image_type: typeof coverImage,
+                    startsWith_http: coverImage?.startsWith('http'),
+                    startsWith_https: coverImage?.startsWith('https'),
+                    startsWith_data: coverImage?.startsWith('data:')
+                  });
+                  
                   if (!coverImage) {
                     return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
                   }
                   
                   // 完全なURL（http/httpsで始まる）の場合はそのまま使用
                   if (coverImage.startsWith('http://') || coverImage.startsWith('https://')) {
+                    console.log('完全なURLを使用:', coverImage);
                     return `url(${coverImage})`;
                   }
                   
                   // data:で始まるbase64画像の場合はそのまま使用
                   if (coverImage.startsWith('data:')) {
+                    console.log('base64画像を使用:', coverImage.substring(0, 50) + '...');
                     return `url(${coverImage})`;
                   }
                   
                   // 相対パスの場合はベースURLを付与
+                  console.log('相対パスにベースURLを付与:', coverImage);
                   return `url(https://language-community-backend.onrender.com${coverImage})`;
                 })(),
                 backgroundSize: 'cover',
