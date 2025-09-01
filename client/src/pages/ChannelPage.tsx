@@ -207,18 +207,7 @@ const ChannelPage: React.FC = () => {
               is_event: true
             }));
             
-            // デバッグログ：変換後のイベントデータを確認
-            console.log('Eventsチャンネル: イベントデータ変換後:', {
-              totalCount: postsData.length,
-              sampleEvent: postsData[0] ? {
-                id: postsData[0].id,
-                title: postsData[0].content,
-                cover_image: postsData[0].cover_image,
-                cover_image_type: typeof postsData[0].cover_image,
-                startsWith_http: postsData[0].cover_image?.startsWith('http'),
-                startsWith_https: postsData[0].cover_image?.startsWith('https')
-              } : null
-            });
+
             
 
           } catch (error) {
