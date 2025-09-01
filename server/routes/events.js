@@ -37,6 +37,11 @@ router.get('/', (req, res) => {
       cover_image: (() => {
         if (!event.cover_image) return null;
         
+        // 既に完全なURL（https://で始まる）の場合はそのまま返す
+        if (event.cover_image.startsWith('https://') || event.cover_image.startsWith('http://')) {
+          return event.cover_image;
+        }
+        
         // base64画像データの場合は、/uploads/プレフィックスを除去
         if (event.cover_image.startsWith('/uploads/data:')) {
           return event.cover_image.replace('/uploads/', '');
@@ -91,6 +96,11 @@ router.get('/month/:year/:month', (req, res) => {
       cover_image: (() => {
         if (!event.cover_image) return null;
         
+        // 既に完全なURL（https://で始まる）の場合はそのまま返す
+        if (event.cover_image.startsWith('https://') || event.cover_image.startsWith('http://')) {
+          return event.cover_image;
+        }
+        
         // base64画像データの場合は、/uploads/プレフィックスを除去
         if (event.cover_image.startsWith('/uploads/data:')) {
           return event.cover_image.replace('/uploads/', '');
@@ -143,6 +153,11 @@ router.get('/all', (req, res) => {
       // cover_image が存在する場合、相対パスを返す
       cover_image: (() => {
         if (!event.cover_image) return null;
+        
+        // 既に完全なURL（https://で始まる）の場合はそのまま返す
+        if (event.cover_image.startsWith('https://') || event.cover_image.startsWith('http://')) {
+          return event.cover_image;
+        }
         
         // base64画像データの場合は、/uploads/プレフィックスを除去
         if (event.cover_image.startsWith('/uploads/data:')) {
@@ -199,6 +214,11 @@ router.get('/:id', (req, res) => {
       ...rawEvent,
       cover_image: (() => {
         if (!rawEvent.cover_image) return null;
+        
+        // 既に完全なURL（https://で始まる）の場合はそのまま返す
+        if (rawEvent.cover_image.startsWith('https://') || rawEvent.cover_image.startsWith('http://')) {
+          return rawEvent.cover_image;
+        }
         
         // base64画像データの場合は、/uploads/プレフィックスを除去
         if (rawEvent.cover_image.startsWith('/uploads/data:')) {
