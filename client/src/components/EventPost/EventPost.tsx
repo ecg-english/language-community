@@ -100,16 +100,30 @@ const EventPost: React.FC<EventPostProps> = ({
             backgroundImage: (() => {
               const coverImage = event.cover_image;
               
+              // デバッグログ：cover_imageの値を詳細に確認
+              console.log('EventPost cover_image詳細:', {
+                eventId: event.id,
+                title: event.title,
+                cover_image: coverImage,
+                cover_image_type: typeof coverImage,
+                startsWith_http: coverImage?.startsWith('http'),
+                startsWith_https: coverImage?.startsWith('https'),
+                startsWith_uploads: coverImage?.startsWith('/uploads'),
+                length: coverImage?.length
+              });
+              
               if (!coverImage) {
                 return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
               }
               
               // 既に完全なURL（http/httpsで始まる）の場合はそのまま使用
               if (coverImage.startsWith('http://') || coverImage.startsWith('https://')) {
+                console.log('完全なURLを使用:', coverImage);
                 return `url(${coverImage})`;
               }
               
               // 相対パスの場合はベースURLを付与
+              console.log('相対パスにベースURLを付与:', coverImage);
               return `url(https://language-community-backend.onrender.com${coverImage})`;
             })(),
             backgroundSize: 'cover',
