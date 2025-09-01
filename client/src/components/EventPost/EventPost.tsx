@@ -108,12 +108,19 @@ const EventPost: React.FC<EventPostProps> = ({
                 cover_image_type: typeof coverImage,
                 startsWith_http: coverImage?.startsWith('http'),
                 startsWith_https: coverImage?.startsWith('https'),
+                startsWith_data: coverImage?.startsWith('data:'),
                 startsWith_uploads: coverImage?.startsWith('/uploads'),
                 length: coverImage?.length
               });
               
               if (!coverImage) {
                 return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+              }
+              
+              // base64画像データの場合はそのまま使用
+              if (coverImage.startsWith('data:')) {
+                console.log('base64画像を使用:', coverImage.substring(0, 50) + '...');
+                return `url(${coverImage})`;
               }
               
               // 既に完全なURL（http/httpsで始まる）の場合はそのまま使用

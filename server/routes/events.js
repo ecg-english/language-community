@@ -34,7 +34,17 @@ router.get('/', (req, res) => {
       created_at: event.created_at,
       updated_at: event.updated_at,
       location: event.location,
-      cover_image: event.cover_image ? `/uploads/${event.cover_image}` : null,
+      cover_image: (() => {
+        if (!event.cover_image) return null;
+        
+        // base64画像データの場合は、/uploads/プレフィックスを除去
+        if (event.cover_image.startsWith('/uploads/data:')) {
+          return event.cover_image.replace('/uploads/', '');
+        }
+        
+        // 通常のファイル名の場合は、/uploads/プレフィックスを付与
+        return `/uploads/${event.cover_image}`;
+      })(),
       created_by_name: event.created_by_name || 'Unknown',
       created_by_role: event.created_by_role || 'Unknown'
     }));
@@ -78,7 +88,17 @@ router.get('/month/:year/:month', (req, res) => {
       created_at: event.created_at,
       updated_at: event.updated_at,
       location: event.location,
-      cover_image: event.cover_image ? `/uploads/${event.cover_image}` : null,
+      cover_image: (() => {
+        if (!event.cover_image) return null;
+        
+        // base64画像データの場合は、/uploads/プレフィックスを除去
+        if (event.cover_image.startsWith('/uploads/data:')) {
+          return event.cover_image.replace('/uploads/', '');
+        }
+        
+        // 通常のファイル名の場合は、/uploads/プレフィックスを付与
+        return `/uploads/${event.cover_image}`;
+      })(),
       created_by_name: event.created_by_name || 'Unknown',
       created_by_role: event.created_by_role || 'Unknown'
     }));
@@ -121,7 +141,17 @@ router.get('/all', (req, res) => {
       updated_at: event.updated_at,
       location: event.location,
       // cover_image が存在する場合、相対パスを返す
-      cover_image: event.cover_image ? `/uploads/${event.cover_image}` : null,
+      cover_image: (() => {
+        if (!event.cover_image) return null;
+        
+        // base64画像データの場合は、/uploads/プレフィックスを除去
+        if (event.cover_image.startsWith('/uploads/data:')) {
+          return event.cover_image.replace('/uploads/', '');
+        }
+        
+        // 通常のファイル名の場合は、/uploads/プレフィックスを付与
+        return `/uploads/${event.cover_image}`;
+      })(),
       // created_by_name と created_by_role が null/undefined の場合、'Unknown' に設定
       created_by_name: event.created_by_name || 'Unknown',
       created_by_role: event.created_by_role || 'Unknown'
@@ -167,7 +197,17 @@ router.get('/:id', (req, res) => {
     // レスポンス形式を統一
     const event = {
       ...rawEvent,
-      cover_image: rawEvent.cover_image ? `/uploads/${rawEvent.cover_image}` : null,
+      cover_image: (() => {
+        if (!rawEvent.cover_image) return null;
+        
+        // base64画像データの場合は、/uploads/プレフィックスを除去
+        if (rawEvent.cover_image.startsWith('/uploads/data:')) {
+          return rawEvent.cover_image.replace('/uploads/', '');
+        }
+        
+        // 通常のファイル名の場合は、/uploads/プレフィックスを付与
+        return `/uploads/${rawEvent.cover_image}`;
+      })(),
       created_by_name: rawEvent.created_by_name || 'Unknown',
       created_by_role: rawEvent.created_by_role || 'Unknown'
     };
