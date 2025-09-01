@@ -1264,7 +1264,7 @@ const ChannelPage: React.FC = () => {
                   key={post.id}
                   event={{
                     id: post.event_id,
-                    title: post.title || post.content,
+                    title: post.content,
                     description: (post.content || ""),
                     event_date: post.event_date || post.created_at, // イベント日付を優先
                     start_time: post.start_time || '',
@@ -1872,7 +1872,7 @@ const ChannelPage: React.FC = () => {
                     <EventPost
                       event={{
                         id: post.event_id,
-                        title: post.title || post.content,
+                        title: post.content,
                         description: (post.content || ""),
                         event_date: post.event_date || post.created_at,
                         start_time: post.start_time || '',
