@@ -299,6 +299,13 @@ const EventDetailPage: React.FC = () => {
                     return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
                   }
                   
+                  // /uploads/data: で始まる場合は、/uploads/プレフィックスを除去
+                  if (coverImage.startsWith('/uploads/data:')) {
+                    const corrected = coverImage.replace('/uploads/', '');
+                    console.log('🔧 /uploads/プレフィックスを除去:', corrected.substring(0, 50) + '...');
+                    return `url(${corrected})`;
+                  }
+                  
                   // base64画像データの場合はそのまま使用
                   if (coverImage.startsWith('data:')) {
                     console.log('base64画像を使用:', coverImage.substring(0, 50) + '...');
