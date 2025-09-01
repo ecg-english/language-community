@@ -1270,9 +1270,9 @@ const ChannelPage: React.FC = () => {
                     start_time: post.start_time || '',
                     end_time: post.end_time || '',
                     location: post.location || '',
-                    cover_image: post.cover_image || post.image_url,
-                    created_by_name: post.created_by_name || post.username,
-                    created_by_role: post.created_by_role || '',
+                    cover_image: (post as any).cover_image || (post as any).image_url,
+                    created_by_name: (post as any).created_by_name || (post as any).username,
+                    created_by_role: (post as any).created_by_role || '',
                     created_at: post.created_at,
                   }}
                   canEdit={user?.id === post.user_id || user?.role === 'サーバー管理者'}
@@ -1878,9 +1878,9 @@ const ChannelPage: React.FC = () => {
                         start_time: post.start_time || '',
                         end_time: post.end_time || '',
                         location: post.location || '',
-                        cover_image: post.cover_image || post.image_url,
-                        created_by_name: post.created_by_name || post.username,
-                        created_by_role: post.created_by_role || '',
+                        cover_image: (post as any).cover_image || (post as any).image_url,
+                        created_by_name: (post as any).created_by_name || (post as any).username,
+                        created_by_role: (post as any).created_by_role || '',
                         created_at: post.created_at,
                       }}
                       canEdit={user?.id === post.user_id || user?.role === 'サーバー管理者'}
