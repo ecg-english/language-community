@@ -10,7 +10,7 @@ router.get('/', (req, res) => {
   console.log('=== Events API: イベント一覧取得リクエスト受信 ===');
 
   try {
-    const events = db.prepare(`
+    const rawEvents = db.prepare(`
       SELECT e.id, e.title, e.description, e.target_audience, e.event_date,
              e.start_time, e.end_time, e.participation_method, e.created_by,
              e.created_at, e.updated_at, e.location, e.cover_image, 
@@ -19,6 +19,25 @@ router.get('/', (req, res) => {
       LEFT JOIN users u ON e.created_by = u.id
       ORDER BY e.event_date DESC
     `).all();
+
+    // レスポンス形式を統一
+    const events = rawEvents.map(event => ({
+      id: event.id,
+      title: event.title,
+      description: event.description,
+      target_audience: event.target_audience,
+      event_date: event.event_date,
+      start_time: event.start_time,
+      end_time: event.end_time,
+      participation_method: event.participation_method,
+      created_by: event.created_by,
+      created_at: event.created_at,
+      updated_at: event.updated_at,
+      location: event.location,
+      cover_image: event.cover_image ? `https://language-community-backend.onrender.com/uploads/${event.cover_image}` : null,
+      created_by_name: event.created_by_name || 'Unknown',
+      created_by_role: event.created_by_role || 'Unknown'
+    }));
 
     console.log('イベント一覧取得成功:', { eventCount: events.length });
     res.json(events);
@@ -34,7 +53,7 @@ router.get('/month/:year/:month', (req, res) => {
   
   try {
     // 指定された年月のイベントを取得
-    const events = db.prepare(`
+    const rawEvents = db.prepare(`
       SELECT e.id, e.title, e.description, e.target_audience, e.event_date,
              e.start_time, e.end_time, e.participation_method, e.created_by,
              e.created_at, e.updated_at, e.location, e.cover_image, 
@@ -44,6 +63,25 @@ router.get('/month/:year/:month', (req, res) => {
       WHERE strftime('%Y-%m', e.event_date) = ?
       ORDER BY e.event_date ASC, e.start_time ASC
     `).all(`${year}-${month.padStart(2, '0')}`);
+    
+    // レスポンス形式を統一
+    const events = rawEvents.map(event => ({
+      id: event.id,
+      title: event.title,
+      description: event.description,
+      target_audience: event.target_audience,
+      event_date: event.event_date,
+      start_time: event.start_time,
+      end_time: event.end_time,
+      participation_method: event.participation_method,
+      created_by: event.created_by,
+      created_at: event.created_at,
+      updated_at: event.updated_at,
+      location: event.location,
+      cover_image: event.cover_image ? `https://language-community-backend.onrender.com/uploads/${event.cover_image}` : null,
+      created_by_name: event.created_by_name || 'Unknown',
+      created_by_role: event.created_by_role || 'Unknown'
+    }));
     
     res.json({ events });
   } catch (error) {
@@ -83,7 +121,7 @@ router.get('/all', (req, res) => {
       updated_at: event.updated_at,
       location: event.location,
       // cover_image が存在する場合、完全なURLパスを構築
-      cover_image: event.cover_image ? `/uploads/${event.cover_image}` : null,
+      cover_image: event.cover_image ? `https://language-community-backend.onrender.com/uploads/${event.cover_image}` : null,
       // created_by_name と created_by_role が null/undefined の場合、'Unknown' に設定
       created_by_name: event.created_by_name || 'Unknown',
       created_by_role: event.created_by_role || 'Unknown'
@@ -104,7 +142,7 @@ router.get('/:id', (req, res) => {
   console.log('=== Events API: イベント詳細取得リクエスト受信 ===', { eventId });
   
   try {
-    const event = db.prepare(`
+    const rawEvent = db.prepare(`
       SELECT e.id, e.title, e.description, e.target_audience, e.event_date, 
              e.start_time, e.end_time, e.participation_method, e.created_by, 
              e.created_at, e.updated_at, e.location, e.cover_image, 
@@ -115,16 +153,24 @@ router.get('/:id', (req, res) => {
     `).get(eventId);
 
     console.log('データベースから取得したイベント（軽量化）:', { 
-      id: event?.id, 
-      title: event?.title,
-      event_date: event?.event_date,
-      cover_image: event?.cover_image ? '存在' : 'なし'
+      id: rawEvent?.id, 
+      title: rawEvent?.title,
+      event_date: rawEvent?.event_date,
+      cover_image: rawEvent?.cover_image ? '存在' : 'なし'
     });
 
-    if (!event) {
+    if (!rawEvent) {
       console.log('イベントが見つかりません:', { eventId });
       return res.status(404).json({ error: 'イベントが見つかりません' });
     }
+
+    // レスポンス形式を統一
+    const event = {
+      ...rawEvent,
+      cover_image: rawEvent.cover_image ? `https://language-community-backend.onrender.com/uploads/${rawEvent.cover_image}` : null,
+      created_by_name: rawEvent.created_by_name || 'Unknown',
+      created_by_role: rawEvent.created_by_role || 'Unknown'
+    };
 
     const attendees = db.prepare(`
       SELECT ea.*, u.username, u.avatar_url
