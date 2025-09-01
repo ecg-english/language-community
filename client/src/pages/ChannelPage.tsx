@@ -189,11 +189,11 @@ const ChannelPage: React.FC = () => {
             const events = eventsResponse.data.events || [];
             console.log('イベント取得成功:', { count: events.length, events });
             
-            // イベントを投稿形式に変換（EventPostコンポーネント用）
+            // イベントを投稿形式に変換（EventPostに必要なフィールドを保持）
             postsData = events.map((event: any) => ({
               id: event.id || 0,
-              title: event.title || '', // EventPostコンポーネントが期待するフィールド名
-              content: event.title || '', // 後方互換性のため残す
+              title: event.title || '',
+              content: event.title || '',
               event_id: event.id || 0,
               event_date: event.event_date || '',
               start_time: event.start_time || '',
