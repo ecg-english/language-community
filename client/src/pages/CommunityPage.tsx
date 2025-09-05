@@ -19,6 +19,14 @@ import {
   IconButton,
   Grid,
   Tooltip,
+  Fab,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
@@ -30,6 +38,9 @@ import {
   Info as InfoIcon,
   Star as StarIcon,
   Edit as EditIcon,
+  Send as SendIcon,
+  Close as CloseIcon,
+  Image as ImageIcon,
 } from '@mui/icons-material';
 import { useCommunity } from '../contexts/CommunityContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -38,6 +49,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import SetupGuide from '../components/SetupGuide/SetupGuide';
 import FavoriteChannelDialog from '../components/FavoriteChannelDialog/FavoriteChannelDialog';
+import axios from 'axios'; // axiosを追加
 
 const CommunityPage: React.FC = () => {
   const { user } = useAuth();
@@ -55,6 +67,14 @@ const CommunityPage: React.FC = () => {
   const hasLoaded = useRef(false);
   const [expandedCategories, setExpandedCategories] = useState<number[]>([]);
   const { t } = useTranslation();
+
+  // Diary投稿機能の状態管理
+  const [diaryPostModalOpen, setDiaryPostModalOpen] = useState(false);
+  const [diaryPostContent, setDiaryPostContent] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (!hasLoaded.current) {
@@ -179,6 +199,64 @@ const CommunityPage: React.FC = () => {
     }
   };
 
+  // Diary投稿処理
+  const handleDiaryPost = async () => {
+    if (!diaryPostContent.trim()) {
+      setError('投稿内容を入力してください');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      // DiaryチャンネルのID（18）に投稿
+      await axios.post('/api/posts/channels/18/posts', {
+        content: diaryPostContent.trim(),
+        image_url: selectedImage
+      });
+
+      // 成功時の処理
+      setDiaryPostContent('');
+      setSelectedImage(null);
+      setImagePreview(null);
+      setDiaryPostModalOpen(false);
+      
+      // Diaryチャンネルに遷移
+      navigate('/channel/18');
+    } catch (error: any) {
+      console.error('Diary投稿エラー:', error);
+      setError(error.response?.data?.error || 'Diary投稿に失敗しました');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // 画像選択処理
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        setError('画像サイズは10MB以下にしてください');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setSelectedImage(result);
+        setImagePreview(result);
+        setError(null);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // 画像削除処理
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+  };
 
 
   return (
@@ -528,6 +606,119 @@ const CommunityPage: React.FC = () => {
         open={favoriteChannelDialogOpen}
         onClose={() => setFavoriteChannelDialogOpen(false)}
       />
+
+      {/* Diary投稿用フローティングボタン */}
+      {user && (
+        <Fab
+          color="primary"
+          sx={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            zIndex: 1000,
+          }}
+          onClick={() => setDiaryPostModalOpen(true)}
+        >
+          <AddIcon />
+        </Fab>
+      )}
+
+      {/* Diary投稿モーダル */}
+      <Dialog
+        open={diaryPostModalOpen}
+        onClose={() => setDiaryPostModalOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          📝 Diaryに投稿
+        </DialogTitle>
+        <DialogContent>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+          <TextField
+            fullWidth
+            multiline
+            rows={4}
+            value={diaryPostContent}
+            onChange={(e) => setDiaryPostContent(e.target.value)}
+            placeholder="今日の学習や感想を書いてください..."
+            variant="outlined"
+            sx={{ mt: 1, mb: 2 }}
+          />
+          
+          {/* 画像プレビュー */}
+          {imagePreview && (
+            <Box sx={{ mb: 2, position: 'relative' }}>
+              <img
+                src={imagePreview}
+                alt="プレビュー"
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '300px',
+                  borderRadius: '8px',
+                  objectFit: 'contain'
+                }}
+              />
+              <IconButton
+                onClick={handleRemoveImage}
+                sx={{
+                  position: 'absolute',
+                  top: 8,
+                  right: 8,
+                  bgcolor: 'rgba(0, 0, 0, 0.5)',
+                  color: 'white',
+                  '&:hover': {
+                    bgcolor: 'rgba(0, 0, 0, 0.7)',
+                  }
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </Box>
+          )}
+          
+          {/* 画像追加ボタン */}
+          <Box sx={{ mb: 2 }}>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageSelect}
+              style={{ display: 'none' }}
+              id="diary-image-upload"
+            />
+            <label htmlFor="diary-image-upload">
+              <Button
+                component="span"
+                variant="outlined"
+                startIcon={<ImageIcon />}
+                disabled={isSubmitting}
+              >
+                画像を追加
+              </Button>
+            </label>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setDiaryPostModalOpen(false)}
+            disabled={isSubmitting}
+          >
+            キャンセル
+          </Button>
+          <Button 
+            onClick={handleDiaryPost}
+            variant="contained"
+            disabled={!diaryPostContent.trim() || isSubmitting}
+            startIcon={isSubmitting ? <CircularProgress size={20} /> : <SendIcon />}
+          >
+            {isSubmitting ? '投稿中...' : 'Diaryに投稿'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
